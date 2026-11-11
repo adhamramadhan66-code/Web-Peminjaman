@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Lindungi halaman: hanya dibuka jika sudah masuk (sesi di server dicek ulang oleh pesan-notif.js).
+        (function () {
+            try {
+                const user = JSON.parse(sessionStorage.getItem('kampuslyCurrentUser') || 'null');
+                if (!user || !user.email) { window.location.replace('index.html'); return; }
+                document.documentElement.dataset.peran = user.peran === 'admin' ? 'admin' : 'pengguna';
+                try {   // preferensi tampilan dipasang sebelum halaman digambar (lihat ui.css / ui.js)
+                    const pa = localStorage.getItem('ui-animasi');
+                    if (pa === 'penuh' || pa === 'hemat') document.documentElement.dataset.animasi = pa;
+                    if (sessionStorage.getItem('ui-sb')) document.documentElement.setAttribute('data-ui-sb', ''); else sessionStorage.setItem('ui-sb', '1');
+                } catch (e) { /* abaikan */ }
+            } catch (error) { window.location.replace('index.html'); }
+        })();
+    </script>
+    <title>Peminjaman Ruang | Kampusly</title>
+    <link rel="stylesheet" href="style.css?v=17">
+    <link rel="stylesheet" href="denah.css?v=8">
+    <link rel="stylesheet" href="jadwal.css?v=5">
+    <link rel="stylesheet" href="pesan.css?v=3">
+    <link rel="stylesheet" href="profil.css?v=1">
+    <link rel="stylesheet" href="ui.css?v=2">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 'dark'; }
+        catch (e) { document.documentElement.dataset.theme = 'dark'; }
+    </script>
+</head>
+<body class="preload">
+    <aside class="sidebar" id="mainSidebar">
+        <div class="sidebar-top">
+            <div class="logo">
+                <img src="logo-tsu.png" alt="TSU Logo" class="logo-img">
+            </div>
+            <nav class="nav-menu">
+                <a href="dashboard.html" class="nav-item">
+                    <i data-lucide="layout-dashboard" class="icon"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="jadwal.html" class="nav-item">
+                    <i data-lucide="calendar-days" class="icon"></i>
+                    <span>Jadwal Ruang</span>
+                </a>
+                <a href="peminjaman.html" class="nav-item active">
+                    <i data-lucide="calendar-check" class="icon"></i>
+                    <span>Peminjaman</span>
+                </a>
+                <a href="pesan.html" class="nav-item" id="navPesan">
+                    <i data-lucide="message-circle" class="icon"></i>
+                    <span>Pesan</span>
+                    <em class="nav-badge" hidden>0</em>
+                </a>
+                <a href="denah.html" class="nav-item khusus-admin">
+                    <i data-lucide="map" class="icon"></i>
+                    <span>Editor Ruang</span>
+                </a>
+            </nav>
+        </div>
+        <div class="sidebar-bottom">
+            <a href="#" class="nav-item">
+                <i data-lucide="settings" class="icon"></i>
+                <span>Settings</span>
+            </a>
+            <a href="index.html" class="nav-item" id="logoutBtn" title="Keluar dari akun">
+                <i data-lucide="log-out" class="icon"></i>
+                <span>Log out</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="header">
+            <div>
+                <p class="page-sub">Campus Operations / 2026</p>
+                <h2>Peminjaman ruang</h2>
+            </div>
+            <div class="header-right">
+                <span class="sync" id="syncStatus"><i class="dot"></i><span>Memuat…</span></span>
+                <button class="btn-icon" type="button" id="themeToggle" aria-label="Ganti tema gelap/terang" title="Ganti tema">
+                    <svg class="theme-icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+                    <svg class="theme-icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                </button>
+                <span id="currentUserLabel" class="user-label">Admin TSU</span>
+                <img src="https://i.pravatar.cc/150?img=32" alt="Profil Admin TSU" class="profile-img">
+            </div>
+        </header>
+
+        <div class="pinjam-layout">
+            <section class="panel">
+                <div class="list-head">
+                    <h3>Daftar peminjaman</h3>
+                    <p>Ajukan waktu penggunaan ruang dan pantau persetujuan admin.</p>
+                </div>
+                <div class="list-tools">
+                    <div class="seg" id="statusTabs" role="tablist" aria-label="Filter status"></div>
+                    <div class="tools-right">
+                        <select class="in" id="fWaktu" aria-label="Periode">
+                            <option value="mendatang">Hari ini &amp; mendatang</option>
+                            <option value="riwayat">Riwayat</option>
+                            <option value="semua">Semua tanggal</option>
+                        </select>
+                        <input class="in" type="search" id="fCari" placeholder="Cari kegiatan / pemohon / ruang" aria-label="Cari">
+                    </div>
+                </div>
+                <div class="tbl-wrap">
+                    <table class="tbl">
+                        <thead><tr><th>Ruang</th><th>Tanggal</th><th>Waktu</th><th>Keperluan</th><th>Status</th><th></th></tr></thead>
+                        <tbody id="listBody"><tr class="empty-row"><td colspan="6">Memuat…</td></tr></tbody>
+                    </table>
+                </div>
+                <div class="pager">
+                    <span id="pagerInfo"></span>
+                    <span class="tool-group">
+                        <button type="button" class="btn" id="pgPrev"><i data-lucide="chevron-left"></i> Sebelumnya</button>
+                        <button type="button" class="btn" id="pgNext">Berikutnya <i data-lucide="chevron-right"></i></button>
+                    </span>
+                </div>
+            </section>
+
+            <aside class="panel req-form">
+                <p class="kind">New request</p>
+                <h3>Ajukan ruang</h3>
+                <div class="form-err" id="formErr" role="alert"></div>
+                <div class="field"><label for="fTanggal">Tanggal</label><input id="fTanggal" autocomplete="off" type="date"></div>
+                <div class="field-row">
+                    <div class="field"><label for="fMulai">Mulai</label><input id="fMulai" autocomplete="off" type="time"></div>
+                    <div class="field"><label for="fSelesai">Selesai</label><input id="fSelesai" autocomplete="off" type="time"></div>
+                </div>
+                <p class="jam-hint"><span id="jamHint"></span></p>
+                <div class="field">
+                    <label>Pilih ruang <small id="pickSum" class="pick-sum"></small></label>
+                    <div class="pick-legend"><span><i class="free"></i>Kosong</span><span><i class="pend"></i>Ada pengajuan lain</span></div>
+                    <div class="room-pick" id="roomPick" role="group" aria-label="Pilih ruang"></div>
+                </div>
+                <div class="field-row">
+                    <div class="field"><label for="fPemohon">Pemohon</label><input id="fPemohon" type="text" maxlength="80"></div>
+                    <div class="field"><label for="fPeserta">Peserta</label><input id="fPeserta" type="number" min="0" max="9999" placeholder="0"></div>
+                </div>
+                <div class="field"><label for="fKeperluan">Keperluan</label><textarea id="fKeperluan" maxlength="160" placeholder="Contoh: Rapat koordinasi panitia"></textarea></div>
+                <button type="button" class="btn primary" id="btnAjukan"><i data-lucide="calendar-check"></i> Ajukan peminjaman</button>
+            </aside>
+        </div>
+
+    </main>
+
+    <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Buka sidebar" aria-expanded="false" aria-controls="mainSidebar" title="Buka/tutup menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+    <div class="toast" id="toast" role="status"></div>
+
+    <script src="app.js?v=2"></script>
+    <script src="alasan.js?v=1"></script>
+    <script src="peminjaman.js?v=12"></script>
+    <script src="pesan-notif.js?v=1"></script>
+    <script src="profil.js?v=1"></script>
+    <script src="ui.js?v=2"></script>
+    <script src="mobile.js?v=1"></script>
+</body>
+</html>

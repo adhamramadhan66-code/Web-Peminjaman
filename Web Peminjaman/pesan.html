@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Lindungi halaman: hanya dibuka jika sudah masuk (sesi di server dicek ulang oleh pesan-notif.js).
+        (function () {
+            try {
+                const user = JSON.parse(sessionStorage.getItem('kampuslyCurrentUser') || 'null');
+                if (!user || !user.email) { window.location.replace('index.html'); return; }
+                document.documentElement.dataset.peran = user.peran === 'admin' ? 'admin' : 'pengguna';
+                try {   // preferensi tampilan dipasang sebelum halaman digambar (lihat ui.css / ui.js)
+                    const pa = localStorage.getItem('ui-animasi');
+                    if (pa === 'penuh' || pa === 'hemat') document.documentElement.dataset.animasi = pa;
+                    if (sessionStorage.getItem('ui-sb')) document.documentElement.setAttribute('data-ui-sb', ''); else sessionStorage.setItem('ui-sb', '1');
+                } catch (e) { /* abaikan */ }
+            } catch (error) { window.location.replace('index.html'); }
+        })();
+    </script>
+    <title>Pesan | Kampusly</title>
+    <link rel="stylesheet" href="style.css?v=17">
+    <link rel="stylesheet" href="denah.css?v=8">
+    <link rel="stylesheet" href="jadwal.css?v=5">
+    <link rel="stylesheet" href="pesan.css?v=5">
+    <link rel="stylesheet" href="profil.css?v=1">
+    <link rel="stylesheet" href="ui.css?v=2">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 'dark'; }
+        catch (e) { document.documentElement.dataset.theme = 'dark'; }
+    </script>
+</head>
+<body class="preload">
+    <aside class="sidebar" id="mainSidebar">
+        <div class="sidebar-top">
+            <div class="logo">
+                <img src="logo-tsu.png" alt="TSU Logo" class="logo-img">
+            </div>
+            <nav class="nav-menu">
+                <a href="dashboard.html" class="nav-item">
+                    <i data-lucide="layout-dashboard" class="icon"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="jadwal.html" class="nav-item">
+                    <i data-lucide="calendar-days" class="icon"></i>
+                    <span>Jadwal Ruang</span>
+                </a>
+                <a href="peminjaman.html" class="nav-item">
+                    <i data-lucide="calendar-check" class="icon"></i>
+                    <span>Peminjaman</span>
+                </a>
+                <a href="pesan.html" class="nav-item active" id="navPesan">
+                    <i data-lucide="message-circle" class="icon"></i>
+                    <span>Pesan</span>
+                    <em class="nav-badge" hidden>0</em>
+                </a>
+                <a href="denah.html" class="nav-item khusus-admin">
+                    <i data-lucide="map" class="icon"></i>
+                    <span>Editor Ruang</span>
+                </a>
+            </nav>
+        </div>
+        <div class="sidebar-bottom">
+            <a href="#" class="nav-item">
+                <i data-lucide="settings" class="icon"></i>
+                <span>Settings</span>
+            </a>
+            <a href="index.html" class="nav-item" id="logoutBtn" title="Keluar dari akun">
+                <i data-lucide="log-out" class="icon"></i>
+                <span>Log out</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="header">
+            <div>
+                <p class="page-sub">Campus Operations / 2026</p>
+                <h2>Pesan</h2>
+            </div>
+            <div class="header-right">
+                <button class="btn-icon" type="button" id="themeToggle" aria-label="Ganti tema gelap/terang" title="Ganti tema">
+                    <svg class="theme-icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+                    <svg class="theme-icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                </button>
+                <span id="currentUserLabel" class="user-label"></span>
+                <img src="https://i.pravatar.cc/150?img=32" alt="Foto profil" class="profile-img">
+            </div>
+        </header>
+
+        <section class="msgr" id="msgr" aria-label="Pesan">
+            <!-- Daftar akun: hanya tampil untuk admin -->
+            <div class="msgr-list">
+                <div class="msgr-list-head">
+                    <h3>Percakapan</h3>
+                    <input class="in" type="search" id="kontakCari" placeholder="Cari nama atau email akun" aria-label="Cari akun" autocomplete="off">
+                </div>
+                <div class="kontak-list" id="kontakList"></div>
+            </div>
+
+            <!-- Percakapan -->
+            <div class="msgr-thread">
+                <div class="thread-kosong" id="threadPilih">
+                    <strong>Pilih percakapan</strong>
+                    Pilih salah satu akun di sebelah kiri untuk membaca atau membalas pesan.
+                </div>
+                <div class="thread-isi" id="threadIsi" hidden>
+                    <div class="thread-head">
+                        <button class="btn-icon thread-back" type="button" id="threadBack" aria-label="Kembali ke daftar percakapan" title="Kembali">
+                            <i data-lucide="chevron-left" class="icon"></i>
+                        </button>
+                        <div id="threadAvatar"></div>
+                        <div>
+                            <div class="thread-nama" id="threadNama"></div>
+                            <div class="thread-sub" id="threadSub"></div>
+                        </div>
+                    </div>
+                    <div class="thread-body" id="threadBody" aria-live="polite"></div>
+                    <div class="composer">
+                        <textarea class="in" id="ketik" rows="1" maxlength="1000" placeholder="Tulis pesan… (Enter kirim, Shift+Enter baris baru)" aria-label="Tulis pesan"></textarea>
+                        <button type="button" class="btn primary" id="kirimBtn" aria-label="Kirim pesan" title="Kirim" disabled>
+                            <span class="ik ik-kirim"><i data-lucide="send"></i></span>
+                            <span class="ik ik-hapus"><i data-lucide="trash-2"></i></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Buka sidebar" aria-expanded="false" aria-controls="mainSidebar" title="Buka/tutup menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+    <div class="toast" id="toast" role="status"></div>
+
+    <script src="app.js?v=2"></script>
+    <script src="pesan-notif.js?v=1"></script>
+    <script src="profil.js?v=1"></script>
+    <script src="ui.js?v=2"></script>
+    <script src="pesan.js?v=5"></script>
+    <script src="mobile.js?v=1"></script>
+</body>
+</html>

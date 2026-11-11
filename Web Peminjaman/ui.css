@@ -1,0 +1,372 @@
+/* =====================================================================
+   ui.css  -  lapisan tampilan bersama (dimuat PALING AKHIR di semua halaman dalam)
+   1. Dasar & variabel gerak     4. Kartu, tombol, input, navigasi (kedalaman + interaksi)
+   2. Perbaikan tata letak HP    5. Jendela (modal) & pesan
+   3. Tabel -> kartu di HP       6. Animasi masuk halaman, tabel, chat
+   Semua gerak dimatikan otomatis bagi pengguna yang memilih "kurangi gerakan" (bagian paling bawah).
+   ===================================================================== */
+
+/* ---------- 1. dasar ---------- */
+:root {
+    --ui-ease: cubic-bezier(0.22, 0.8, 0.3, 1);
+    --ui-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ui-bayang: 0 1px 2px rgba(0, 0, 0, 0.35), 0 8px 24px rgba(0, 0, 0, 0.3);
+    --ui-bayang-naik: 0 2px 4px rgba(0, 0, 0, 0.4), 0 16px 36px rgba(0, 0, 0, 0.4);
+}
+:root[data-theme="light"] {
+    --ui-bayang: 0 1px 2px rgba(16, 24, 40, 0.05), 0 6px 20px rgba(16, 24, 40, 0.06);
+    --ui-bayang-naik: 0 2px 4px rgba(16, 24, 40, 0.06), 0 14px 32px rgba(16, 24, 40, 0.12);
+}
+html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+/* latar halus: sedikit semburat hijau di kiri atas dan biru di kanan atas supaya tidak terlihat datar */
+body {
+    background-image:
+        radial-gradient(52rem 26rem at -5% -8%, rgba(16, 185, 129, 0.10), transparent 62%),
+        radial-gradient(46rem 24rem at 105% -6%, rgba(59, 130, 246, 0.08), transparent 60%);
+    background-attachment: fixed;
+}
+:root[data-theme="light"] body {
+    background-image:
+        radial-gradient(52rem 26rem at -5% -8%, rgba(16, 185, 129, 0.12), transparent 62%),
+        radial-gradient(46rem 24rem at 105% -6%, rgba(59, 130, 246, 0.09), transparent 60%);
+}
+
+/* scrollbar tipis dan serasi tema */
+* { scrollbar-width: thin; scrollbar-color: var(--surface-3) transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 999px; }
+*::-webkit-scrollbar-thumb:hover { background: var(--dash-border); }
+*::-webkit-scrollbar-track { background: transparent; }
+
+/* cincin fokus yang konsisten untuk pengguna keyboard */
+:where(a, button, [role="button"], summary):focus-visible { outline: 2px solid var(--green); outline-offset: 2px; border-radius: 0.5rem; }
+
+/* transisi tema (kelas dipasang sebentar oleh ui.js saat tombol tema ditekan) */
+html.ui-tema, html.ui-tema *, html.ui-tema *::before, html.ui-tema *::after {
+    transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease, fill 0.4s ease !important;
+}
+
+/* ---------- 2. perbaikan tata letak (bug HP) ---------- */
+/* Kolom "1fr" berarti minmax(auto,1fr): tabel lebar mendorong kartu melewati layar. minmax(0,1fr) + min-width:0 memperbaikinya. */
+.pinjam-layout > *, .editor-layout > *, .charts-grid > *, .kpi-grid > * { min-width: 0; }
+@media (max-width: 1100px) {
+    .pinjam-layout { grid-template-columns: minmax(0, 1fr); }
+    .editor-layout { grid-template-columns: minmax(0, 1fr); }
+}
+.main-content { min-width: 0; }
+.panel, .chart-card, .table-card { max-width: 100%; }
+
+@media (max-width: 768px) {
+    .main-content { padding: 0.9rem 0.9rem calc(1.25rem + env(safe-area-inset-bottom, 0px)); }
+    .header { margin-bottom: 1rem; row-gap: 0.4rem; }
+    .header h2 { letter-spacing: -0.01em; }
+    .header-right { gap: 0.5rem; }
+    .page-sub { font-size: 0.66rem; }
+
+    /* sentuhan: target minimal 40px, huruf isian 16px agar iOS tidak memperbesar halaman saat mengetik */
+    .btn { min-height: 2.5rem; }
+    .ic-btn { width: 2.4rem; height: 2.4rem; }
+    .btn-icon { min-width: 2.4rem; min-height: 2.4rem; }
+    .in, input.in, select.in, textarea.in, .field input, .field select, .field textarea,
+    .list-tools input, .list-tools select { font-size: 16px; }
+    .seg button { padding: 0.45rem 0.8rem; }
+
+    /* tab lantai: bisa digeser, dengan pudar di tepi kanan sebagai petunjuk ada lanjutannya */
+    .floor-tabs { overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch;
+        -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent); mask-image: linear-gradient(90deg, #000 88%, transparent); }
+    .floor-tabs::-webkit-scrollbar { display: none; }
+    .floor-tabs > * { scroll-snap-align: start; flex: none; }
+
+    /* kartu ruang di dashboard: dua kolom, lebih ringkas */
+    .room-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
+    .rk { min-height: 92px; padding: 0.65rem; }
+    .room-slide-head { flex-wrap: wrap; row-gap: 0.15rem; }
+    .room-slide-head h4 { font-size: 1.05rem; }
+
+    /* hamburger lebih jelas */
+    .sidebar-toggle { box-shadow: var(--ui-bayang); }
+    .toast { max-width: calc(100vw - 1.5rem); bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); text-align: center; }
+}
+@media (max-width: 420px) {
+    .kpi-card { padding: 0.85rem; }
+    .kpi-title { font-size: 0.74rem; }
+    .list-tools { gap: 0.5rem; }
+    .tools-right { width: 100%; }
+    .tools-right > * { flex: 1; min-width: 0; }
+}
+
+/* ---------- 3. tabel -> kartu di HP ---------- */
+/* ui.js memberi kelas ui-kartu pada tabel daftar (Peminjaman, Daftar jadwal, Agenda dashboard) dan data-label pada tiap sel. */
+table.ui-kartu td.ui-penuh { grid-column: 1 / -1; }
+@media (max-width: 640px) {
+    .tbl-wrap, .agenda-wrap { overflow: visible; }
+    table.ui-kartu { display: block; width: 100%; min-width: 0 !important; }
+    table.ui-kartu thead { display: none; }
+    table.ui-kartu tbody { display: grid; gap: 0.7rem; padding: 0.8rem; }
+    table.agenda.ui-kartu tbody { padding: 0.5rem 0 0; }
+    table.ui-kartu tbody tr:not(.empty-row):not(.grup-hari):not(.ui-kosong) {
+        display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 0.75rem;
+        background: var(--surface-2); border: 1px solid var(--border-color); border-radius: 0.9rem; overflow: hidden;
+        box-shadow: var(--ui-bayang); transition: transform 0.2s var(--ui-ease), box-shadow 0.2s ease;
+    }
+    table.ui-kartu tbody tr:not(.empty-row):not(.grup-hari):not(.ui-kosong):active { transform: scale(0.985); }
+    table.ui-kartu td { display: block; width: auto; min-width: 0; padding: 0.5rem 0.9rem; border-bottom: 0; overflow-wrap: anywhere; color: var(--text-main); white-space: normal; }
+    table.ui-kartu td::before {
+        content: attr(data-label); display: block; margin-bottom: 0.15rem;
+        font: 600 0.62rem/1.2 ui-monospace, Consolas, monospace; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted);
+    }
+    table.ui-kartu td:not([data-label])::before, table.ui-kartu td[data-label=""]::before { display: none; }
+    table.ui-kartu tr:not(.empty-row):not(.grup-hari):not(.ui-kosong) td:first-child {
+        grid-column: 1 / -1; padding-top: 0.7rem; padding-bottom: 0.45rem; font-weight: 600;
+        background: linear-gradient(90deg, rgba(16, 185, 129, 0.10), transparent); border-bottom: 1px solid var(--border-color);
+    }
+    table.ui-kartu td small { font-weight: 400; }
+    table.ui-kartu td.aksi, table.ui-kartu td.ui-aksi { grid-column: 1 / -1; width: auto; padding-top: 0.45rem; padding-bottom: 0.7rem; border-top: 1px dashed var(--border-color); }
+    table.ui-kartu td.aksi::before, table.ui-kartu td.ui-aksi::before { display: none; }
+    table.ui-kartu td .row-act { display: flex; justify-content: flex-end; gap: 0.5rem; }
+    table.ui-kartu td strong { font-size: 0.9rem; }
+    table.ui-kartu tr.empty-row, table.ui-kartu tr.ui-kosong { display: block; background: none; border: 0; box-shadow: none; }
+    table.ui-kartu tr.empty-row td, table.ui-kartu tr.ui-kosong td { display: block; text-align: center; padding: 1.6rem 1rem; background: none; border: 0; font-weight: 400; color: var(--text-muted); }
+    table.ui-kartu tr.empty-row td::before, table.ui-kartu tr.ui-kosong td::before { display: none; }
+    table.ui-kartu tr.grup-hari { display: block; background: none; border: 0; box-shadow: none; overflow: visible; margin-top: 0.3rem; }
+    table.ui-kartu tr.grup-hari td { display: block; background: none; border: 0; padding: 0.2rem 0.2rem 0; color: var(--green); }
+    table.ui-kartu tr.grup-hari td::before { display: none; }
+    .tbl-klik tbody tr:not(.empty-row):not(.grup-hari):hover td { background: none; }
+    .tbl-klik tbody tr:not(.empty-row):not(.grup-hari):hover td:first-child { background: linear-gradient(90deg, rgba(16, 185, 129, 0.10), transparent); }
+}
+
+/* kartu "Ruang Hari Ini": tinggi mengikuti slide yang sedang tampil (diatur ui.js), bukan slide terpanjang */
+.room-track { align-items: flex-start; transition: height 0.4s var(--ui-ease); }
+@media (max-width: 420px) { .seg button { padding: 0.4rem 0.55rem; font-size: 0.78rem; } }
+
+/* ---------- 4. kartu, tombol, input, navigasi ---------- */
+.panel, .chart-card, .kpi-card, .table-card, .msgr {
+    box-shadow: 0 0 0 1px var(--border-color), var(--ui-bayang);
+    transition: box-shadow 0.3s ease, transform 0.3s var(--ui-ease), background-color 0.25s ease;
+}
+.kpi-card:hover, .chart-card:hover { box-shadow: 0 0 0 1px var(--border-color), var(--ui-bayang-naik); }
+@media (hover: hover) { .kpi-card:hover { transform: translateY(-3px); } }
+
+.btn, .btn-icon, .btn-round, .ic-btn, .seg button, .pager .btn, .room-arrow {
+    transition: transform 0.18s var(--ui-ease), box-shadow 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, filter 0.2s ease;
+}
+@media (hover: hover) {
+    .btn:hover:not(:disabled), .btn-icon:hover, .ic-btn:hover, .room-arrow:hover:not(:disabled) { transform: translateY(-1px); }
+}
+.btn:active:not(:disabled), .btn-icon:active, .btn-round:active, .ic-btn:active, .seg button:active, .room-arrow:active:not(:disabled) { transform: scale(0.95); }
+.btn.primary { background-image: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 6px 16px rgba(16, 185, 129, 0.28); }
+.btn.primary:hover:not(:disabled) { box-shadow: 0 10px 24px rgba(16, 185, 129, 0.38); }
+.btn.primary:disabled { box-shadow: none; }
+.btn.danger { transition: transform 0.18s var(--ui-ease), background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease; }
+.btn-icon:hover { box-shadow: var(--ui-bayang); }
+
+/* tombol "Ajukan ruang" berupa tautan: tanpa garis bawah */
+a.btn, a.btn:hover, .btn a { text-decoration: none; }
+
+/* segmen / tab: gelembung penanda yang bergeser halus */
+.seg button.active { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); }
+
+/* input: cincin hijau lembut saat fokus */
+.in, .field input, .field select, .field textarea, .list-tools input, .list-tools select {
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+.in:focus, .field input:focus, .field select:focus, .field textarea:focus, .list-tools input:focus, .list-tools select:focus {
+    outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.16);
+}
+
+/* navigasi samping */
+.nav-item { transition: background-color 0.2s ease, color 0.2s ease, padding 0.2s ease; }
+.nav-item .icon { transition: transform 0.25s var(--ui-spring); }
+@media (hover: hover) { .nav-item:hover .icon { transform: scale(1.14) rotate(-4deg); } }
+.nav-item:active .icon { transform: scale(0.9); }
+
+/* kartu ruang dan baris tabel */
+.rk { transition: transform 0.22s var(--ui-ease), box-shadow 0.22s ease, filter 0.2s ease; }
+@media (hover: hover) { .rk:hover { box-shadow: 0 10px 22px rgba(0, 0, 0, 0.2); } }
+.tbl tbody tr { transition: background-color 0.2s ease; }
+.badge-st { transition: transform 0.2s var(--ui-spring); }
+tr:hover .badge-st { transform: scale(1.06); }
+
+/* lencana pesan: berdenyut halus saat ada yang belum dibaca */
+.nav-badge:not([hidden]) { animation: ui-denyut 2.4s ease-in-out infinite; }
+@keyframes ui-denyut { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.14); } }
+.sidebar.expanded .nav-badge:not([hidden]) { animation-name: ui-denyut-tengah; }
+@keyframes ui-denyut-tengah { 0%, 100% { transform: translateY(-50%) scale(1); } 50% { transform: translateY(-50%) scale(1.14); } }
+@media (max-width: 768px) { .nav-badge:not([hidden]) { animation-name: ui-denyut-tengah; } }
+
+/* titik "tersinkronisasi" berdenyut */
+.sync .dot { position: relative; }
+.sync:not(.error):not(.dirty) .dot::after { content: ""; position: absolute; inset: -3px; border-radius: 50%; background: var(--green); opacity: 0.3; animation: ui-riak 2.2s ease-out infinite; }
+@keyframes ui-riak { 0% { transform: scale(0.7); opacity: 0.35; } 100% { transform: scale(1.7); opacity: 0; } }
+
+/* ---------- 5. jendela, pesan, toast ---------- */
+@keyframes ui-muncul { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ui-modal-masuk { 0% { opacity: 0; transform: translateY(46px) scale(0.88); } 100% { opacity: 1; transform: none; } }
+@keyframes ui-sheet-masuk { 0% { transform: translateY(100%); } 100% { transform: none; } }
+.room-modal:not([hidden]), .pf-modal, .al-modal { animation: ui-muncul 0.3s ease backwards; }
+.room-modal:not([hidden]) .room-modal-box, .pf-box, .al-box { animation: ui-modal-masuk 0.5s var(--ui-spring) backwards; }
+@media (max-width: 768px) {
+    .room-modal:not([hidden]) .room-modal-box { animation-name: ui-sheet-masuk; animation-duration: 0.45s; animation-timing-function: var(--ui-ease); }
+}
+
+/* toast: memantul masuk + garis waktu yang menyusut sampai toast hilang */
+.toast { overflow: hidden; transition: opacity 0.25s ease, transform 0.55s var(--ui-spring), background-color 0.2s ease; }
+.toast::after { content: ""; position: absolute; left: 0; bottom: 0; width: 100%; height: 3px; background: currentColor; opacity: 0.35; transform-origin: left; transform: scaleX(0); }
+.toast.show::after { animation: ui-toast-garis 3.2s linear forwards; }
+@keyframes ui-toast-garis { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+/* gelembung chat memantul masuk dari sisi pengirimnya */
+@keyframes ui-gelembung-kanan { 0% { opacity: 0; transform: translateX(46px) scale(0.85); } 100% { opacity: 1; transform: none; } }
+@keyframes ui-gelembung-kiri { 0% { opacity: 0; transform: translateX(-46px) scale(0.85); } 100% { opacity: 1; transform: none; } }
+.msg.me { animation: ui-gelembung-kanan 0.5s var(--ui-spring) backwards; }
+.msg.them { animation: ui-gelembung-kiri 0.5s var(--ui-spring) backwards; }
+.kontak { transition: background-color 0.2s ease, transform 0.2s var(--ui-ease); }
+.kontak:active { transform: scale(0.98); }
+.avatar { transition: transform 0.3s var(--ui-spring); }
+.kontak:hover .avatar { transform: scale(1.12) rotate(-4deg); }
+
+/* menu foto profil: butirnya masuk bergantian */
+@keyframes ui-butir { 0% { opacity: 0; transform: translateX(-16px); } 100% { opacity: 1; transform: none; } }
+.pf-menu.buka .pf-item, .pf-menu.buka .pf-head { animation: ui-butir 0.35s var(--ui-ease) backwards; }
+.pf-menu.buka .pf-head { animation-delay: 0.02s; }
+.pf-menu.buka .pf-item:nth-of-type(1) { animation-delay: 0.08s; }
+.pf-menu.buka .pf-item:nth-of-type(2) { animation-delay: 0.13s; }
+.pf-menu.buka .pf-item:nth-of-type(3) { animation-delay: 0.18s; }
+.pf-menu.buka .pf-item:nth-of-type(4) { animation-delay: 0.23s; }
+.pf-menu.buka .pf-item:nth-of-type(5) { animation-delay: 0.28s; }
+
+/* ---------- 6. animasi masuk ---------- */
+/* Memakai fill-mode "backwards": setelah selesai, elemen kembali ke gayanya sendiri sehingga efek hover (transform) tetap berfungsi. */
+@keyframes ui-naik { 0% { opacity: 0; transform: translateY(40px) scale(0.96); } 100% { opacity: 1; transform: none; } }
+@keyframes ui-turun { 0% { opacity: 0; transform: translateY(-28px); } 100% { opacity: 1; transform: none; } }
+@keyframes ui-kartu-pop { 0% { opacity: 0; transform: perspective(700px) rotateX(-18deg) translateY(38px) scale(0.9); } 100% { opacity: 1; transform: none; } }
+@keyframes ui-baris { 0% { opacity: 0; transform: translateX(-30px); } 100% { opacity: 1; transform: none; } }
+@keyframes ui-geser-kanan { 0% { opacity: 0; transform: translateX(-34px); } 100% { opacity: 1; transform: none; } }
+@keyframes ui-ubin { 0% { opacity: 0; transform: scale(0.78) translateY(16px); } 100% { opacity: 1; transform: none; } }
+@keyframes ui-logo { 0% { opacity: 0; transform: scale(0.55) rotate(-10deg); } 100% { opacity: 1; transform: none; } }
+@keyframes ui-garis { 0% { width: 0; opacity: 0; } 100% { width: 2.8rem; opacity: 1; } }
+
+.main-content > .header { animation: ui-turun 0.75s var(--ui-ease) backwards; }
+.main-content > :not(.header) { animation: ui-naik 0.85s var(--ui-ease) backwards; }
+.main-content > :nth-child(2) { animation-delay: 0.12s; }
+.main-content > :nth-child(3) { animation-delay: 0.24s; }
+.main-content > :nth-child(4) { animation-delay: 0.36s; }
+.main-content > :nth-child(5) { animation-delay: 0.48s; }
+.main-content > :nth-child(n + 6) { animation-delay: 0.56s; }
+
+/* garis aksen di bawah judul halaman tumbuh dari kiri */
+.header h2 { position: relative; padding-bottom: 0.55rem; }
+.header h2::after {
+    content: ""; position: absolute; left: 0; bottom: 0; height: 3px; width: 2.8rem; border-radius: 3px;
+    background: linear-gradient(90deg, var(--green), #3b82f6); animation: ui-garis 0.9s 0.4s var(--ui-ease) backwards;
+}
+
+/* sidebar: logo memantul masuk, menu masuk bergantian dari kiri (hanya kunjungan pertama sesi; pindah halaman tidak mengulang) */
+.logo { animation: ui-logo 0.8s var(--ui-spring) backwards; }
+.nav-menu > .nav-item, .sidebar-bottom > .nav-item { animation: ui-geser-kanan 0.6s var(--ui-ease) backwards; }
+.nav-menu > .nav-item:nth-child(1) { animation-delay: 0.18s; }
+.nav-menu > .nav-item:nth-child(2) { animation-delay: 0.25s; }
+.nav-menu > .nav-item:nth-child(3) { animation-delay: 0.32s; }
+.nav-menu > .nav-item:nth-child(4) { animation-delay: 0.39s; }
+.nav-menu > .nav-item:nth-child(5) { animation-delay: 0.46s; }
+.sidebar-bottom > .nav-item:nth-child(1) { animation-delay: 0.53s; }
+.sidebar-bottom > .nav-item:nth-child(2) { animation-delay: 0.60s; }
+html[data-ui-sb] .logo, html[data-ui-sb] .nav-menu > .nav-item, html[data-ui-sb] .sidebar-bottom > .nav-item { animation: none; }
+
+/* kartu ringkasan masuk dengan efek miring-pop, bergantian */
+.kpi-grid > .kpi-card { animation: ui-kartu-pop 0.85s var(--ui-spring) backwards; }
+.kpi-grid > .kpi-card:nth-child(1) { animation-delay: 0.20s; }
+.kpi-grid > .kpi-card:nth-child(2) { animation-delay: 0.32s; }
+.kpi-grid > .kpi-card:nth-child(3) { animation-delay: 0.44s; }
+.kpi-grid > .kpi-card:nth-child(4) { animation-delay: 0.56s; }
+.pinjam-layout > :nth-child(2), .editor-layout > :nth-child(2) { animation: ui-naik 0.85s var(--ui-ease) 0.3s backwards; }
+
+/* baris tabel masuk berurutan dari kiri setiap daftar dimuat ulang (ganti halaman / filter / tab) */
+.tbl tbody tr:not(.empty-row), table.agenda tbody tr { animation: ui-baris 0.55s var(--ui-ease) backwards; }
+.tbl tbody tr:nth-child(2), table.agenda tbody tr:nth-child(2) { animation-delay: 0.06s; }
+.tbl tbody tr:nth-child(3), table.agenda tbody tr:nth-child(3) { animation-delay: 0.12s; }
+.tbl tbody tr:nth-child(4), table.agenda tbody tr:nth-child(4) { animation-delay: 0.18s; }
+.tbl tbody tr:nth-child(5), table.agenda tbody tr:nth-child(5) { animation-delay: 0.24s; }
+.tbl tbody tr:nth-child(6), table.agenda tbody tr:nth-child(6) { animation-delay: 0.30s; }
+.tbl tbody tr:nth-child(7), table.agenda tbody tr:nth-child(7) { animation-delay: 0.36s; }
+.tbl tbody tr:nth-child(8), table.agenda tbody tr:nth-child(8) { animation-delay: 0.42s; }
+.tbl tbody tr:nth-child(n + 9), table.agenda tbody tr:nth-child(n + 9) { animation-delay: 0.48s; }
+
+/* kartu ruang muncul membesar dengan efek pantul, bergantian */
+.room-tiles > .rk, .room-grid > * { animation: ui-ubin 0.6s var(--ui-spring) backwards; }
+.room-tiles > :nth-child(2), .room-grid > :nth-child(2) { animation-delay: 0.07s; }
+.room-tiles > :nth-child(3), .room-grid > :nth-child(3) { animation-delay: 0.14s; }
+.room-tiles > :nth-child(4), .room-grid > :nth-child(4) { animation-delay: 0.21s; }
+.room-tiles > :nth-child(5), .room-grid > :nth-child(5) { animation-delay: 0.28s; }
+.room-tiles > :nth-child(6), .room-grid > :nth-child(6) { animation-delay: 0.35s; }
+.room-tiles > :nth-child(n + 7), .room-grid > :nth-child(n + 7) { animation-delay: 0.42s; }
+
+/* latar bergerak: dua cahaya besar melayang pelan di belakang konten */
+body::before, body::after { content: ""; position: fixed; z-index: -1; border-radius: 50%; pointer-events: none; will-change: transform; filter: blur(64px); }
+body::before { width: 40rem; height: 40rem; left: -12rem; top: -14rem; opacity: 0.55;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.40), transparent 66%); animation: ui-melayang-a 24s ease-in-out infinite alternate; }
+body::after { width: 36rem; height: 36rem; right: -10rem; bottom: -14rem; opacity: 0.5;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.34), transparent 66%); animation: ui-melayang-b 29s ease-in-out infinite alternate; }
+:root[data-theme="light"] body::before { opacity: 0.40; }
+:root[data-theme="light"] body::after { opacity: 0.34; }
+@keyframes ui-melayang-a { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(18vw, 14vh) scale(1.15); } 100% { transform: translate(6vw, 30vh) scale(0.95); } }
+@keyframes ui-melayang-b { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-20vw, -12vh) scale(1.2); } 100% { transform: translate(-6vw, -28vh) scale(0.95); } }
+@media (max-width: 768px) { body::before, body::after { filter: blur(48px); width: 26rem; height: 26rem; } }
+
+/* ---------- 7. efek interaksi ---------- */
+/* riak klik (elemen dibuat ui.js; memakai elemen khusus <ui-riak> agar tidak terkena aturan "span" milik sidebar) */
+ui-riak { position: absolute; inset: 0; display: block; overflow: hidden; border-radius: inherit; pointer-events: none; z-index: 1; }
+ui-riak > ui-g { position: absolute; display: block; border-radius: 50%; background: currentColor; opacity: 0.3; transform: scale(0); animation: ui-gelombang 0.7s ease-out forwards; }
+@keyframes ui-gelombang { to { transform: scale(1); opacity: 0; } }
+
+/* kilau yang menyapu tombol utama saat disorot */
+.btn.primary { position: relative; overflow: hidden; }
+.btn.primary::after { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 60%; pointer-events: none; transform: translateX(-130%) skewX(-18deg);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.38), transparent); }
+@media (hover: hover) { .btn.primary:hover:not(:disabled)::after { animation: ui-kilau 0.9s ease; } }
+@keyframes ui-kilau { to { transform: translateX(260%) skewX(-18deg); } }
+
+/* kartu ringkasan & kartu ruang: miring mengikuti kursor (diatur ui.js lewat transform inline) */
+.kpi-card, .rk { transform-style: preserve-3d; }
+.ui-miring-lepas { transition: transform 0.5s var(--ui-spring) !important; }
+
+/* muncul saat di-scroll: kartu yang berada di bawah layar saat halaman dibuka tampil ketika didekati */
+.ui-reveal { opacity: 0; transform: translateY(54px) scale(0.96); animation: none !important; transition: opacity 0.8s var(--ui-ease), transform 0.8s var(--ui-ease); }
+.ui-reveal.ui-lihat { opacity: 1; transform: none; }
+.ui-tampil { animation: none !important; }   /* sudah tampil lewat scroll: jangan memutar ulang animasi masuk bawaannya */
+
+/* sakelar animasi di menu foto profil */
+.pf-item.ui-sakelar { cursor: pointer; }
+.pf-item.ui-sakelar > span:not(.pf-ik) { display: flex; flex-direction: column; gap: 0.05rem; }
+.pf-item.ui-sakelar small { font-size: 0.7rem; color: var(--text-muted); }
+ui-sw { position: relative; display: block; flex: none; width: 2.4rem; height: 1.35rem; border-radius: 999px; background: var(--surface-3); transition: background-color 0.25s ease; }
+ui-sw::after { content: ""; position: absolute; top: 0.15rem; left: 0.15rem; width: 1.05rem; height: 1.05rem; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); transition: transform 0.35s var(--ui-spring); }
+.pf-item.ui-sakelar[aria-checked="true"] ui-sw { background: var(--green); }
+.pf-item.ui-sakelar[aria-checked="true"] ui-sw::after { transform: translateX(1.05rem); }
+
+/* ---------- 8. perpindahan antarhalaman ---------- */
+/* Browser yang mendukung (Chrome/Edge 126+, Safari 18.2+) memberi transisi halus saat pindah menu: sidebar tetap diam,
+   isi halaman bergeser. Browser lain mengabaikannya dengan aman. */
+@view-transition { navigation: auto; }
+.sidebar { view-transition-name: ui-sidebar; }
+.main-content { view-transition-name: ui-konten; }
+::view-transition-old(ui-konten) { animation: ui-vt-keluar 0.3s ease both; }
+::view-transition-new(ui-konten) { animation: ui-vt-masuk 0.55s var(--ui-ease) both; }
+@keyframes ui-vt-keluar { to { opacity: 0; transform: translateX(-36px) scale(0.985); } }
+@keyframes ui-vt-masuk { from { opacity: 0; transform: translateX(48px) scale(0.985); } }
+::view-transition-group(ui-sidebar) { animation-duration: 0.3s; }
+::view-transition-old(ui-sidebar), ::view-transition-new(ui-sidebar) { animation: none; mix-blend-mode: normal; }
+
+/* ---------- hemat gerak ---------- */
+/* Dipakai bila perangkat meminta "kurangi gerakan" (kecuali pengguna memilih "Animasi penuh") atau pengguna memilih "Hemat". */
+@media (prefers-reduced-motion: reduce) {
+    html:not([data-animasi]) *, html:not([data-animasi]) *::before, html:not([data-animasi]) *::after { animation: none !important; transition-duration: 0.01ms !important; }
+    html:not([data-animasi]) { scroll-behavior: auto; }
+}
+html[data-animasi="hemat"], html[data-animasi="hemat"] * , html[data-animasi="hemat"] *::before, html[data-animasi="hemat"] *::after {
+    animation: none !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important;
+}
+html[data-animasi="hemat"]::view-transition-group(*), html[data-animasi="hemat"]::view-transition-old(*), html[data-animasi="hemat"]::view-transition-new(*) { animation: none !important; }
+html[data-animasi="hemat"] .ui-reveal { opacity: 1; transform: none; }

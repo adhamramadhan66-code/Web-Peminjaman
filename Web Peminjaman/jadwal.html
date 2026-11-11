@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Lindungi halaman: hanya dibuka jika sudah masuk (sesi di server dicek ulang oleh pesan-notif.js).
+        (function () {
+            try {
+                const user = JSON.parse(sessionStorage.getItem('kampuslyCurrentUser') || 'null');
+                if (!user || !user.email) { window.location.replace('index.html'); return; }
+                document.documentElement.dataset.peran = user.peran === 'admin' ? 'admin' : 'pengguna';
+                try {   // preferensi tampilan dipasang sebelum halaman digambar (lihat ui.css / ui.js)
+                    const pa = localStorage.getItem('ui-animasi');
+                    if (pa === 'penuh' || pa === 'hemat') document.documentElement.dataset.animasi = pa;
+                    if (sessionStorage.getItem('ui-sb')) document.documentElement.setAttribute('data-ui-sb', ''); else sessionStorage.setItem('ui-sb', '1');
+                } catch (e) { /* abaikan */ }
+            } catch (error) { window.location.replace('index.html'); }
+        })();
+    </script>
+    <title>Jadwal Ruang | Kampusly</title>
+    <link rel="stylesheet" href="style.css?v=17">
+    <link rel="stylesheet" href="denah.css?v=8">
+    <link rel="stylesheet" href="jadwal.css?v=7">
+    <link rel="stylesheet" href="pesan.css?v=3">
+    <link rel="stylesheet" href="profil.css?v=1">
+    <link rel="stylesheet" href="ui.css?v=2">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 'dark'; }
+        catch (e) { document.documentElement.dataset.theme = 'dark'; }
+    </script>
+</head>
+<body class="preload">
+    <aside class="sidebar" id="mainSidebar">
+        <div class="sidebar-top">
+            <div class="logo">
+                <img src="logo-tsu.png" alt="TSU Logo" class="logo-img">
+            </div>
+            <nav class="nav-menu">
+                <a href="dashboard.html" class="nav-item">
+                    <i data-lucide="layout-dashboard" class="icon"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="jadwal.html" class="nav-item active">
+                    <i data-lucide="calendar-days" class="icon"></i>
+                    <span>Jadwal Ruang</span>
+                </a>
+                <a href="peminjaman.html" class="nav-item">
+                    <i data-lucide="calendar-check" class="icon"></i>
+                    <span>Peminjaman</span>
+                </a>
+                <a href="pesan.html" class="nav-item" id="navPesan">
+                    <i data-lucide="message-circle" class="icon"></i>
+                    <span>Pesan</span>
+                    <em class="nav-badge" hidden>0</em>
+                </a>
+                <a href="denah.html" class="nav-item khusus-admin">
+                    <i data-lucide="map" class="icon"></i>
+                    <span>Editor Ruang</span>
+                </a>
+            </nav>
+        </div>
+        <div class="sidebar-bottom">
+            <a href="#" class="nav-item">
+                <i data-lucide="settings" class="icon"></i>
+                <span>Settings</span>
+            </a>
+            <a href="index.html" class="nav-item" id="logoutBtn" title="Keluar dari akun">
+                <i data-lucide="log-out" class="icon"></i>
+                <span>Log out</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="header">
+            <div>
+                <p class="page-sub">Campus Operations / 2026</p>
+                <h2>Jadwal ruang</h2>
+            </div>
+            <div class="header-right">
+                <span class="sync" id="syncStatus"><i class="dot"></i><span>Memuat…</span></span>
+                <button class="btn-icon" type="button" id="themeToggle" aria-label="Ganti tema gelap/terang" title="Ganti tema">
+                    <svg class="theme-icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+                    <svg class="theme-icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                </button>
+                <span id="currentUserLabel" class="user-label">Admin TSU</span>
+                <img src="https://i.pravatar.cc/150?img=32" alt="Profil Admin TSU" class="profile-img">
+            </div>
+        </header>
+
+        <div class="editor-toolbar">
+            <div class="floor-tabs" id="floorTabs"></div>
+            <div class="day-nav">
+                <button type="button" class="btn" id="prevDay" aria-label="Hari sebelumnya"><i data-lucide="chevron-left"></i></button>
+                <input class="in" type="date" id="tgl" aria-label="Pilih tanggal">
+                <button type="button" class="btn" id="nextDay" aria-label="Hari berikutnya"><i data-lucide="chevron-right"></i></button>
+                <button type="button" class="btn" id="hariIni">Hari ini</button>
+                <a class="btn primary" href="peminjaman.html"><i data-lucide="plus"></i> Ajukan ruang</a>
+            </div>
+        </div>
+
+        <section class="panel">
+            <div class="canvas-head">
+                <div>
+                    <p class="page-sub" id="canvasCrumb">Jadwal ruang</p>
+                    <h3 id="canvasTitle"></h3>
+                    <p class="hint" id="summary"></p>
+                </div>
+                <div class="filter-chips">
+                    <label><input type="checkbox" id="chKuliah" checked><i class="i-kuliah"></i> Kuliah</label>
+                    <label><input type="checkbox" id="chKegiatan" checked><i class="i-kegiatan"></i> Kegiatan</label>
+                    <label><input type="checkbox" id="chMenunggu" checked><i class="i-menunggu"></i> Menunggu persetujuan</label>
+                </div>
+            </div>
+            <div class="tt-wrap"><div class="tt" id="tt"></div></div>
+        </section>
+
+        <section class="panel" id="daftarPanel" style="margin-top:1.5rem">
+            <div class="list-head list-head-flex">
+                <div>
+                    <h3>Daftar jadwal</h3>
+                    <p>Seluruh kegiatan/peminjaman dan jadwal kuliah. Klik sebuah baris untuk melihatnya di timeline di atas.</p>
+                </div>
+                <div class="list-actions khusus-admin">
+                    <button type="button" class="btn" id="btnTemplate" title="Unduh contoh berkas Excel untuk tab ini"><i data-lucide="download"></i> Template</button>
+                    <button type="button" class="btn" id="btnImpor" title="Tambahkan data dari berkas Excel (.xlsx / .xls / .csv)"><i data-lucide="file-spreadsheet"></i> Impor Excel</button>
+                    <button type="button" class="btn primary" id="btnTambah"><i data-lucide="plus"></i> Tambah data</button>
+                    <input type="file" id="fileExcel" accept=".xlsx,.xls,.csv" hidden>
+                </div>
+            </div>
+            <div class="list-tools">
+                <div class="seg" id="dTabs" role="tablist" aria-label="Jenis jadwal">
+                    <button type="button" data-t="kegiatan" class="active">Kegiatan &amp; peminjaman</button>
+                    <button type="button" data-t="kuliah">Jadwal kuliah</button>
+                </div>
+                <div class="tools-right">
+                    <select class="in" id="dFilter" aria-label="Filter"></select>
+                    <input class="in" type="search" id="dCari" aria-label="Cari" placeholder="Cari kegiatan, pemohon, ruang">
+                </div>
+            </div>
+            <div class="tbl-wrap">
+                <table class="tbl tbl-klik">
+                    <thead id="dHead"></thead>
+                    <tbody id="dBody"><tr class="empty-row"><td>Memuat…</td></tr></tbody>
+                </table>
+            </div>
+            <div class="pager">
+                <span id="dInfo"></span>
+                <span class="tool-group">
+                    <button type="button" class="btn" id="dPrev"><i data-lucide="chevron-left"></i> Sebelumnya</button>
+                    <button type="button" class="btn" id="dNext">Berikutnya <i data-lucide="chevron-right"></i></button>
+                </span>
+            </div>
+        </section>
+
+    </main>
+
+    <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Buka sidebar" aria-expanded="false" aria-controls="mainSidebar" title="Buka/tutup menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+    <div class="toast" id="toast" role="status"></div>
+
+    <div class="room-modal" id="sesiModal" role="dialog" aria-modal="true" aria-labelledby="sesiTitle" hidden>
+        <div class="room-modal-box">
+            <div class="room-modal-head">
+                <div><h3 id="sesiTitle"></h3><p id="sesiSub"></p></div>
+                <button type="button" class="btn-round" id="sesiClose" aria-label="Tutup"><i data-lucide="x"></i></button>
+            </div>
+            <div class="room-modal-list" id="sesiBody"></div>
+        </div>
+    </div>
+
+    <!-- Form tambah / ubah data (khusus admin) -->
+    <div class="room-modal" id="formModal" role="dialog" aria-modal="true" aria-labelledby="formTitle" hidden>
+        <div class="room-modal-box modal-lebar">
+            <div class="room-modal-head">
+                <div><h3 id="formTitle"></h3><p id="formSub"></p></div>
+                <button type="button" class="btn-round" id="formClose" aria-label="Tutup"><i data-lucide="x"></i></button>
+            </div>
+            <form class="room-modal-list kform" id="kForm" novalidate>
+                <div class="form-err" id="kErr" role="alert"></div>
+                <div class="kgrid" id="kFields"></div>
+                <div class="kbtns">
+                    <button type="button" class="btn" id="kBatal">Batal</button>
+                    <button type="submit" class="btn primary" id="kSimpan">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Pratinjau impor Excel (khusus admin) -->
+    <div class="room-modal" id="imporModal" role="dialog" aria-modal="true" aria-labelledby="imporTitle" hidden>
+        <div class="room-modal-box modal-lebar">
+            <div class="room-modal-head">
+                <div><h3 id="imporTitle">Impor dari Excel</h3><p id="imporSub"></p></div>
+                <button type="button" class="btn-round" id="imporClose" aria-label="Tutup"><i data-lucide="x"></i></button>
+            </div>
+            <div class="room-modal-list" id="imporBody"></div>
+        </div>
+    </div>
+
+    <script src="app.js?v=2"></script>
+    <script src="alasan.js?v=1"></script>
+    <script src="jadwal.js?v=6"></script>
+    <script src="jadwal-kelola.js?v=1"></script>
+    <script src="pesan-notif.js?v=1"></script>
+    <script src="profil.js?v=1"></script>
+    <script src="ui.js?v=2"></script>
+    <script src="mobile.js?v=1"></script>
+</body>
+</html>

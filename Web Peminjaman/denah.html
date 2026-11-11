@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Lindungi halaman: hanya dibuka jika sudah masuk (sesi di server dicek ulang oleh pesan-notif.js).
+        (function () {
+            try {
+                const user = JSON.parse(sessionStorage.getItem('kampuslyCurrentUser') || 'null');
+                if (!user || !user.email) { window.location.replace('index.html'); return; }
+                document.documentElement.dataset.peran = user.peran === 'admin' ? 'admin' : 'pengguna';
+                try {   // preferensi tampilan dipasang sebelum halaman digambar (lihat ui.css / ui.js)
+                    const pa = localStorage.getItem('ui-animasi');
+                    if (pa === 'penuh' || pa === 'hemat') document.documentElement.dataset.animasi = pa;
+                    if (sessionStorage.getItem('ui-sb')) document.documentElement.setAttribute('data-ui-sb', ''); else sessionStorage.setItem('ui-sb', '1');
+                } catch (e) { /* abaikan */ }
+                if (user.peran !== 'admin') window.location.replace('peminjaman.html');   // halaman ini khusus admin
+            } catch (error) { window.location.replace('index.html'); }
+        })();
+    </script>
+    <title>Editor Ruang | Kampusly</title>
+    <link rel="stylesheet" href="style.css?v=13">
+    <link rel="stylesheet" href="denah.css?v=11">
+    <link rel="stylesheet" href="pesan.css?v=1">
+    <link rel="stylesheet" href="profil.css?v=1">
+    <link rel="stylesheet" href="ui.css?v=2">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 'dark'; }
+        catch (e) { document.documentElement.dataset.theme = 'dark'; }
+    </script>
+</head>
+<body class="preload">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="mainSidebar">
+        <div class="sidebar-top">
+            <!-- LOGO TSU -->
+            <div class="logo">
+                <img src="logo-tsu.png" alt="TSU Logo" class="logo-img">
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="dashboard.html" class="nav-item">
+                    <i data-lucide="layout-dashboard" class="icon"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="jadwal.html" class="nav-item">
+                    <i data-lucide="calendar-days" class="icon"></i>
+                    <span>Jadwal Ruang</span>
+                </a>
+                <a href="peminjaman.html" class="nav-item">
+                    <i data-lucide="calendar-check" class="icon"></i>
+                    <span>Peminjaman</span>
+                </a>
+                <a href="pesan.html" class="nav-item" id="navPesan">
+                    <i data-lucide="message-circle" class="icon"></i>
+                    <span>Pesan</span>
+                    <em class="nav-badge" hidden>0</em>
+                </a>
+                <a href="denah.html" class="nav-item active khusus-admin">
+                    <i data-lucide="map" class="icon"></i>
+                    <span>Editor Ruang</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="sidebar-bottom">
+            <a href="#" class="nav-item">
+                <i data-lucide="settings" class="icon"></i>
+                <span>Settings</span>
+            </a>
+            <a href="index.html" class="nav-item" id="logoutBtn" title="Keluar dari akun">
+                <i data-lucide="log-out" class="icon"></i>
+                <span>Log out</span>
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="header">
+            <div>
+                <p class="page-sub">Campus Operations</p>
+                <h2>Editor ruang</h2>
+            </div>
+            <div class="header-right">
+                <span class="sync" id="syncStatus"><i class="dot"></i><span>Memuat…</span></span>
+                <button class="btn-icon" type="button" id="themeToggle" aria-label="Ganti tema gelap/terang" title="Ganti tema">
+                    <svg class="theme-icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+                    <svg class="theme-icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                </button>
+                <span id="currentUserLabel" class="user-label">Admin TSU</span>
+                <img src="https://i.pravatar.cc/150?img=32" alt="Profil Admin TSU" class="profile-img">
+            </div>
+        </header>
+
+        <div class="editor-toolbar">
+            <div class="floor-tabs" id="floorTabs"></div>
+            <div class="tool-group">
+                <button type="button" class="btn" id="addRoom"><i data-lucide="plus"></i> Tambah ruang</button>
+                <button type="button" class="btn primary" id="saveBtn" disabled><i data-lucide="save"></i> Simpan data</button>
+            </div>
+        </div>
+
+        <div class="editor-layout">
+            <section class="panel">
+                <div class="canvas-head">
+                    <div>
+                        <p class="page-sub" id="canvasCrumb">Daftar ruang</p>
+                        <h3 id="canvasTitle"></h3>
+                        <p class="hint" id="summary"></p>
+                    </div>
+                    <div class="legend">
+                        <span><i class="lg tersedia"></i> Tersedia</span>
+                        <span><i class="lg dipakai"></i> Sedang dipakai</span>
+                        <span><i class="lg dipinjam"></i> Dipinjam / Jadwal kuliah</span>
+                        <span><i class="lg sk"></i> Pita biru: kuliah</span>
+                        <span><i class="lg sg"></i> Pita ungu: dipinjam pihak lain</span>
+                    </div>
+                    <div class="floor-actions">
+                        <button type="button" class="btn" id="renameFloor"><i data-lucide="pencil"></i> Ubah nama</button>
+                        <button type="button" class="btn danger" id="deleteFloor"><i data-lucide="trash-2"></i> Hapus lantai</button>
+                    </div>
+                </div>
+                <div class="room-grid" id="roomGrid"></div>
+            </section>
+            <aside class="panel detail" id="detail"></aside>
+        </div>
+    </main>
+
+    <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Buka sidebar" aria-expanded="false" aria-controls="mainSidebar" title="Buka/tutup menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+    <div class="toast" id="toast" role="status"></div>
+
+    <script src="denah.js?v=9"></script>
+    <script>
+        (function () {
+            // Tema gelap/terang
+            const root = document.documentElement, btn = document.getElementById('themeToggle');
+            const sync = () => { const dark = root.dataset.theme !== 'light'; btn.setAttribute('aria-pressed', String(dark)); btn.title = dark ? 'Ganti ke tema terang' : 'Ganti ke tema gelap'; };
+            sync();
+            btn.addEventListener('click', () => {
+                root.dataset.theme = root.dataset.theme === 'light' ? 'dark' : 'light';
+                try { localStorage.setItem('theme', root.dataset.theme); } catch (e) {}
+                sync();
+            });
+
+            // Sesi login + logout (sama seperti dashboard)
+            const KEY = 'kampuslyCurrentUser';
+            const cek = () => {
+                try {
+                    const u = JSON.parse(sessionStorage.getItem(KEY) || 'null');
+                    if (!u || !u.email) { window.location.replace('index.html'); return null; }
+                    if (u.peran !== 'admin') { window.location.replace('peminjaman.html'); return null; }
+                    return u;
+                } catch (e) { window.location.replace('index.html'); return null; }
+            };
+            const user = cek();
+            if (user) document.getElementById('currentUserLabel').textContent = user.name || user.email;
+            document.getElementById('logoutBtn').addEventListener('click', (ev) => {
+                ev.preventDefault();
+                try { sessionStorage.removeItem(KEY); } catch (e) {}
+                // Akhiri sesi di server juga; tetap lanjut ke halaman login walau permintaan gagal.
+                const selesai = () => window.location.replace('index.html?logout=1');
+                fetch('api/auth.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aksi: 'keluar' }), keepalive: true }).then(selesai, selesai);
+            });
+            window.addEventListener('pageshow', cek);
+
+            // Sidebar buka/tutup
+            const sidebar = document.getElementById('mainSidebar'), tg = document.getElementById('sidebarToggle');
+            const set = (open) => {
+                sidebar.classList.toggle('expanded', open); tg.classList.toggle('expanded', open);
+                tg.setAttribute('aria-expanded', String(open)); tg.setAttribute('aria-label', open ? 'Tutup sidebar' : 'Buka sidebar');
+            };
+            set(true);
+            tg.addEventListener('click', () => set(!sidebar.classList.contains('expanded')));
+
+            if (window.lucide) lucide.createIcons();
+            requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove('preload')));
+        })();
+    </script>
+    <script src="pesan-notif.js?v=1"></script>
+    <script src="profil.js?v=1"></script>
+    <script src="ui.js?v=2"></script>
+    <script src="mobile.js?v=1"></script>
+</body>
+</html>

@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        // Lindungi halaman: hanya dibuka jika sudah masuk (sesi di server dicek ulang oleh pesan-notif.js).
+        (function () {
+            try {
+                const user = JSON.parse(sessionStorage.getItem('kampuslyCurrentUser') || 'null');
+                if (!user || !user.email) { window.location.replace('index.html'); return; }
+                document.documentElement.dataset.peran = user.peran === 'admin' ? 'admin' : 'pengguna';
+                try {   // preferensi tampilan dipasang sebelum halaman digambar (lihat ui.css / ui.js)
+                    const pa = localStorage.getItem('ui-animasi');
+                    if (pa === 'penuh' || pa === 'hemat') document.documentElement.dataset.animasi = pa;
+                    if (sessionStorage.getItem('ui-sb')) document.documentElement.setAttribute('data-ui-sb', ''); else sessionStorage.setItem('ui-sb', '1');
+                } catch (e) { /* abaikan */ }
+            } catch (error) { window.location.replace('index.html'); }
+        })();
+    </script>
+    <title>TSU Dashboard | Kampusly</title>
+    <link rel="stylesheet" href="style.css?v=17">
+    <link rel="stylesheet" href="jadwal.css?v=5">
+    <link rel="stylesheet" href="pesan.css?v=1">
+    <link rel="stylesheet" href="profil.css?v=1">
+    <link rel="stylesheet" href="ui.css?v=2">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        // Terapkan tema tersimpan sebelum halaman digambar (mencegah kedip)
+        try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 'dark'; }
+        catch (e) { document.documentElement.dataset.theme = 'dark'; }
+    </script>
+</head>
+<!-- Class "preload" ditambahkan untuk mencegah animasi patah-patah saat pertama kali dimuat -->
+<body class="preload">
+    <!-- Efek api hijau di belakang elemen (hanya tema gelap) -->
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="mainSidebar">
+        <div class="sidebar-top">
+            <!-- LOGO TSU -->
+            <div class="logo">
+                <img src="logo-tsu.png" alt="TSU Logo" class="logo-img">
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="dashboard.html" class="nav-item active">
+                    <i data-lucide="layout-dashboard" class="icon"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="jadwal.html" class="nav-item">
+                    <i data-lucide="calendar-days" class="icon"></i>
+                    <span>Jadwal Ruang</span>
+                </a>
+                <a href="peminjaman.html" class="nav-item">
+                    <i data-lucide="calendar-check" class="icon"></i>
+                    <span>Peminjaman</span>
+                </a>
+                <a href="pesan.html" class="nav-item" id="navPesan">
+                    <i data-lucide="message-circle" class="icon"></i>
+                    <span>Pesan</span>
+                    <em class="nav-badge" hidden>0</em>
+                </a>
+                <a href="denah.html" class="nav-item khusus-admin">
+                    <i data-lucide="map" class="icon"></i>
+                    <span>Editor Ruang</span>
+                </a>
+            </nav>
+        </div>
+
+        <div class="sidebar-bottom">
+            <a href="#" class="nav-item">
+                <i data-lucide="settings" class="icon"></i>
+                <span>Settings</span>
+            </a>
+            <a href="index.html" class="nav-item" id="logoutBtn" title="Keluar dari akun">
+                <i data-lucide="log-out" class="icon"></i>
+                <span>Log out</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+        <!-- HEADER -->
+        <header class="header">
+            <h2>Dashboard</h2>
+            <div class="header-right">
+                <div class="search-box">
+                    <i data-lucide="search" class="icon-search"></i>
+                    <input type="text" placeholder="Search...">
+                </div>
+                <button class="btn-icon" type="button" id="themeToggle" aria-label="Ganti tema gelap/terang" title="Ganti tema">
+                    <!-- bulan (tampil di tema terang) & matahari (tampil di tema gelap) -->
+                    <svg class="theme-icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+                    <svg class="theme-icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                </button>
+                <button class="btn-icon" type="button" aria-label="Notifikasi"><i data-lucide="bell" class="icon"></i></button>
+                <span id="currentUserLabel" class="user-label">Admin TSU</span>
+                <img src="https://i.pravatar.cc/150?img=32" alt="Profil Admin TSU" class="profile-img">
+            </div>
+        </header>
+
+        <!-- FILTERS -->
+        <div class="filters">
+            <div class="filter-group">
+                <button type="button" data-period="day">Day</button>
+                <button type="button" data-period="week">Week</button>
+                <button type="button" data-period="month" class="active">Month</button>
+                <button type="button" data-period="year">Year</button>
+            </div>
+            
+            <div class="date-picker-wrapper">
+                <button type="button" class="date-picker" id="datePickerBtn" aria-haspopup="dialog" aria-expanded="false">
+                    <i data-lucide="calendar" class="icon-small"></i> 
+                    <span id="dateRangeText"></span>
+                </button>
+                <!-- Popup Kalender -->
+                <div class="datepicker-popup" id="datepickerPopup" role="dialog" aria-label="Pilih tanggal">
+                    <div class="popup-header">
+                        <select id="monthSelect" aria-label="Bulan"></select>
+                        <select id="yearSelect" aria-label="Tahun"></select>
+                    </div>
+                    <div class="popup-grid-header">
+                        <div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div>
+                    </div>
+                    <div class="popup-dates" id="popupDates"></div>
+                    <div class="popup-footer">
+                        <button type="button" class="popup-today" id="popupToday">Today</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI CARDS -->
+        <div class="kpi-grid">
+            <div class="kpi-card dark">
+                <p class="kpi-title">Total Ruang</p>
+                <h3 class="kpi-value" id="kpiRuang">-</h3>
+                <p class="kpi-trend positive"><i data-lucide="building-2"></i> <span id="kpiRuangSub">memuat…</span></p>
+            </div>
+            <div class="kpi-card">
+                <p class="kpi-title" id="kpiPakaiLabel">Sedang Dipakai</p>
+                <h3 class="kpi-value" id="kpiPakai">-</h3>
+                <p class="kpi-trend positive"><i data-lucide="activity"></i> <span id="kpiPakaiSub">memuat…</span></p>
+            </div>
+            <div class="kpi-card">
+                <p class="kpi-title" id="kpiAgendaLabel">Agenda Hari Ini</p>
+                <h3 class="kpi-value" id="kpiAgenda">-</h3>
+                <p class="kpi-trend positive"><i data-lucide="calendar-days"></i> <span id="kpiAgendaSub">memuat…</span></p>
+            </div>
+            <div class="kpi-card">
+                <p class="kpi-title">Menunggu Persetujuan</p>
+                <h3 class="kpi-value" id="kpiMenunggu">-</h3>
+                <p class="kpi-trend negative"><i data-lucide="clock"></i> <a href="peminjaman.html?status=menunggu">Buka daftar pengajuan</a></p>
+            </div>
+        </div>
+
+        <!-- CHARTS AREA -->
+        <div class="charts-grid">
+            <!-- RUANG HARI INI (mengikuti tanggal di kalender) -->
+            <div class="chart-card main-chart room-card" id="roomCard">
+                <div class="chart-header">
+                    <div>
+                        <h3 id="roomTitle">Ruang Hari Ini</h3>
+                        <p class="room-caption" id="roomCaption">Klik ruang untuk melihat siapa yang memakai dan mata kuliahnya</p>
+                    </div>
+                    <div class="room-nav">
+                        <span class="room-floor-label" id="roomFloorLabel"></span>
+                        <button type="button" class="room-arrow" id="roomPrev" aria-label="Lantai sebelumnya"><i data-lucide="chevron-left"></i></button>
+                        <button type="button" class="room-arrow" id="roomNext" aria-label="Lantai berikutnya"><i data-lucide="chevron-right"></i></button>
+                    </div>
+                </div>
+                <div class="room-track" id="roomTrack"></div>
+                <div class="room-dots" id="roomDots"></div>
+                <div class="room-legend">
+                    <span><i></i>Tersedia</span><span><i class="dipakai"></i>Sedang dipakai</span><span><i class="dipinjam"></i>Dipinjam / Jadwal kuliah</span><span><i class="sk"></i>Pita biru: kuliah</span><span><i class="sg"></i>Pita ungu: dipinjam pihak lain</span>
+                </div>
+            </div>
+            <div class="chart-card side-chart">
+                <div class="calendar-header">
+                    <h3 id="calTitle"></h3>
+                    <div class="calendar-nav">
+                        <button type="button" class="cal-nav-btn" id="calPrev" aria-label="Bulan sebelumnya"><i data-lucide="chevron-left"></i></button>
+                        <button type="button" class="cal-nav-btn" id="calNext" aria-label="Bulan berikutnya"><i data-lucide="chevron-right"></i></button>
+                    </div>
+                </div>
+                <div class="mini-calendar">
+                    <div class="mini-days"><div>Su</div><div>Mo</div><div>Tu</div><div>We</div><div>Th</div><div>Fr</div><div>Sa</div></div>
+                    <div class="mini-dates" id="miniDates"></div>
+                </div>
+                </div>
+        </div>
+
+        <!-- TABLE -->
+        <div class="table-card">
+            <div class="table-header">
+                <div>
+                    <h3 id="agendaTitle">Agenda Hari Ini</h3>
+                    <p class="room-caption" id="agendaCaption">Kuliah dan kegiatan yang sudah disetujui</p>
+                </div>
+                <div class="table-actions">
+                    <a class="btn-round" href="peminjaman.html" title="Ajukan ruang" aria-label="Ajukan ruang"><i data-lucide="plus"></i></a>
+                    <a class="btn-round" href="jadwal.html" id="agendaLink" title="Buka jadwal lengkap" aria-label="Buka jadwal lengkap"><i data-lucide="arrow-up-right"></i></a>
+                </div>
+            </div>
+            <div class="agenda-wrap">
+                <table class="agenda">
+                    <thead><tr><th>Waktu</th><th>Ruang</th><th>Kegiatan / Mata kuliah</th><th>Pemohon / Dosen</th><th>Jenis</th></tr></thead>
+                    <tbody id="agendaBody"><tr><td colspan="5">Memuat…</td></tr></tbody>
+                </table>
+            </div>
+            <div class="agenda-more"><span id="agendaInfo"></span><a href="jadwal.html" id="agendaMore">Lihat jadwal lengkap</a></div>
+        </div>
+    </main>
+
+
+    <!-- POPUP DETAIL RUANG PER LANTAI -->
+    <div class="room-modal" id="roomModal" role="dialog" aria-modal="true" aria-labelledby="roomModalTitle" hidden>
+        <div class="room-modal-box">
+            <div class="room-modal-head">
+                <div>
+                    <h3 id="roomModalTitle">Lantai 1</h3>
+                    <p id="roomModalSub"></p>
+                </div>
+                <button type="button" class="btn-round" id="roomModalClose" aria-label="Tutup"><i data-lucide="x"></i></button>
+            </div>
+            <div class="room-modal-list" id="roomModalList"></div>
+        </div>
+    </div>
+
+    <!-- TOMBOL BUKA/TUTUP SIDEBAR -->
+    <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Buka sidebar" aria-expanded="false" aria-controls="mainSidebar" title="Buka/tutup menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+
+    <script src="script.js?v=13"></script>
+    <script src="ruang-hari-ini.js?v=6"></script>
+    <script src="dashboard-ringkas.js?v=1"></script>
+    <script>
+        // Tombol tema gelap/terang
+        (function () {
+            const root = document.documentElement;
+            const btn = document.getElementById('themeToggle');
+            const sync = () => {
+                const dark = root.dataset.theme !== 'light';
+                btn.setAttribute('aria-pressed', String(dark));
+                btn.title = dark ? 'Ganti ke tema terang' : 'Ganti ke tema gelap';
+            };
+            sync();
+            btn.addEventListener('click', () => {
+                root.dataset.theme = root.dataset.theme === 'light' ? 'dark' : 'light';
+                try { localStorage.setItem('theme', root.dataset.theme); } catch (e) {}
+                sync();
+            });
+        })();
+    </script>
+    <script>
+        // 0. Nama akun aktif dan proses logout.
+        (function () {
+            const SESSION_KEY = 'kampuslyCurrentUser';
+            const logoutBtn = document.getElementById('logoutBtn');
+            try {
+                const user = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
+                if (!user || !user.email) {
+                    window.location.replace('index.html');
+                    return;
+                }
+                const label = document.getElementById('currentUserLabel');
+                if (label) label.textContent = user.name || user.email;
+            } catch (error) {
+                window.location.replace('index.html');
+                return;
+            }
+
+            logoutBtn.addEventListener('click', function (event) {
+                event.preventDefault();
+                try { sessionStorage.removeItem(SESSION_KEY); } catch (error) {}
+                // Akhiri sesi di server juga; tetap lanjut ke halaman login walau permintaan gagal.
+                const selesai = function () { window.location.replace('index.html?logout=1'); };
+                fetch('api/auth.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aksi: 'keluar' }), keepalive: true }).then(selesai, selesai);
+            });
+
+            // Jika dashboard dipulihkan melalui tombol Back setelah logout, cek sesi lagi.
+            window.addEventListener('pageshow', function () {
+                try {
+                    const user = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
+                    if (!user || !user.email) window.location.replace('index.html');
+                } catch (error) {
+                    window.location.replace('index.html');
+                }
+            });
+        })();
+
+        // 1. Buat ikon
+        if (window.lucide) lucide.createIcons();
+
+        // Tombol buka/tutup sidebar (awalnya terbuka)
+        (function () {
+            const sidebar = document.getElementById('mainSidebar');
+            const btn = document.getElementById('sidebarToggle');
+            const set = (open) => {
+                sidebar.classList.toggle('expanded', open);
+                btn.classList.toggle('expanded', open);
+                btn.setAttribute('aria-expanded', String(open));
+                btn.setAttribute('aria-label', open ? 'Tutup sidebar' : 'Buka sidebar');
+            };
+            set(true); // awalnya terbuka; dijalankan saat .preload aktif, jadi tanpa animasi
+            btn.addEventListener('click', () => set(!sidebar.classList.contains('expanded')));
+        })();
+        
+        // 2. Matikan mode preload begitu tampilan awal selesai digambar.
+        //    (Tidak menunggu gambar/font dari internet, supaya animasi tidak hilang
+        //     kalau ada resource yang lambat dimuat.)
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            document.body.classList.remove('preload');
+        }));
+    </script>
+    <script src="pesan-notif.js?v=1"></script>
+    <script src="profil.js?v=1"></script>
+    <script src="ui.js?v=2"></script>
+    <script src="mobile.js?v=1"></script>
+</body>
+</html>
