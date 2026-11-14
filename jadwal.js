@@ -87,7 +87,7 @@
                 if (e.target !== lane) return;
                 const rc = lane.getBoundingClientRect();
                 const m = Math.round((H0 * 60 + ((e.clientX - rc.left) / rc.width) * SPAN) / 30) * 30;
-                location.href = 'peminjaman.html?ruang=' + r.id + '&tanggal=' + tgl + '&mulai=' + jam(Math.max(H0 * 60, Math.min(m, H1 * 60 - 60)));
+                location.href = 'ajukan.html?ruang=' + r.id + '&tanggal=' + tgl + '&mulai=' + jam(Math.max(H0 * 60, Math.min(m, H1 * 60 - 60)));
             });
 
             pos.forEach(({ j, a, b, k }) => {

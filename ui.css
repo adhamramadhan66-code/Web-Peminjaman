@@ -271,8 +271,9 @@ tr:hover .badge-st { transform: scale(1.06); }
 .nav-menu > .nav-item:nth-child(3) { animation-delay: 0.32s; }
 .nav-menu > .nav-item:nth-child(4) { animation-delay: 0.39s; }
 .nav-menu > .nav-item:nth-child(5) { animation-delay: 0.46s; }
-.sidebar-bottom > .nav-item:nth-child(1) { animation-delay: 0.53s; }
-.sidebar-bottom > .nav-item:nth-child(2) { animation-delay: 0.60s; }
+.nav-menu > .nav-item:nth-child(6) { animation-delay: 0.53s; }
+.sidebar-bottom > .nav-item:nth-child(1) { animation-delay: 0.60s; }
+.sidebar-bottom > .nav-item:nth-child(2) { animation-delay: 0.67s; }
 html[data-ui-sb] .logo, html[data-ui-sb] .nav-menu > .nav-item, html[data-ui-sb] .sidebar-bottom > .nav-item { animation: none; }
 
 /* kartu ringkasan masuk dengan efek miring-pop, bergantian */
@@ -380,3 +381,34 @@ html[data-animasi="hemat"] .ui-reveal { opacity: 1; transform: none; }
     .main-content { --hero-h: clamp(260px, 46vh, 420px); }
     .main-content.ada-video > .filters { margin-top: max(0px, calc(var(--hero-h) - 8.5rem)); }
 }
+
+/* ---------- halaman Ajukan ruang ---------- */
+.ajukan-layout { display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+.ajukan-layout .req-form { position: static; }
+.ajukan-layout .room-pick { max-height: min(58vh, 520px); }
+.ajukan-aksi { grid-column: 1 / -1; }
+.ajukan-aksi .btn.primary { width: 100%; max-width: 420px; justify-content: center; padding: 0.8rem 1.5rem; }
+@media (max-width: 1000px) { .ajukan-layout { grid-template-columns: 1fr; } .ajukan-aksi .btn.primary { max-width: none; } }
+
+/* ---------- layar sukses: lingkaran hijau tergambar, lalu centang putih (mirip transaksi berhasil di dompet digital) ---------- */
+/* Keadaan akhir adalah keadaan normal; animasi hanya "dari" keadaan awal, jadi mode animasi hemat tetap menampilkan centang utuh. */
+.sukses-overlay { position: fixed; inset: 0; z-index: 400; display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+    background: rgba(0, 0, 0, 0.55); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); animation: sukses-fade 0.25s ease backwards; }
+.sukses-box { width: min(380px, 100%); text-align: center; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color);
+    border-radius: 1.1rem; padding: 2rem 1.5rem 1.4rem; box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.6);
+    animation: sukses-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) backwards; }
+.sukses-box h3 { font-size: 1.3rem; margin: 0.9rem 0 0.4rem; }
+.sukses-box p { font-size: 0.9rem; line-height: 1.5; color: var(--text-muted); margin: 0 0 1.2rem; }
+.sukses-box .btn.primary { width: 100%; justify-content: center; padding: 0.7rem; }
+.sukses-box small { display: block; margin-top: 0.8rem; font-size: 0.75rem; color: var(--text-muted); }
+.sukses-ikon { width: 92px; height: 92px; display: block; margin: 0 auto; }
+.sukses-lingkar { fill: #10b981; stroke: #10b981; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 151; stroke-dashoffset: 0;
+    transform-box: fill-box; transform-origin: center; transform: rotate(-90deg);
+    animation: sukses-gambar 0.6s 0.1s cubic-bezier(0.65, 0, 0.45, 1) backwards, sukses-isi 0.25s 0.62s ease backwards; }
+.sukses-centang { fill: none; stroke: #fff; stroke-width: 4.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 40; stroke-dashoffset: 0;
+    animation: sukses-tarik 0.35s 0.78s ease-out backwards; }
+@keyframes sukses-fade { from { opacity: 0; } }
+@keyframes sukses-pop { from { opacity: 0; transform: scale(0.85) translateY(10px); } }
+@keyframes sukses-gambar { from { stroke-dashoffset: 151; } }
+@keyframes sukses-isi { from { fill-opacity: 0; } }
+@keyframes sukses-tarik { from { stroke-dashoffset: 40; } }

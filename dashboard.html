@@ -23,7 +23,7 @@
     <link rel="stylesheet" href="jadwal.css?v=5">
     <link rel="stylesheet" href="pesan.css?v=1">
     <link rel="stylesheet" href="profil.css?v=1">
-    <link rel="stylesheet" href="ui.css?v=4">
+    <link rel="stylesheet" href="ui.css?v=5">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -53,9 +53,9 @@
                     <i data-lucide="calendar-days" class="icon"></i>
                     <span>Jadwal Ruang</span>
                 </a>
-                <a href="peminjaman.html" class="nav-item">
-                    <i data-lucide="calendar-check" class="icon"></i>
-                    <span>Peminjaman</span>
+                <a href="ajukan.html" class="nav-item">
+                    <i data-lucide="calendar-plus" class="icon"></i>
+                    <span>Ajukan Ruang</span>
                 </a>
                 <a href="pesan.html" class="nav-item" id="navPesan">
                     <i data-lucide="message-circle" class="icon"></i>
@@ -65,6 +65,10 @@
                 <a href="denah.html" class="nav-item khusus-admin">
                     <i data-lucide="map" class="icon"></i>
                     <span>Editor Ruang</span>
+                </a>
+                <a href="peminjaman.html" class="nav-item">
+                    <i data-lucide="history" class="icon"></i>
+                    <span>Riwayat Peminjaman</span>
                 </a>
             </nav>
         </div>
@@ -87,10 +91,6 @@
         <header class="header">
             <h2>Dashboard</h2>
             <div class="header-right">
-                <div class="search-box">
-                    <i data-lucide="search" class="icon-search"></i>
-                    <input type="text" placeholder="Search...">
-                </div>
                 <button class="btn-icon" type="button" id="themeToggle" aria-label="Ganti tema gelap/terang" title="Ganti tema">
                     <!-- bulan (tampil di tema terang) & matahari (tampil di tema gelap) -->
                     <svg class="theme-icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
@@ -208,7 +208,7 @@
                     <p class="room-caption" id="agendaCaption">Kuliah dan kegiatan yang sudah disetujui</p>
                 </div>
                 <div class="table-actions">
-                    <a class="btn-round" href="peminjaman.html" title="Ajukan ruang" aria-label="Ajukan ruang"><i data-lucide="plus"></i></a>
+                    <a class="btn-round" href="ajukan.html" title="Ajukan ruang" aria-label="Ajukan ruang"><i data-lucide="plus"></i></a>
                     <a class="btn-round" href="jadwal.html" id="agendaLink" title="Buka jadwal lengkap" aria-label="Buka jadwal lengkap"><i data-lucide="arrow-up-right"></i></a>
                 </div>
             </div>
@@ -320,7 +320,7 @@
         // 1. Buat ikon
         if (window.lucide) lucide.createIcons();
 
-        // Tombol buka/tutup sidebar (awalnya terbuka)
+        // Tombol buka/tutup sidebar (awalnya tertutup)
         (function () {
             const sidebar = document.getElementById('mainSidebar');
             const btn = document.getElementById('sidebarToggle');
@@ -330,8 +330,11 @@
                 btn.setAttribute('aria-expanded', String(open));
                 btn.setAttribute('aria-label', open ? 'Tutup sidebar' : 'Buka sidebar');
             };
-            set(true); // awalnya terbuka; dijalankan saat .preload aktif, jadi tanpa animasi
-            btn.addEventListener('click', () => set(!sidebar.classList.contains('expanded')));
+            // Awalnya tertutup (hanya ikon); pilihan diingat selama sesi. Dijalankan saat .preload aktif, jadi tanpa animasi.
+            const simpan = (o) => { try { if (window.innerWidth > 768) sessionStorage.setItem('sb-open', o ? '1' : '0'); } catch (e) {} };
+            const awal = (() => { try { return sessionStorage.getItem('sb-open') === '1'; } catch (e) { return false; } })();
+            set(awal);
+            btn.addEventListener('click', () => { const o = !sidebar.classList.contains('expanded'); set(o); simpan(o); });
         })();
         
         // 2. Matikan mode preload begitu tampilan awal selesai digambar.

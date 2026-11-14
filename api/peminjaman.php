@@ -85,6 +85,9 @@ try {
 
         $where = ['1 = 1'];
         $par = [];
+        // Akun pengguna/mahasiswa hanya boleh melihat pengajuannya sendiri; admin melihat semuanya.
+        // (Ringkasan dashboard di atas dan jadwal per tanggal tetap menampilkan seluruh kegiatan.)
+        if ($saya['peran'] !== 'admin') { $where[] = 'p.pengguna_id = ?'; $par[] = (int) $saya['id']; }
         $waktu = $_GET['waktu'] ?? 'mendatang';
         if ($waktu === 'mendatang') { $where[] = 'p.tanggal >= ?'; $par[] = $hariIni; }
         elseif ($waktu === 'riwayat') { $where[] = 'p.tanggal < ?'; $par[] = $hariIni; }

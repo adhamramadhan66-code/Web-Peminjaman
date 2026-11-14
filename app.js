@@ -53,8 +53,11 @@
             sidebar.classList.toggle('expanded', open); tg.classList.toggle('expanded', open);
             tg.setAttribute('aria-expanded', String(open)); tg.setAttribute('aria-label', open ? 'Tutup sidebar' : 'Buka sidebar');
         };
-        set(true);
-        tg.addEventListener('click', () => set(!sidebar.classList.contains('expanded')));
+        // Awalnya tertutup (hanya ikon). Pilihan buka/tutup diingat selama sesi supaya tidak berubah saat pindah halaman.
+        const simpan = (o) => { try { if (window.innerWidth > 768) sessionStorage.setItem('sb-open', o ? '1' : '0'); } catch (e) {} };
+        const awal = (() => { try { return sessionStorage.getItem('sb-open') === '1'; } catch (e) { return false; } })();
+        set(awal);
+        tg.addEventListener('click', () => { const o = !sidebar.classList.contains('expanded'); set(o); simpan(o); });
     }
 
     if (window.lucide) lucide.createIcons();

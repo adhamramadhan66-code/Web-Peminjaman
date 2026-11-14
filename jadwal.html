@@ -24,7 +24,7 @@
     <link rel="stylesheet" href="jadwal.css?v=8">
     <link rel="stylesheet" href="pesan.css?v=3">
     <link rel="stylesheet" href="profil.css?v=1">
-    <link rel="stylesheet" href="ui.css?v=4">
+    <link rel="stylesheet" href="ui.css?v=5">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -47,9 +47,9 @@
                     <i data-lucide="calendar-days" class="icon"></i>
                     <span>Jadwal Ruang</span>
                 </a>
-                <a href="peminjaman.html" class="nav-item">
-                    <i data-lucide="calendar-check" class="icon"></i>
-                    <span>Peminjaman</span>
+                <a href="ajukan.html" class="nav-item">
+                    <i data-lucide="calendar-plus" class="icon"></i>
+                    <span>Ajukan Ruang</span>
                 </a>
                 <a href="pesan.html" class="nav-item" id="navPesan">
                     <i data-lucide="message-circle" class="icon"></i>
@@ -59,6 +59,10 @@
                 <a href="denah.html" class="nav-item khusus-admin">
                     <i data-lucide="map" class="icon"></i>
                     <span>Editor Ruang</span>
+                </a>
+                <a href="peminjaman.html" class="nav-item">
+                    <i data-lucide="history" class="icon"></i>
+                    <span>Riwayat Peminjaman</span>
                 </a>
             </nav>
         </div>
@@ -98,7 +102,7 @@
                 <input class="in" type="date" id="tgl" aria-label="Pilih tanggal">
                 <button type="button" class="btn" id="nextDay" aria-label="Hari berikutnya"><i data-lucide="chevron-right"></i></button>
                 <button type="button" class="btn" id="hariIni">Hari ini</button>
-                <a class="btn primary" href="peminjaman.html"><i data-lucide="plus"></i> Ajukan ruang</a>
+                <a class="btn primary" href="ajukan.html"><i data-lucide="plus"></i> Ajukan ruang</a>
             </div>
         </div>
 
@@ -222,9 +226,9 @@
         </div>
     </div>
 
-    <script src="app.js?v=2"></script>
+    <script src="app.js?v=3"></script>
     <script src="alasan.js?v=1"></script>
-    <script src="jadwal.js?v=6"></script>
+    <script src="jadwal.js?v=7"></script>
     <script src="jadwal-kelola.js?v=2"></script>
     <script src="pesan-notif.js?v=1"></script>
     <script src="profil.js?v=1"></script>

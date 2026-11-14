@@ -24,7 +24,7 @@
     <link rel="stylesheet" href="denah.css?v=11">
     <link rel="stylesheet" href="pesan.css?v=1">
     <link rel="stylesheet" href="profil.css?v=1">
-    <link rel="stylesheet" href="ui.css?v=4">
+    <link rel="stylesheet" href="ui.css?v=5">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -50,18 +50,22 @@
                     <i data-lucide="calendar-days" class="icon"></i>
                     <span>Jadwal Ruang</span>
                 </a>
-                <a href="peminjaman.html" class="nav-item">
-                    <i data-lucide="calendar-check" class="icon"></i>
-                    <span>Peminjaman</span>
+                <a href="ajukan.html" class="nav-item">
+                    <i data-lucide="calendar-plus" class="icon"></i>
+                    <span>Ajukan Ruang</span>
                 </a>
                 <a href="pesan.html" class="nav-item" id="navPesan">
                     <i data-lucide="message-circle" class="icon"></i>
                     <span>Pesan</span>
                     <em class="nav-badge" hidden>0</em>
                 </a>
-                <a href="denah.html" class="nav-item active khusus-admin">
+                <a href="denah.html" class="nav-item khusus-admin active">
                     <i data-lucide="map" class="icon"></i>
                     <span>Editor Ruang</span>
+                </a>
+                <a href="peminjaman.html" class="nav-item">
+                    <i data-lucide="history" class="icon"></i>
+                    <span>Riwayat Peminjaman</span>
                 </a>
             </nav>
         </div>
@@ -174,8 +178,10 @@
                 sidebar.classList.toggle('expanded', open); tg.classList.toggle('expanded', open);
                 tg.setAttribute('aria-expanded', String(open)); tg.setAttribute('aria-label', open ? 'Tutup sidebar' : 'Buka sidebar');
             };
-            set(true);
-            tg.addEventListener('click', () => set(!sidebar.classList.contains('expanded')));
+            const simpan = (o) => { try { if (window.innerWidth > 768) sessionStorage.setItem('sb-open', o ? '1' : '0'); } catch (e) {} };
+            const awal = (() => { try { return sessionStorage.getItem('sb-open') === '1'; } catch (e) { return false; } })();
+            set(awal);
+            tg.addEventListener('click', () => { const o = !sidebar.classList.contains('expanded'); set(o); simpan(o); });
 
             if (window.lucide) lucide.createIcons();
             requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove('preload')));

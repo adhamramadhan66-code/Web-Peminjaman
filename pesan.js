@@ -149,7 +149,7 @@
         const a = negatif
             ? el('a', 'btn' + (admin ? '' : ' primary'), admin ? 'Lihat daftar ditolak' : 'Ajukan ulang')
             : el('a', 'btn' + (admin ? ' primary' : ''), admin ? 'Tinjau pengajuan' : 'Lihat pengajuan');
-        a.href = 'peminjaman.html' + (negatif ? (admin ? '?status=ditolak' : '') : (admin ? '?status=menunggu' : ''));
+        a.href = negatif ? (admin ? 'peminjaman.html?status=ditolak' : 'ajukan.html') : 'peminjaman.html' + (admin ? '?status=menunggu' : '');
         aks.appendChild(a); kartu.appendChild(aks);
         return kartu;
     }
