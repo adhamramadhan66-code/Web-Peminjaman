@@ -337,15 +337,6 @@ ui-riak > ui-g { position: absolute; display: block; border-radius: 50%; backgro
 .ui-reveal.ui-lihat { opacity: 1; transform: none; }
 .ui-tampil { animation: none !important; }   /* sudah tampil lewat scroll: jangan memutar ulang animasi masuk bawaannya */
 
-/* sakelar animasi di menu foto profil */
-.pf-item.ui-sakelar { cursor: pointer; }
-.pf-item.ui-sakelar > span:not(.pf-ik) { display: flex; flex-direction: column; gap: 0.05rem; }
-.pf-item.ui-sakelar small { font-size: 0.7rem; color: var(--text-muted); }
-ui-sw { position: relative; display: block; flex: none; width: 2.4rem; height: 1.35rem; border-radius: 999px; background: var(--surface-3); transition: background-color 0.25s ease; }
-ui-sw::after { content: ""; position: absolute; top: 0.15rem; left: 0.15rem; width: 1.05rem; height: 1.05rem; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); transition: transform 0.35s var(--ui-spring); }
-.pf-item.ui-sakelar[aria-checked="true"] ui-sw { background: var(--green); }
-.pf-item.ui-sakelar[aria-checked="true"] ui-sw::after { transform: translateX(1.05rem); }
-
 /* ---------- 8. perpindahan antarhalaman ---------- */
 /* Browser yang mendukung (Chrome/Edge 126+, Safari 18.2+) memberi transisi halus saat pindah menu: sidebar tetap diam,
    isi halaman bergeser. Browser lain mengabaikannya dengan aman. */

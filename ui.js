@@ -1,5 +1,5 @@
 /* ui.js - pelengkap lapisan tampilan (ui.css). Dimuat di semua halaman dalam; tidak mengubah data atau logika halaman.
-   (bagian 5-8: sakelar animasi, riak klik, kartu miring, muncul saat scroll)
+   (bagian 5-8: mode animasi, riak klik, kartu miring, muncul saat scroll)
    1) Angka ringkasan (kartu KPI) menghitung naik dari 0 saat tampil dan saat nilainya berubah.
    2) Tabel diberi data-label per sel (dari judul kolom) supaya di HP tampil sebagai kartu (lihat ui.css bagian 3).
    3) Pergantian tema tampil dengan transisi warna yang halus.
@@ -82,29 +82,9 @@
         }, true);
     }
 
-    // ---------- 5. mode animasi: penuh / hemat ----------
-    // Bawaan mengikuti pengaturan perangkat ("kurangi gerakan"). Pengguna bisa memaksa "penuh" atau "hemat" lewat sakelar
-    // di menu foto profil; pilihan disimpan di browser (localStorage 'ui-animasi') dan dipasang sedini mungkin oleh skrip di <head>.
+    // ---------- 5. mode animasi ----------
+    // Mengikuti pengaturan perangkat ("kurangi gerakan"). Sakelar "Animasi" di menu foto profil sudah dihapus.
     const aktif = () => { const a = html.dataset.animasi; return a === 'penuh' || (a !== 'hemat' && !kurangiGerak); };
-    const menuFoto = document.querySelector('.pf-menu');
-    if (menuFoto) {
-        const sep = document.createElement('div'); sep.className = 'pf-sep';
-        const tbl = document.createElement('button'); tbl.type = 'button'; tbl.className = 'pf-item ui-sakelar'; tbl.setAttribute('role', 'menuitemcheckbox');
-        tbl.innerHTML = '<span class="pf-ik"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.7 1.8 1.8.7-1.8.7L19 20l-.7-1.8-1.8-.7 1.8-.7z"/></svg></span><span><b>Animasi</b><small></small></span><ui-sw></ui-sw>';
-        const perbarui = () => {
-            const on = aktif();
-            tbl.setAttribute('aria-checked', on ? 'true' : 'false');
-            tbl.querySelector('small').textContent = on ? 'Penuh' : (html.dataset.animasi === 'hemat' ? 'Hemat' : 'Hemat (mengikuti pengaturan perangkat)');
-        };
-        tbl.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const baru = aktif() ? 'hemat' : 'penuh';
-            html.dataset.animasi = baru;
-            try { localStorage.setItem('ui-animasi', baru); } catch (x) { /* abaikan */ }
-            perbarui();
-        });
-        perbarui(); menuFoto.appendChild(sep); menuFoto.appendChild(tbl);
-    }
 
     // ---------- 6. riak saat diklik / disentuh ----------
     const TARGET_RIAK = '.btn, .btn-icon, .btn-round, .ic-btn, .seg button, .pf-item, .al-chip, .kontak, .nav-item, .pf-tbl, .al-tbl, .room-arrow, .sidebar-toggle';
