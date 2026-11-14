@@ -14,23 +14,31 @@
     --ui-bayang-naik: 0 2px 4px rgba(0, 0, 0, 0.4), 0 16px 36px rgba(0, 0, 0, 0.4);
 }
 :root[data-theme="light"] {
-    --ui-bayang: 0 1px 2px rgba(16, 24, 40, 0.05), 0 6px 20px rgba(16, 24, 40, 0.06);
-    --ui-bayang-naik: 0 2px 4px rgba(16, 24, 40, 0.06), 0 14px 32px rgba(16, 24, 40, 0.12);
+    --ui-bayang: 0 1px 2px rgba(6, 78, 59, 0.06), 0 8px 24px rgba(6, 78, 59, 0.09);
+    --ui-bayang-naik: 0 2px 4px rgba(6, 78, 59, 0.08), 0 16px 34px rgba(6, 78, 59, 0.16);
 }
 html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
 body { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
 
-/* latar halus: sedikit semburat hijau di kiri atas dan biru di kanan atas supaya tidak terlihat datar */
+/* latar berwarna: semburat hijau, biru, ungu, dan kuning di keempat sudut + pola titik halus (statis, tidak bergerak) */
 body {
     background-image:
-        radial-gradient(52rem 26rem at -5% -8%, rgba(16, 185, 129, 0.10), transparent 62%),
-        radial-gradient(46rem 24rem at 105% -6%, rgba(59, 130, 246, 0.08), transparent 60%);
+        radial-gradient(46rem 28rem at -6% -10%, rgba(16, 185, 129, 0.16), transparent 62%),
+        radial-gradient(40rem 26rem at 104% -8%, rgba(59, 130, 246, 0.14), transparent 60%),
+        radial-gradient(38rem 26rem at 100% 106%, rgba(139, 92, 246, 0.10), transparent 60%),
+        radial-gradient(34rem 22rem at -4% 108%, rgba(245, 158, 11, 0.06), transparent 60%),
+        radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1.3px);
+    background-size: auto, auto, auto, auto, 24px 24px;
     background-attachment: fixed;
 }
 :root[data-theme="light"] body {
     background-image:
-        radial-gradient(52rem 26rem at -5% -8%, rgba(16, 185, 129, 0.12), transparent 62%),
-        radial-gradient(46rem 24rem at 105% -6%, rgba(59, 130, 246, 0.09), transparent 60%);
+        radial-gradient(46rem 30rem at -6% -10%, rgba(16, 185, 129, 0.28), transparent 62%),
+        radial-gradient(42rem 28rem at 104% -8%, rgba(59, 130, 246, 0.22), transparent 60%),
+        radial-gradient(40rem 28rem at 100% 106%, rgba(139, 92, 246, 0.17), transparent 60%),
+        radial-gradient(36rem 24rem at 0% 108%, rgba(245, 158, 11, 0.14), transparent 60%),
+        radial-gradient(rgba(5, 95, 70, 0.10) 1px, transparent 1.3px);
+    background-size: auto, auto, auto, auto, 24px 24px;
 }
 
 /* scrollbar tipis dan serasi tema */
@@ -281,7 +289,7 @@ html[data-animasi="hemat"], html[data-animasi="hemat"] * , html[data-animasi="he
 
 /* ---------- halaman Ajukan ruang ---------- */
 .ajukan-layout { display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); gap: 1.5rem; align-items: start; }
-.ajukan-layout .req-form { position: static; }
+.ajukan-layout .req-form { position: relative; }
 .ajukan-layout .room-pick { max-height: min(58vh, 520px); }
 .ajukan-aksi { grid-column: 1 / -1; }
 .ajukan-aksi .btn.primary { width: 100%; max-width: 420px; justify-content: center; padding: 0.8rem 1.5rem; }
@@ -318,3 +326,99 @@ html[data-animasi="hemat"], html[data-animasi="hemat"] * , html[data-animasi="he
 @keyframes sukses-tarik { from { stroke-dashoffset: 40; } }
 @keyframes sukses-lompat { 0% { transform: scale(0.85); } 100% { transform: scale(1); } }
 @keyframes sukses-teks { from { opacity: 0; transform: translateY(6px); } }
+
+
+/* =====================================================================
+   9. warna & elemen tambahan (penyegar tampilan) - HP dan PC
+   Hanya mengubah warna/hiasan; tata letak dan perilaku halaman tidak berubah.
+   ===================================================================== */
+
+/* scrollbar bernuansa hijau di tema terang */
+:root[data-theme="light"] *::-webkit-scrollbar-thumb { background: rgba(5, 150, 105, 0.35); }
+:root[data-theme="light"] * { scrollbar-color: rgba(5, 150, 105, 0.4) transparent; }
+
+/* ---------- sidebar ---------- */
+.sidebar { background-image: linear-gradient(180deg, rgba(16, 185, 129, 0.10), transparent 38%, rgba(59, 130, 246, 0.07)); }
+:root[data-theme="light"] .sidebar {
+    background-image: linear-gradient(180deg, #065f46 0%, #064e3b 50%, #0b4a52 100%);
+    border-right-color: rgba(255, 255, 255, 0.08);
+}
+:root[data-theme="light"] .sidebar .logo-img { background: #fff; border-radius: 0.65rem; padding: 0.3rem 0.45rem; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.22); }
+:root[data-theme="light"] .sidebar .nav-item { color: rgba(236, 253, 245, 0.80); }
+:root[data-theme="light"] .sidebar .nav-item:hover { color: #fff; background-color: rgba(255, 255, 255, 0.12); }
+:root[data-theme="light"] .sidebar .nav-item.active { color: #fff; background-color: rgba(255, 255, 255, 0.13); background-image: linear-gradient(90deg, rgba(110, 231, 183, 0.30), rgba(110, 231, 183, 0) 82%); }
+:root[data-theme="light"] .sidebar .nav-item.active:hover { color: #fff; background-color: rgba(255, 255, 255, 0.18); }
+:root[data-theme="light"] .sidebar .nav-item.active .icon { color: #6ee7b7; }
+:root[data-theme="light"] .sidebar .nav-item.active::before { background: #6ee7b7; box-shadow: 0 0 8px 1px #34d399, 0 0 20px 3px rgba(52, 211, 153, 0.5); }
+
+/* ---------- kartu & panel: garis warna di atas + semburat tipis ---------- */
+.panel:not(.req-form), .chart-card, .table-card { position: relative; }
+.panel, .chart-card, .table-card, .msgr { background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 120px); }
+:root[data-theme="light"] .panel, :root[data-theme="light"] .chart-card, :root[data-theme="light"] .table-card, :root[data-theme="light"] .msgr {
+    background-image: linear-gradient(180deg, rgba(16, 185, 129, 0.07), rgba(16, 185, 129, 0) 140px);
+}
+.panel::before, .chart-card::before, .table-card::before {
+    content: ""; position: absolute; left: 1.25rem; right: 1.25rem; top: 0; height: 3px; border-radius: 0 0 4px 4px; pointer-events: none;
+    background: linear-gradient(90deg, #10b981, #38bdf8 60%, #3b82f6);
+}
+.chart-card.side-chart::before { background: linear-gradient(90deg, #3b82f6, #8b5cf6); }
+.table-card::before { background: linear-gradient(90deg, #8b5cf6, #3b82f6 55%, #10b981); }
+.req-form.panel::before { background: linear-gradient(90deg, #10b981, #f59e0b); }
+
+/* penanda kecil berwarna di depan judul kartu */
+.chart-header h3::before, .table-header h3::before, .calendar-header h3::before, .req-form h3::before, .list-head h3::before {
+    content: ""; display: inline-block; width: 4px; height: 1em; border-radius: 4px; margin-right: 0.55rem; vertical-align: -0.14em;
+    background: linear-gradient(180deg, #10b981, #3b82f6);
+}
+
+/* ---------- kartu ringkasan: tiap kartu punya warna sendiri ---------- */
+.kpi-grid > .kpi-card {
+    --acc: 16, 185, 129; --acc-d: 4, 120, 87; --acc-l: 110, 231, 183;
+    position: relative; overflow: hidden;
+    background-image: linear-gradient(135deg, rgba(var(--acc), 0.16), rgba(var(--acc), 0) 66%);
+}
+.kpi-grid > .kpi-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: rgb(var(--acc)); pointer-events: none; }
+.kpi-grid > .kpi-card::after { content: ""; position: absolute; right: -2rem; top: -2rem; width: 6.5rem; height: 6.5rem; border-radius: 50%; background: rgba(var(--acc), 0.14); pointer-events: none; }
+.kpi-grid > .kpi-card:nth-child(2) { --acc: 59, 130, 246; --acc-d: 29, 78, 216; --acc-l: 147, 197, 253; }
+.kpi-grid > .kpi-card:nth-child(3) { --acc: 139, 92, 246; --acc-d: 109, 40, 217; --acc-l: 196, 181, 253; }
+.kpi-grid > .kpi-card:nth-child(4) { --acc: 245, 158, 11; --acc-d: 180, 83, 9; --acc-l: 252, 211, 77; }
+.kpi-grid > .kpi-card .kpi-trend, .kpi-grid > .kpi-card .kpi-trend a { color: rgb(var(--acc-d)); font-weight: 600; }
+:root:not([data-theme="light"]) .kpi-grid > .kpi-card .kpi-trend, :root:not([data-theme="light"]) .kpi-grid > .kpi-card .kpi-trend a { color: rgb(var(--acc-l)); }
+.kpi-grid > .kpi-card.dark {
+    background-image: linear-gradient(135deg, #047857 0%, #0f766e 58%, #0e7490 100%); border: 0; color: #fff;
+}
+.kpi-grid > .kpi-card.dark::before { display: none; }
+.kpi-grid > .kpi-card.dark::after { background: rgba(255, 255, 255, 0.10); }
+.kpi-grid > .kpi-card.dark .kpi-title { color: rgba(255, 255, 255, 0.82); }
+.kpi-grid > .kpi-card.dark .kpi-trend, .kpi-grid > .kpi-card.dark .kpi-trend a,
+:root:not([data-theme="light"]) .kpi-grid > .kpi-card.dark .kpi-trend { color: #d1fae5; }
+
+/* ---------- tabel ---------- */
+.tbl thead, .agenda thead { background: linear-gradient(90deg, rgba(16, 185, 129, 0.12), rgba(59, 130, 246, 0.08)); }
+.tbl th, .agenda th { background: transparent; color: var(--text-muted); }
+.agenda th { padding-top: 0.7rem; padding-bottom: 0.7rem; }
+.tbl tbody tr:not(.empty-row):hover td, .agenda tbody tr:hover td { background: rgba(16, 185, 129, 0.07); }
+:root[data-theme="light"] .badge-st.menunggu { color: #b45309; }
+:root[data-theme="light"] .badge-st.disetujui { color: #047857; }
+:root[data-theme="light"] .badge-st.ditolak { color: #b91c1c; }
+
+/* ---------- tab, tombol, input ---------- */
+.seg { background: rgba(16, 185, 129, 0.09); border-color: rgba(16, 185, 129, 0.25); }
+.seg button.active { background: var(--card-bg); color: #047857; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.14), 0 0 0 1px rgba(16, 185, 129, 0.4); }
+:root:not([data-theme="light"]) .seg button.active { color: var(--green); }
+.btn:not(.primary):not(.danger):hover:not(:disabled) { border-color: rgba(16, 185, 129, 0.55); background-color: rgba(16, 185, 129, 0.08); }
+.btn-round:hover, .ic-btn:hover { background-color: rgba(16, 185, 129, 0.16); }
+.btn-icon:hover { border-color: rgba(16, 185, 129, 0.55); }
+.in, .field input, .field select, .field textarea, .req-form textarea { border-color: var(--border-color); }
+:root[data-theme="light"] .in, :root[data-theme="light"] .field input, :root[data-theme="light"] .field select, :root[data-theme="light"] .field textarea, :root[data-theme="light"] .req-form textarea { background: #fbfefd; }
+
+/* ---------- jadwal (timeline) ---------- */
+.tt-head { background: linear-gradient(90deg, rgba(16, 185, 129, 0.12), rgba(59, 130, 246, 0.08)); }
+.tt-row:not(.tt-head):nth-child(even) .tt-lane { background-color: rgba(16, 185, 129, 0.035); }
+
+/* ---------- HP ---------- */
+@media (max-width: 768px) {
+    .sidebar-toggle { background: linear-gradient(135deg, #10b981, #059669); color: #fff; border-color: transparent; box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4); }
+    .panel::before, .chart-card::before, .table-card::before { left: 1rem; right: 1rem; }
+    .kpi-grid > .kpi-card::after { width: 4.5rem; height: 4.5rem; right: -1.5rem; top: -1.5rem; }
+}

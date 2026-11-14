@@ -82,9 +82,10 @@
             const nm = el('div', 'tt-name', r.nama || 'Ruang tanpa nama');
             row.appendChild(nm);
             const lane = el('div', 'tt-lane'); lane.style.height = Math.max(1, lanes.length) * LANE + 8 + 'px';
-            lane.title = 'Klik area kosong untuk mengajukan ruang ini';
+            const admin = document.documentElement.dataset.peran === 'admin';   // admin tidak mengajukan ruang
+            if (!admin) lane.title = 'Klik area kosong untuk mengajukan ruang ini'; else lane.style.cursor = 'default';
             lane.addEventListener('click', (e) => {
-                if (e.target !== lane) return;
+                if (admin || e.target !== lane) return;
                 const rc = lane.getBoundingClientRect();
                 const m = Math.round((H0 * 60 + ((e.clientX - rc.left) / rc.width) * SPAN) / 30) * 30;
                 location.href = 'ajukan.html?ruang=' + r.id + '&tanggal=' + tgl + '&mulai=' + jam(Math.max(H0 * 60, Math.min(m, H1 * 60 - 60)));

@@ -3,6 +3,8 @@
 
 /* ---------- menu yang hanya untuk admin disembunyikan dari akun pengguna ---------- */
 html[data-peran="pengguna"] .khusus-admin { display: none !important; }
+/* kebalikannya: yang hanya untuk pengguna (mis. Ajukan ruang) disembunyikan dari admin */
+html[data-peran="admin"] .khusus-pengguna { display: none !important; }
 
 /* ---------- lencana jumlah pesan belum dibaca (di menu Pesan) ----------
    Memakai <em>, bukan <span>, karena style.css menyembunyikan semua <span> di dalam menu saat sidebar dilipat. */

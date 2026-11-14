@@ -10,6 +10,7 @@
                 const user = JSON.parse(sessionStorage.getItem('kampuslyCurrentUser') || 'null');
                 if (!user || !user.email) { window.location.replace('index.html'); return; }
                 document.documentElement.dataset.peran = user.peran === 'admin' ? 'admin' : 'pengguna';
+                if (user.peran === 'admin') { window.location.replace('dashboard.html'); return; }   // admin tidak mengajukan ruang
                 try {   // preferensi tampilan dipasang sebelum halaman digambar (lihat ui.css / ui.js)
                     localStorage.removeItem('ui-animasi');   // sakelar "Animasi" sudah dihapus; pilihan lama (mis. "Hemat") tidak boleh mematikan animasi
                     if (sessionStorage.getItem('ui-sb')) document.documentElement.setAttribute('data-ui-sb', ''); else sessionStorage.setItem('ui-sb', '1');
@@ -18,12 +19,12 @@
         })();
     </script>
     <title>Ajukan Ruang | Kampusly</title>
-    <link rel="stylesheet" href="style.css?v=19">
+    <link rel="stylesheet" href="style.css?v=20">
     <link rel="stylesheet" href="denah.css?v=8">
     <link rel="stylesheet" href="jadwal.css?v=9">
-    <link rel="stylesheet" href="pesan.css?v=3">
+    <link rel="stylesheet" href="pesan.css?v=4">
     <link rel="stylesheet" href="profil.css?v=1">
-    <link rel="stylesheet" href="ui.css?v=10">
+    <link rel="stylesheet" href="ui.css?v=11">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>

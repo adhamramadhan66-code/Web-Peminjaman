@@ -21,19 +21,20 @@
 
 /* --- TEMA TERANG --- */
 :root[data-theme="light"] {
-    --bg-color: #f3f4f6;
-    --sidebar-bg: #ffffff;
+    --bg-color: #ecf5f1;
+    --sidebar-bg: #064e3b;
     --card-bg: #ffffff;
-    --surface-2: #f9fafb;
-    --surface-3: #e5e7eb;
-    --text-main: #111827;
-    --text-muted: #6b7280;
-    --border-color: #e5e7eb;
-    --dark-bg: #1f2937;
-    --select-bg: #1f2937;
+    --surface-2: #f2faf6;
+    --surface-3: #dcede6;
+    --text-main: #0f1d19;
+    --text-muted: #566a63;
+    --border-color: #d2e4dc;
+    --dark-bg: #064e3b;
+    --green-light: rgba(16, 185, 129, 0.12);
+    --select-bg: #059669;
     --select-fg: #ffffff;
-    --dash-border: #d1d5db;
-    --kpi-dark-title: #9ca3af;
+    --dash-border: #bcd3c9;
+    --kpi-dark-title: #a7f3d0;
     color-scheme: light;
 }
 
