@@ -106,6 +106,7 @@
     let tmr; $('fCari').addEventListener('input', (e) => { clearTimeout(tmr); tmr = setTimeout(() => { state.q = e.target.value.trim(); state.halaman = 1; muat(); }, 300); });
 
     $('fWaktu').value = state.waktu;
+    if (adminAwal) document.title = 'Daftar Peminjaman | Kampusly';   // admin: "Daftar", pengguna: "Riwayat"
     if (!adminAwal) $('riwayatInfo').textContent = 'Seluruh pengajuan peminjamanmu dan status persetujuannya. Pengajuan orang lain tidak ditampilkan di sini.';
     muat();
 })();
