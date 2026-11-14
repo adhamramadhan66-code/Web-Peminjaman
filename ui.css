@@ -178,9 +178,6 @@ a.btn, a.btn:hover, .btn a { text-decoration: none; }
 
 /* navigasi samping */
 .nav-item { transition: background-color 0.2s ease, color 0.2s ease, padding 0.2s ease; }
-.nav-item .icon { transition: transform 0.25s var(--ui-spring); }
-@media (hover: hover) { .nav-item:hover .icon { transform: scale(1.14) rotate(-4deg); } }
-.nav-item:active .icon { transform: scale(0.9); }
 
 /* kartu ruang dan baris tabel */
 .rk { transition: transform 0.22s var(--ui-ease), box-shadow 0.22s ease, filter 0.2s ease; }
@@ -190,11 +187,6 @@ a.btn, a.btn:hover, .btn a { text-decoration: none; }
 tr:hover .badge-st { transform: scale(1.06); }
 
 /* lencana pesan: berdenyut halus saat ada yang belum dibaca */
-.nav-badge:not([hidden]) { animation: ui-denyut 2.4s ease-in-out infinite; }
-@keyframes ui-denyut { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.14); } }
-.sidebar.expanded .nav-badge:not([hidden]) { animation-name: ui-denyut-tengah; }
-@keyframes ui-denyut-tengah { 0%, 100% { transform: translateY(-50%) scale(1); } 50% { transform: translateY(-50%) scale(1.14); } }
-@media (max-width: 768px) { .nav-badge:not([hidden]) { animation-name: ui-denyut-tengah; } }
 
 /* titik "tersinkronisasi" berdenyut */
 .sync .dot { position: relative; }
@@ -263,18 +255,7 @@ tr:hover .badge-st { transform: scale(1.06); }
     background: linear-gradient(90deg, var(--green), #3b82f6); animation: ui-garis 0.9s 0.4s var(--ui-ease) backwards;
 }
 
-/* sidebar: logo memantul masuk, menu masuk bergantian dari kiri (hanya kunjungan pertama sesi; pindah halaman tidak mengulang) */
-.logo { animation: ui-logo 0.8s var(--ui-spring) backwards; }
-.nav-menu > .nav-item, .sidebar-bottom > .nav-item { animation: ui-geser-kanan 0.6s var(--ui-ease) backwards; }
-.nav-menu > .nav-item:nth-child(1) { animation-delay: 0.18s; }
-.nav-menu > .nav-item:nth-child(2) { animation-delay: 0.25s; }
-.nav-menu > .nav-item:nth-child(3) { animation-delay: 0.32s; }
-.nav-menu > .nav-item:nth-child(4) { animation-delay: 0.39s; }
-.nav-menu > .nav-item:nth-child(5) { animation-delay: 0.46s; }
-.nav-menu > .nav-item:nth-child(6) { animation-delay: 0.53s; }
-.sidebar-bottom > .nav-item:nth-child(1) { animation-delay: 0.60s; }
-.sidebar-bottom > .nav-item:nth-child(2) { animation-delay: 0.67s; }
-html[data-ui-sb] .logo, html[data-ui-sb] .nav-menu > .nav-item, html[data-ui-sb] .sidebar-bottom > .nav-item { animation: none; }
+/* sidebar: sengaja TANPA animasi (logo/menu masuk, ikon bergoyang, lencana berdenyut) supaya ringan. Hanya transisi buka/tutup dan warna aktif. */
 
 /* kartu ringkasan masuk dengan efek miring-pop, bergantian */
 .kpi-grid > .kpi-card { animation: ui-kartu-pop 0.85s var(--ui-spring) backwards; }

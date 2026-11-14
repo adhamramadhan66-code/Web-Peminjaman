@@ -87,7 +87,7 @@
     const aktif = () => { const a = html.dataset.animasi; return a === 'penuh' || (a !== 'hemat' && !kurangiGerak); };
 
     // ---------- 6. riak saat diklik / disentuh ----------
-    const TARGET_RIAK = '.btn, .btn-icon, .btn-round, .ic-btn, .seg button, .pf-item, .al-chip, .kontak, .nav-item, .pf-tbl, .al-tbl, .room-arrow, .sidebar-toggle';
+    const TARGET_RIAK = '.btn, .btn-icon, .btn-round, .ic-btn, .seg button, .pf-item, .al-chip, .kontak, .pf-tbl, .al-tbl, .room-arrow';   // menu sidebar & tombol buka/tutup sengaja tanpa riak
     document.addEventListener('pointerdown', (e) => {
         if (!aktif() || e.button > 0) return;
         const t = e.target.closest && e.target.closest(TARGET_RIAK);
