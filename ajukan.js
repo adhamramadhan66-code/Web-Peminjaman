@@ -21,6 +21,19 @@
         return { k: 'free' };
     }
 
+    /** Kartu ruang berbentuk sama dengan kartu "Ruang Hari Ini" di dashboard: nama, info, label status. */
+    function kartuRuang(r, varian, info, label, tip) {
+        const dipilih = r.id === pilih;
+        const b = el('button', 'rk ' + varian + (dipilih ? ' sel' : '')); b.type = 'button';
+        b.setAttribute('aria-pressed', String(dipilih));
+        b.appendChild(el('div', 'n', r.nama || 'Ruang tanpa nama'));
+        b.appendChild(el('div', 'f', info || '\u00a0'));
+        b.appendChild(el('div', 's', dipilih ? '\u2713 Dipilih' : label));
+        b.title = tip;
+        b.addEventListener('click', () => { pilih = r.id; tampilError(''); renderPilih(); });
+        return b;
+    }
+
     /** Jam belum diisi / belum benar: semua ruang tetap ditampilkan (tanpa status kosong/dipakai) supaya bisa dipilih lebih dulu. */
     function renderTanpaJam(box, petunjuk) {
         box.appendChild(el('p', 'pick-note', petunjuk));
@@ -31,13 +44,10 @@
             const grid = el('div', 'pick-grid');
             l.ruang.forEach((r) => {
                 jumlah++;
-                const b = el('button', 'rp netral' + (r.id === pilih ? ' sel' : '')); b.type = 'button';
-                b.appendChild(el('b', null, r.nama || 'Ruang tanpa nama'));
                 const n = r.jadwal.length;
-                b.appendChild(el('span', null, n ? n + ' jadwal pada tanggal ini' : 'Belum ada jadwal'));
-                b.title = n ? r.nama + ': ' + r.jadwal.map((j) => j.mulai + '\u2013' + j.selesai + ' ' + (j.keperluan || '')).join('; ')
-                            : r.nama + ': belum ada jadwal pada tanggal ini';
-                b.addEventListener('click', () => { pilih = r.id; tampilError(''); renderPilih(); });
+                const b = kartuRuang(r, 'netral', r.fasilitas, n ? n + ' jadwal hari ini' : 'Belum ada jadwal',
+                    n ? r.nama + ': ' + r.jadwal.map((j) => j.mulai + '\u2013' + j.selesai + ' ' + (j.keperluan || '')).join('; ')
+                      : r.nama + ': belum ada jadwal pada tanggal ini');
                 grid.appendChild(b);
             });
             box.appendChild(grid);
@@ -68,19 +78,17 @@
             box.appendChild(el('div', 'pick-floor', l.nama));
             const grid = el('div', 'pick-grid');
             tampil.forEach(({ r, st }) => {
-                const b = el('button', 'rp ' + st.k + (r.id === pilih ? ' sel' : '')); b.type = 'button';
-                b.appendChild(el('b', null, r.nama || 'Ruang tanpa nama'));
-                let teks = 'Kosong', tip = r.nama + ': kosong pada jam ini';
+                let label = 'Kosong', tip = r.nama + ': kosong pada jam ini', varian = '';
                 if (st.k === 'busy') {
                     const kul = st.j.jenis === 'kuliah';
-                    teks = 'Dipakai \u00b7 ' + (kul ? 'Kuliah' : 'Dipinjam') + ' ' + st.j.mulai + '\u2013' + st.j.selesai;
+                    label = 'Dipakai ' + st.j.mulai + '\u2013' + st.j.selesai;
                     tip = r.nama + ': ' + (kul ? 'jadwal kuliah ' : 'dipinjam untuk ') + st.j.keperluan + ' (' + st.j.mulai + '\u2013' + st.j.selesai + ')';
-                    b.disabled = true;
+                    varian = 'dipakai';
                 } else if (st.k === 'pend') {
-                    teks = 'Kosong \u00b7 ada pengajuan lain'; tip = r.nama + ': masih ada pengajuan menunggu persetujuan (' + st.j.keperluan + ')';
+                    label = 'Ada pengajuan lain'; tip = r.nama + ': masih ada pengajuan menunggu persetujuan (' + st.j.keperluan + ')'; varian = 'dipinjam';
                 }
-                b.appendChild(el('span', null, teks)); b.title = tip;
-                b.addEventListener('click', () => { pilih = r.id; tampilError(''); renderPilih(); });
+                const b = kartuRuang(r, varian, r.fasilitas, label, tip);
+                if (st.k === 'busy') b.disabled = true;
                 grid.appendChild(b);
             });
             box.appendChild(grid);
