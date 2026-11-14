@@ -11,8 +11,7 @@
                 if (!user || !user.email) { window.location.replace('index.html'); return; }
                 document.documentElement.dataset.peran = user.peran === 'admin' ? 'admin' : 'pengguna';
                 try {   // preferensi tampilan dipasang sebelum halaman digambar (lihat ui.css / ui.js)
-                    const pa = localStorage.getItem('ui-animasi');
-                    if (pa === 'penuh' || pa === 'hemat') document.documentElement.dataset.animasi = pa;
+                    localStorage.removeItem('ui-animasi');   // sakelar "Animasi" sudah dihapus; pilihan lama (mis. "Hemat") tidak boleh mematikan animasi
                     if (sessionStorage.getItem('ui-sb')) document.documentElement.setAttribute('data-ui-sb', ''); else sessionStorage.setItem('ui-sb', '1');
                 } catch (e) { /* abaikan */ }
             } catch (error) { window.location.replace('index.html'); }
@@ -24,7 +23,7 @@
     <link rel="stylesheet" href="jadwal.css?v=5">
     <link rel="stylesheet" href="pesan.css?v=3">
     <link rel="stylesheet" href="profil.css?v=1">
-    <link rel="stylesheet" href="ui.css?v=5">
+    <link rel="stylesheet" href="ui.css?v=6">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -132,7 +131,7 @@
     <div class="toast" id="toast" role="status"></div>
 
     <script src="app.js?v=3"></script>
-    <script src="ajukan.js?v=1"></script>
+    <script src="ajukan.js?v=2"></script>
     <script src="pesan-notif.js?v=1"></script>
     <script src="profil.js?v=1"></script>
     <script src="ui.js?v=3"></script>

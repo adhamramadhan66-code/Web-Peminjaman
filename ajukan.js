@@ -145,7 +145,7 @@
         const o = el('div', 'sukses-overlay'); o.setAttribute('role', 'alertdialog'); o.setAttribute('aria-live', 'assertive');
         o.setAttribute('aria-label', 'Pengajuan berhasil');
         const box = el('div', 'sukses-box');
-        box.innerHTML = '<svg class="sukses-ikon" viewBox="0 0 52 52" aria-hidden="true"><circle class="sukses-lingkar" cx="26" cy="26" r="24"/>'
+        box.innerHTML = '<svg class="sukses-ikon" viewBox="0 0 52 52" aria-hidden="true"><circle class="sukses-putar" cx="26" cy="26" r="24"/><circle class="sukses-lingkar" cx="26" cy="26" r="24"/>'
             + '<path class="sukses-centang" d="M14 27l8 8 16-17"/></svg>';
         box.appendChild(el('h3', null, disetujui ? 'Peminjaman disetujui' : 'Pengajuan berhasil'));
         box.appendChild(el('p', null, disetujui ? 'Ruang sudah dipesan untukmu.'
@@ -154,7 +154,7 @@
         box.appendChild(lihat);
         box.appendChild(el('small', null, 'Mengalihkan ke riwayat peminjaman\u2026'));
         o.appendChild(box); document.body.appendChild(o);
-        setTimeout(() => { location.href = 'peminjaman.html'; }, 2600);
+        setTimeout(() => { location.href = 'peminjaman.html'; }, 4200);   // beri waktu animasi putar + centang selesai dan terbaca
     }
 
     muatKetersediaan();
