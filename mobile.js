@@ -30,10 +30,11 @@
     sinkron();
 
     // ---- layar lebar: tetap terbuka saat pindah lewat menu; klik di luar menutup ----
-    const KUNCI = 'sb-nav';
+    const KUNCI = 'sb-nav', html0 = document.documentElement;
     let dariMenu = false;
     try { dariMenu = sessionStorage.getItem(KUNCI) === '1'; sessionStorage.removeItem(KUNCI); } catch (e) { /* abaikan */ }
     if (dariMenu && !mq.matches && !terbuka()) tg.click();   // dijalankan saat .preload aktif, jadi tanpa animasi
+    html0.classList.remove('sb-buka');   // keadaan sebenarnya (.expanded) sudah terpasang; tampilannya sama, jadi tanpa kedip
 
     sb.querySelectorAll('a.nav-item[href]').forEach((a) => a.addEventListener('click', () => {
         const h = a.getAttribute('href') || '';

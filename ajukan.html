@@ -18,7 +18,7 @@
         })();
     </script>
     <title>Ajukan Ruang | Kampusly</title>
-    <link rel="stylesheet" href="style.css?v=18">
+    <link rel="stylesheet" href="style.css?v=19">
     <link rel="stylesheet" href="denah.css?v=8">
     <link rel="stylesheet" href="jadwal.css?v=9">
     <link rel="stylesheet" href="pesan.css?v=3">
@@ -29,6 +29,11 @@
     <script>
         try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 'dark'; }
         catch (e) { document.documentElement.dataset.theme = 'dark'; }
+    </script>
+    <script>
+        // Pindah halaman lewat menu saat sidebar terbuka: pasang kelas sebelum halaman digambar supaya sidebar langsung tampil terbuka
+        // (tanpa kedip tertutup -> terbuka). Kelas dilepas oleh mobile.js setelah keadaan sebenarnya terpasang.
+        try { if (sessionStorage.getItem('sb-nav') === '1' && window.innerWidth > 768) document.documentElement.classList.add('sb-buka'); } catch (e) { /* abaikan */ }
     </script>
 </head>
 <body class="preload">
@@ -135,6 +140,6 @@
     <script src="pesan-notif.js?v=1"></script>
     <script src="profil.js?v=1"></script>
     <script src="ui.js?v=5"></script>
-    <script src="mobile.js?v=3"></script>
+    <script src="mobile.js?v=4"></script>
 </body>
 </html>
