@@ -612,6 +612,9 @@
       message.className = 'login-message show' + (type === 'success' ? ' success' : '');
     }
 
+    // Setelah masuk, sidebar selalu mulai mengecil: buang penanda "pindah lewat menu" yang mungkin tersisa.
+    try { sessionStorage.removeItem('sb-nav'); } catch (error) { /* abaikan */ }
+
     // Jika sesi demo masih aktif, langsung buka dashboard.
     try {
       if (sessionStorage.getItem(SESSION_KEY)) {

@@ -320,17 +320,7 @@ ui-riak > ui-g { position: absolute; display: block; border-radius: 50%; backgro
 .ui-tampil { animation: none !important; }   /* sudah tampil lewat scroll: jangan memutar ulang animasi masuk bawaannya */
 
 /* ---------- 8. perpindahan antarhalaman ---------- */
-/* Browser yang mendukung (Chrome/Edge 126+, Safari 18.2+) memberi transisi halus saat pindah menu: sidebar tetap diam,
-   isi halaman bergeser. Browser lain mengabaikannya dengan aman. */
-@view-transition { navigation: auto; }
-.sidebar { view-transition-name: ui-sidebar; }
-.main-content { view-transition-name: ui-konten; }
-::view-transition-old(ui-konten) { animation: ui-vt-keluar 0.3s ease both; }
-::view-transition-new(ui-konten) { animation: ui-vt-masuk 0.55s var(--ui-ease) both; }
-@keyframes ui-vt-keluar { to { opacity: 0; transform: translateX(-36px) scale(0.985); } }
-@keyframes ui-vt-masuk { from { opacity: 0; transform: translateX(48px) scale(0.985); } }
-::view-transition-group(ui-sidebar) { animation-duration: 0.3s; }
-::view-transition-old(ui-sidebar), ::view-transition-new(ui-sidebar) { animation: none; mix-blend-mode: normal; }
+/* Sengaja TANPA transisi antarhalaman (halaman langsung berganti) supaya ringan. */
 
 /* ---------- hemat gerak ---------- */
 /* Dipakai bila perangkat meminta "kurangi gerakan" (kecuali pengguna memilih "Animasi penuh") atau pengguna memilih "Hemat". */
@@ -341,7 +331,6 @@ ui-riak > ui-g { position: absolute; display: block; border-radius: 50%; backgro
 html[data-animasi="hemat"], html[data-animasi="hemat"] * , html[data-animasi="hemat"] *::before, html[data-animasi="hemat"] *::after {
     animation: none !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important;
 }
-html[data-animasi="hemat"]::view-transition-group(*), html[data-animasi="hemat"]::view-transition-old(*), html[data-animasi="hemat"]::view-transition-new(*) { animation: none !important; }
 html[data-animasi="hemat"] .ui-reveal { opacity: 1; transform: none; }
 
 /* ---------- video hero di atas dashboard ---------- */
