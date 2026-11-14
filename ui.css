@@ -343,7 +343,8 @@ html[data-animasi="hemat"], html[data-animasi="hemat"] * , html[data-animasi="he
     background-image: linear-gradient(180deg, #065f46 0%, #064e3b 50%, #0b4a52 100%);
     border-right-color: rgba(255, 255, 255, 0.08);
 }
-:root[data-theme="light"] .sidebar .logo-img { background: #fff; border-radius: 0.65rem; padding: 0.3rem 0.45rem; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.22); }
+/* logo tanpa kotak: jadi siluet putih agar menyatu dengan sidebar hijau (latar PNG sudah transparan) */
+:root[data-theme="light"] .sidebar .logo-img { filter: brightness(0) invert(1); opacity: 0.95; }
 :root[data-theme="light"] .sidebar .nav-item { color: rgba(236, 253, 245, 0.80); }
 :root[data-theme="light"] .sidebar .nav-item:hover { color: #fff; background-color: rgba(255, 255, 255, 0.12); }
 :root[data-theme="light"] .sidebar .nav-item.active { color: #fff; background-color: rgba(255, 255, 255, 0.13); background-image: linear-gradient(90deg, rgba(110, 231, 183, 0.30), rgba(110, 231, 183, 0) 82%); }

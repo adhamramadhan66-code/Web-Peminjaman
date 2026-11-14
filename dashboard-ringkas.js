@@ -32,7 +32,7 @@
         $('agendaTitle').textContent = hariIni ? 'Agenda Hari Ini' : 'Agenda ' + d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
         $('kpiAgendaLabel').textContent = hariIni ? 'Agenda Hari Ini' : 'Agenda Tanggal Terpilih';
         $('kpiPakaiLabel').textContent = hariIni ? 'Sedang Dipakai' : 'Ruang Terjadwal';
-        $('agendaMore').href = 'jadwal.html?tanggal=' + key; $('agendaLink').href = 'jadwal.html?tanggal=' + key;
+        $('agendaMore').href = 'jadwal.html?tanggal=' + key;
         try {
             const [jr, rr] = await Promise.all([
                 fetch('api/jadwal.php?tanggal=' + key, { cache: 'no-store' }).then((r) => r.json()),
