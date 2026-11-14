@@ -18,8 +18,7 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && mq.matches) tutup(); });
 
     const ubah = (e) => {
-        if (e.matches) tutup();
-        else if (!terbuka()) tg.click();
+        if (e.matches) tutup();   // ke layar HP: menutup. Ke layar lebar: tetap mengecil (kondisi awal)
         sinkron();
     };
     if (mq.addEventListener) mq.addEventListener('change', ubah); else mq.addListener(ubah);

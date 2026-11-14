@@ -23,7 +23,7 @@
     <link rel="stylesheet" href="denah.css?v=11">
     <link rel="stylesheet" href="pesan.css?v=1">
     <link rel="stylesheet" href="profil.css?v=1">
-    <link rel="stylesheet" href="ui.css?v=7">
+    <link rel="stylesheet" href="ui.css?v=8">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -94,7 +94,7 @@
                     <svg class="theme-icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
                 </button>
                 <span id="currentUserLabel" class="user-label">Admin TSU</span>
-                <img src="https://i.pravatar.cc/150?img=32" alt="Profil Admin TSU" class="profile-img">
+                <img src="foto-kosong.jpg" alt="Foto profil" class="profile-img">
             </div>
         </header>
 
@@ -177,10 +177,9 @@
                 sidebar.classList.toggle('expanded', open); tg.classList.toggle('expanded', open);
                 tg.setAttribute('aria-expanded', String(open)); tg.setAttribute('aria-label', open ? 'Tutup sidebar' : 'Buka sidebar');
             };
-            const simpan = (o) => { try { if (window.innerWidth > 768) sessionStorage.setItem('sb-open', o ? '1' : '0'); } catch (e) {} };
-            const awal = (() => { try { return sessionStorage.getItem('sb-open') === '1'; } catch (e) { return false; } })();
-            set(awal);
-            tg.addEventListener('click', () => { const o = !sidebar.classList.contains('expanded'); set(o); simpan(o); });
+// Kondisi awal selalu mengecil (hanya ikon); dibuka manual lewat tombol panah.
+            set(false);
+            tg.addEventListener('click', () => set(!sidebar.classList.contains('expanded')));
 
             if (window.lucide) lucide.createIcons();
             requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove('preload')));
@@ -189,6 +188,6 @@
     <script src="pesan-notif.js?v=1"></script>
     <script src="profil.js?v=1"></script>
     <script src="ui.js?v=4"></script>
-    <script src="mobile.js?v=1"></script>
+    <script src="mobile.js?v=2"></script>
 </body>
 </html>
