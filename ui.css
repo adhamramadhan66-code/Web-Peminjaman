@@ -2,7 +2,7 @@
    ui.css  -  lapisan tampilan bersama (dimuat PALING AKHIR di semua halaman dalam)
    1. Dasar & variabel gerak     4. Kartu, tombol, input, navigasi (kedalaman + interaksi)
    2. Perbaikan tata letak HP    5. Jendela (modal) & pesan
-   3. Tabel -> kartu di HP       6. Animasi masuk halaman, tabel, chat
+   3. Tabel -> kartu di HP       6. Tampilan halaman (tanpa animasi masuk)
    Semua gerak dimatikan otomatis bagi pengguna yang memilih "kurangi gerakan" (bagian paling bawah).
    ===================================================================== */
 
@@ -219,83 +219,19 @@ tr:hover .badge-st { transform: scale(1.06); }
 .avatar { transition: transform 0.3s var(--ui-spring); }
 .kontak:hover .avatar { transform: scale(1.12) rotate(-4deg); }
 
-/* menu foto profil: butirnya masuk bergantian */
-@keyframes ui-butir { 0% { opacity: 0; transform: translateX(-16px); } 100% { opacity: 1; transform: none; } }
-.pf-menu.buka .pf-item, .pf-menu.buka .pf-head { animation: ui-butir 0.35s var(--ui-ease) backwards; }
-.pf-menu.buka .pf-head { animation-delay: 0.02s; }
-.pf-menu.buka .pf-item:nth-of-type(1) { animation-delay: 0.08s; }
-.pf-menu.buka .pf-item:nth-of-type(2) { animation-delay: 0.13s; }
-.pf-menu.buka .pf-item:nth-of-type(3) { animation-delay: 0.18s; }
-.pf-menu.buka .pf-item:nth-of-type(4) { animation-delay: 0.23s; }
-.pf-menu.buka .pf-item:nth-of-type(5) { animation-delay: 0.28s; }
 
-/* ---------- 6. animasi masuk ---------- */
-/* Memakai fill-mode "backwards": setelah selesai, elemen kembali ke gayanya sendiri sehingga efek hover (transform) tetap berfungsi. */
-@keyframes ui-naik { 0% { opacity: 0; transform: translateY(40px) scale(0.96); } 100% { opacity: 1; transform: none; } }
-@keyframes ui-turun { 0% { opacity: 0; transform: translateY(-28px); } 100% { opacity: 1; transform: none; } }
-@keyframes ui-kartu-pop { 0% { opacity: 0; transform: perspective(700px) rotateX(-18deg) translateY(38px) scale(0.9); } 100% { opacity: 1; transform: none; } }
-@keyframes ui-baris { 0% { opacity: 0; transform: translateX(-30px); } 100% { opacity: 1; transform: none; } }
-@keyframes ui-geser-kanan { 0% { opacity: 0; transform: translateX(-34px); } 100% { opacity: 1; transform: none; } }
-@keyframes ui-ubin { 0% { opacity: 0; transform: scale(0.78) translateY(16px); } 100% { opacity: 1; transform: none; } }
-@keyframes ui-logo { 0% { opacity: 0; transform: scale(0.55) rotate(-10deg); } 100% { opacity: 1; transform: none; } }
-@keyframes ui-garis { 0% { width: 0; opacity: 0; } 100% { width: 2.8rem; opacity: 1; } }
+/* ---------- 6. tampilan halaman ---------- */
+/* Sengaja TANPA animasi masuk (judul, kartu ringkasan, baris tabel, kartu ruang) dan TANPA animasi miring/muncul-saat-scroll,
+   supaya perpindahan antarhalaman terasa langsung dan ringan. Yang tersisa hanya umpan balik kecil saat hover/klik. */
 
-.main-content > .header { animation: ui-turun 0.75s var(--ui-ease) backwards; }
-.main-content > :not(.header) { animation: ui-naik 0.85s var(--ui-ease) backwards; }
-.main-content > :nth-child(2) { animation-delay: 0.12s; }
-.main-content > :nth-child(3) { animation-delay: 0.24s; }
-.main-content > :nth-child(4) { animation-delay: 0.36s; }
-.main-content > :nth-child(5) { animation-delay: 0.48s; }
-.main-content > :nth-child(n + 6) { animation-delay: 0.56s; }
-
-/* garis aksen di bawah judul halaman tumbuh dari kiri */
+/* garis aksen statis di bawah judul halaman */
 .header h2 { position: relative; padding-bottom: 0.55rem; }
 .header h2::after {
     content: ""; position: absolute; left: 0; bottom: 0; height: 3px; width: 2.8rem; border-radius: 3px;
-    background: linear-gradient(90deg, var(--green), #3b82f6); animation: ui-garis 0.9s 0.4s var(--ui-ease) backwards;
+    background: linear-gradient(90deg, var(--green), #3b82f6);
 }
 
 /* sidebar: sengaja TANPA animasi (logo/menu masuk, ikon bergoyang, lencana berdenyut) supaya ringan. Hanya transisi buka/tutup dan warna aktif. */
-
-/* kartu ringkasan masuk dengan efek miring-pop, bergantian */
-.kpi-grid > .kpi-card { animation: ui-kartu-pop 0.85s var(--ui-spring) backwards; }
-.kpi-grid > .kpi-card:nth-child(1) { animation-delay: 0.20s; }
-.kpi-grid > .kpi-card:nth-child(2) { animation-delay: 0.32s; }
-.kpi-grid > .kpi-card:nth-child(3) { animation-delay: 0.44s; }
-.kpi-grid > .kpi-card:nth-child(4) { animation-delay: 0.56s; }
-.pinjam-layout > :nth-child(2), .editor-layout > :nth-child(2) { animation: ui-naik 0.85s var(--ui-ease) 0.3s backwards; }
-
-/* baris tabel masuk berurutan dari kiri setiap daftar dimuat ulang (ganti halaman / filter / tab) */
-.tbl tbody tr:not(.empty-row), table.agenda tbody tr { animation: ui-baris 0.55s var(--ui-ease) backwards; }
-.tbl tbody tr:nth-child(2), table.agenda tbody tr:nth-child(2) { animation-delay: 0.06s; }
-.tbl tbody tr:nth-child(3), table.agenda tbody tr:nth-child(3) { animation-delay: 0.12s; }
-.tbl tbody tr:nth-child(4), table.agenda tbody tr:nth-child(4) { animation-delay: 0.18s; }
-.tbl tbody tr:nth-child(5), table.agenda tbody tr:nth-child(5) { animation-delay: 0.24s; }
-.tbl tbody tr:nth-child(6), table.agenda tbody tr:nth-child(6) { animation-delay: 0.30s; }
-.tbl tbody tr:nth-child(7), table.agenda tbody tr:nth-child(7) { animation-delay: 0.36s; }
-.tbl tbody tr:nth-child(8), table.agenda tbody tr:nth-child(8) { animation-delay: 0.42s; }
-.tbl tbody tr:nth-child(n + 9), table.agenda tbody tr:nth-child(n + 9) { animation-delay: 0.48s; }
-
-/* kartu ruang muncul membesar dengan efek pantul, bergantian */
-.room-tiles > .rk, .room-grid > * { animation: ui-ubin 0.6s var(--ui-spring) backwards; }
-.room-tiles > :nth-child(2), .room-grid > :nth-child(2) { animation-delay: 0.07s; }
-.room-tiles > :nth-child(3), .room-grid > :nth-child(3) { animation-delay: 0.14s; }
-.room-tiles > :nth-child(4), .room-grid > :nth-child(4) { animation-delay: 0.21s; }
-.room-tiles > :nth-child(5), .room-grid > :nth-child(5) { animation-delay: 0.28s; }
-.room-tiles > :nth-child(6), .room-grid > :nth-child(6) { animation-delay: 0.35s; }
-.room-tiles > :nth-child(n + 7), .room-grid > :nth-child(n + 7) { animation-delay: 0.42s; }
-
-/* latar bergerak: dua cahaya besar melayang pelan di belakang konten */
-body::before, body::after { content: ""; position: fixed; z-index: -1; border-radius: 50%; pointer-events: none; will-change: transform; filter: blur(64px); }
-body::before { width: 40rem; height: 40rem; left: -12rem; top: -14rem; opacity: 0.55;
-    background: radial-gradient(circle, rgba(16, 185, 129, 0.40), transparent 66%); animation: ui-melayang-a 24s ease-in-out infinite alternate; }
-body::after { width: 36rem; height: 36rem; right: -10rem; bottom: -14rem; opacity: 0.5;
-    background: radial-gradient(circle, rgba(59, 130, 246, 0.34), transparent 66%); animation: ui-melayang-b 29s ease-in-out infinite alternate; }
-:root[data-theme="light"] body::before { opacity: 0.40; }
-:root[data-theme="light"] body::after { opacity: 0.34; }
-@keyframes ui-melayang-a { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(18vw, 14vh) scale(1.15); } 100% { transform: translate(6vw, 30vh) scale(0.95); } }
-@keyframes ui-melayang-b { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(-20vw, -12vh) scale(1.2); } 100% { transform: translate(-6vw, -28vh) scale(0.95); } }
-@media (max-width: 768px) { body::before, body::after { filter: blur(48px); width: 26rem; height: 26rem; } }
 
 /* ---------- 7. efek interaksi ---------- */
 /* riak klik (elemen dibuat ui.js; memakai elemen khusus <ui-riak> agar tidak terkena aturan "span" milik sidebar) */
@@ -310,14 +246,6 @@ ui-riak > ui-g { position: absolute; display: block; border-radius: 50%; backgro
 @media (hover: hover) { .btn.primary:hover:not(:disabled)::after { animation: ui-kilau 0.9s ease; } }
 @keyframes ui-kilau { to { transform: translateX(260%) skewX(-18deg); } }
 
-/* kartu ringkasan & kartu ruang: miring mengikuti kursor (diatur ui.js lewat transform inline) */
-.kpi-card, .rk { transform-style: preserve-3d; }
-.ui-miring-lepas { transition: transform 0.5s var(--ui-spring) !important; }
-
-/* muncul saat di-scroll: kartu yang berada di bawah layar saat halaman dibuka tampil ketika didekati */
-.ui-reveal { opacity: 0; transform: translateY(54px) scale(0.96); animation: none !important; transition: opacity 0.8s var(--ui-ease), transform 0.8s var(--ui-ease); }
-.ui-reveal.ui-lihat { opacity: 1; transform: none; }
-.ui-tampil { animation: none !important; }   /* sudah tampil lewat scroll: jangan memutar ulang animasi masuk bawaannya */
 
 /* ---------- 8. perpindahan antarhalaman ---------- */
 /* Sengaja TANPA transisi antarhalaman (halaman langsung berganti) supaya ringan. */
@@ -331,7 +259,6 @@ ui-riak > ui-g { position: absolute; display: block; border-radius: 50%; backgro
 html[data-animasi="hemat"], html[data-animasi="hemat"] * , html[data-animasi="hemat"] *::before, html[data-animasi="hemat"] *::after {
     animation: none !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important;
 }
-html[data-animasi="hemat"] .ui-reveal { opacity: 1; transform: none; }
 
 /* ---------- video hero di atas dashboard ---------- */
 /* Penuh sampai tepi atas, memudar transparan ke arah kartu ringkasan (model sama seperti web persuratan baru). */

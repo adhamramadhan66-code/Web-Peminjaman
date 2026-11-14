@@ -1,5 +1,5 @@
 /* ui.js - pelengkap lapisan tampilan (ui.css). Dimuat di semua halaman dalam; tidak mengubah data atau logika halaman.
-   (bagian 5-8: mode animasi, riak klik, kartu miring, muncul saat scroll)
+   (bagian 5-6, 9: mode animasi, riak klik, geser menu di HP)
    1) Angka ringkasan (kartu KPI) menghitung naik dari 0 saat tampil dan saat nilainya berubah.
    2) Tabel diberi data-label per sel (dari judul kolom) supaya di HP tampil sebagai kartu (lihat ui.css bagian 3).
    3) Pergantian tema tampil dengan transisi warna yang halus.
@@ -102,40 +102,6 @@
         setTimeout(() => wadah.remove(), 1100);
     }, true);
 
-    // ---------- 7. kartu miring mengikuti kursor (hanya mouse) ----------
-    let miring = null;
-    function lepasMiring(el) {
-        if (!el) return;
-        el.classList.add('ui-miring-lepas'); el.style.transform = '';
-        setTimeout(() => el.classList.remove('ui-miring-lepas'), 520);
-    }
-    document.addEventListener('pointermove', (e) => {
-        if (e.pointerType !== 'mouse' || !aktif()) return;
-        const t = e.target.closest && e.target.closest('.kpi-card, .rk');
-        if (miring && miring !== t) { lepasMiring(miring); miring = null; }
-        if (!t) return;
-        miring = t;
-        const r = t.getBoundingClientRect(), px = (e.clientX - r.left) / r.width - 0.5, py = (e.clientY - r.top) / r.height - 0.5;
-        t.classList.remove('ui-miring-lepas');
-        t.style.transform = 'perspective(800px) rotateX(' + (-py * 10).toFixed(2) + 'deg) rotateY(' + (px * 12).toFixed(2) + 'deg) translateY(-4px) scale(1.02)';
-    }, { passive: true });
-    document.addEventListener('mouseout', (e) => { if (!e.relatedTarget && miring) { lepasMiring(miring); miring = null; } });
-
-    // ---------- 8. kartu di bawah layar muncul saat di-scroll ----------
-    if ('IntersectionObserver' in window) {
-        const io = new IntersectionObserver((daftar) => {
-            daftar.forEach((en) => {
-                if (!en.isIntersecting) return;
-                const el = en.target; io.unobserve(el); el.classList.add('ui-lihat');
-                setTimeout(() => { el.classList.remove('ui-reveal', 'ui-lihat'); el.classList.add('ui-tampil'); }, 1000);
-            });
-        }, { threshold: 0.12 });
-        document.querySelectorAll('.main-content .panel, .main-content .chart-card, .main-content .table-card').forEach((el) => {
-            const r = el.getBoundingClientRect();
-            if (!aktif() || r.height === 0 || r.top < window.innerHeight * 0.6) return;     // yang sudah jelas terlihat memakai animasi masuk biasa
-            el.classList.add('ui-reveal'); io.observe(el);
-        });
-    }
 
     // ---------- 9. geser untuk membuka / menutup menu (HP) ----------
     const tombolMenu = document.getElementById('sidebarToggle');

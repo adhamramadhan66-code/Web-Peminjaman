@@ -297,15 +297,9 @@ body { transition: background-color 0.25s ease, color 0.25s ease; }
     border-radius: 0 4px 4px 0;
     background: var(--green);
     box-shadow: 0 0 8px 1px var(--green), 0 0 22px 4px rgba(16, 185, 129, 0.55);
-    animation: nav-glow 2.6s ease-in-out infinite;
     pointer-events: none;
 }
 .nav-item.active .icon { color: var(--green); }
-@keyframes nav-glow {
-    0%, 100% { opacity: 0.8; }
-    50%      { opacity: 1; box-shadow: 0 0 10px 2px var(--green), 0 0 30px 7px rgba(16, 185, 129, 0.6); }
-}
-@media (prefers-reduced-motion: reduce) { .nav-item.active::before { animation: none; } }
 
 
 /* =====================================================================
