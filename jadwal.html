@@ -21,7 +21,7 @@
     <title>Jadwal Ruang | Kampusly</title>
     <link rel="stylesheet" href="style.css?v=17">
     <link rel="stylesheet" href="denah.css?v=8">
-    <link rel="stylesheet" href="jadwal.css?v=7">
+    <link rel="stylesheet" href="jadwal.css?v=8">
     <link rel="stylesheet" href="pesan.css?v=3">
     <link rel="stylesheet" href="profil.css?v=1">
     <link rel="stylesheet" href="ui.css?v=3">
@@ -128,6 +128,7 @@
                     <button type="button" class="btn" id="btnTemplate" title="Unduh contoh berkas Excel untuk tab ini"><i data-lucide="download"></i> Template</button>
                     <button type="button" class="btn" id="btnImpor" title="Tambahkan data dari berkas Excel (.xlsx / .xls / .csv)"><i data-lucide="file-spreadsheet"></i> Impor Excel</button>
                     <button type="button" class="btn primary" id="btnTambah"><i data-lucide="plus"></i> Tambah data</button>
+                    <button type="button" class="btn danger" id="btnHapusSemua" title="Hapus seluruh data jadwal / peminjaman"><i data-lucide="trash-2"></i> Hapus semua</button>
                     <input type="file" id="fileExcel" accept=".xlsx,.xls,.csv" hidden>
                 </div>
             </div>
@@ -173,6 +174,25 @@
         </div>
     </div>
 
+    <!-- Konfirmasi hapus semua data (khusus admin) -->
+    <div class="room-modal" id="hapusModal" role="alertdialog" aria-modal="true" aria-labelledby="hapusTitle" hidden>
+        <div class="room-modal-box">
+            <div class="room-modal-head">
+                <div><h3 id="hapusTitle">Hapus semua data?</h3><p>Centang data yang ingin dihapus. Tindakan ini tidak bisa dibatalkan.</p></div>
+                <button type="button" class="btn-round" id="hapusClose" aria-label="Tutup"><i data-lucide="x"></i></button>
+            </div>
+            <div class="room-modal-list">
+                <label class="hapus-opsi"><input type="checkbox" id="hpKegiatan"><span><b>Kegiatan &amp; peminjaman</b><small>Seluruh kegiatan dan pengajuan peminjaman, termasuk yang masih menunggu persetujuan.</small></span></label>
+                <label class="hapus-opsi"><input type="checkbox" id="hpKuliah"><span><b>Jadwal kuliah</b><small>Seluruh jadwal kuliah mingguan.</small></span></label>
+                <div class="form-err" id="hpErr" role="alert"></div>
+                <div class="kbtns">
+                    <button type="button" class="btn" id="hpBatal">Batal</button>
+                    <button type="button" class="btn danger" id="hpOk" disabled><i data-lucide="trash-2"></i> <span id="hpOkTeks">Hapus</span></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Form tambah / ubah data (khusus admin) -->
     <div class="room-modal" id="formModal" role="dialog" aria-modal="true" aria-labelledby="formTitle" hidden>
         <div class="room-modal-box modal-lebar">
@@ -205,7 +225,7 @@
     <script src="app.js?v=2"></script>
     <script src="alasan.js?v=1"></script>
     <script src="jadwal.js?v=6"></script>
-    <script src="jadwal-kelola.js?v=1"></script>
+    <script src="jadwal-kelola.js?v=2"></script>
     <script src="pesan-notif.js?v=1"></script>
     <script src="profil.js?v=1"></script>
     <script src="ui.js?v=3"></script>

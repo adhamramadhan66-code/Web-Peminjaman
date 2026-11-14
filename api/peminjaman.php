@@ -8,6 +8,7 @@
  *   POST api/peminjaman.php {aksi: tolak, id, alasan}   (admin: tolak / batalkan; ALASAN WAJIB, dikirim ke pemohon lewat Pesan)
  *   POST api/peminjaman.php {aksi: simpan, id?, elemen_id, tanggal, mulai, selesai, keperluan, ...}  (admin: tambah/ubah)
  *   POST api/peminjaman.php {aksi: impor, uji?, baris: [...]}                                        (admin: impor Excel)
+ *   POST api/peminjaman.php {aksi: hapus_semua}                                                      (admin: hapus SELURUH data peminjaman)
  * Pengajuan baru berstatus "menunggu" sampai admin menyetujui (atau "langsung": true).
  * Pengajuan yang bentrok dengan kegiatan disetujui / jadwal kuliah ditolak sistem.
  * Wajib login. Setujui / tolak / hapus dan opsi "langsung" hanya untuk admin.
@@ -131,7 +132,7 @@ try {
     $in = json_decode(file_get_contents('php://input') ?: '', true);
     if (!is_array($in)) keluar(['error' => 'Data JSON tidak valid.'], 400);
 
-    if (in_array($in['aksi'] ?? '', ['setujui', 'tolak', 'hapus', 'simpan', 'impor'], true) && $saya['peran'] !== 'admin') {
+    if (in_array($in['aksi'] ?? '', ['setujui', 'tolak', 'hapus', 'hapus_semua', 'simpan', 'impor'], true) && $saya['peran'] !== 'admin') {
         keluar(['error' => 'Hanya admin yang dapat mengelola data jadwal.'], 403);
     }
 
@@ -270,6 +271,10 @@ try {
         case 'hapus':
             $pdo->prepare('DELETE FROM peminjaman WHERE id = ?')->execute([(int) ($in['id'] ?? 0)]);
             keluar(['ok' => true]);
+
+        case 'hapus_semua':   // admin: kosongkan seluruh kegiatan & peminjaman
+            $n = $pdo->exec('DELETE FROM peminjaman');
+            keluar(['ok' => true, 'terhapus' => (int) $n]);
 
         default:
             keluar(['error' => 'Aksi tidak dikenal.'], 400);

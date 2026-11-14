@@ -246,7 +246,8 @@
     const formModal = $('formModal'), imporModal = $('imporModal');
     function bukaModal(m, fokus) { m.hidden = false; document.body.style.overflow = 'hidden'; if (fokus) fokus.focus(); }
     function tutupModal(m) { if (m.hidden) return; m.hidden = true; if (!document.querySelector('.room-modal:not([hidden])')) document.body.style.overflow = ''; }
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { tutupModal(formModal); tutupModal(imporModal); } });
+    const hapusModal = $('hapusModal');
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { tutupModal(formModal); tutupModal(imporModal); tutupModal(hapusModal); } });
     $('formClose').addEventListener('click', () => tutupModal(formModal));
     $('kBatal').addEventListener('click', () => tutupModal(formModal));
     $('imporClose').addEventListener('click', () => tutupModal(imporModal));
@@ -376,6 +377,51 @@
             await window.KPJadwal.segarkan();
         } catch (err) { toast(err.message, true); }
     }
+
+    // =====================================================================
+    //  Hapus semua (per jenis data, atau keduanya)
+    // =====================================================================
+    function pesanHapus(t) { const e = $('hpErr'); e.textContent = t; e.className = 'form-err' + (t ? ' show' : ''); }
+    function perbaruiHapus() {
+        const a = $('hpKegiatan').checked, b = $('hpKuliah').checked;
+        $('hpOk').disabled = !(a || b);
+        $('hpOkTeks').textContent = a && b ? 'Hapus semua' : 'Hapus';
+    }
+    function bukaHapusSemua() {
+        const tab = window.KPJadwal.tab();
+        $('hpKegiatan').checked = tab === 'kegiatan';     // bawaan: hanya jenis data pada tab yang sedang dibuka
+        $('hpKuliah').checked = tab === 'kuliah';
+        pesanHapus(''); perbaruiHapus();
+        $('hpBatal').disabled = false;
+        bukaModal(hapusModal, $('hpBatal'));
+    }
+    async function jalankanHapusSemua() {
+        const pilih = [];
+        if ($('hpKegiatan').checked) pilih.push('kegiatan');
+        if ($('hpKuliah').checked) pilih.push('kuliah');
+        if (!pilih.length) return;
+        const ok = $('hpOk'), batal = $('hpBatal');
+        ok.disabled = true; batal.disabled = true; pesanHapus('');
+        const hasil = [];
+        try {
+            for (const tab of pilih) {
+                const d = await api(URL_API[tab], { aksi: 'hapus_semua' });
+                hasil.push(d.terhapus + (tab === 'kegiatan' ? ' kegiatan/peminjaman' : ' jadwal kuliah'));
+            }
+            tutupModal(hapusModal);
+            toast(hasil.join(' dan ') + ' dihapus');
+        } catch (err) {
+            pesanHapus((hasil.length ? hasil.join(' dan ') + ' sudah terhapus, tetapi ' : '') + err.message);
+        }
+        batal.disabled = false; perbaruiHapus();
+        if (window.KPJadwal) await window.KPJadwal.segarkan();
+    }
+    $('btnHapusSemua').addEventListener('click', bukaHapusSemua);
+    $('hpKegiatan').addEventListener('change', perbaruiHapus);
+    $('hpKuliah').addEventListener('change', perbaruiHapus);
+    $('hpBatal').addEventListener('click', () => tutupModal(hapusModal));
+    $('hapusClose').addEventListener('click', () => tutupModal(hapusModal));
+    $('hpOk').addEventListener('click', jalankanHapusSemua);
 
     // =====================================================================
     //  Template Excel

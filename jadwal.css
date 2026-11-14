@@ -176,3 +176,13 @@
     .list-actions .btn { flex: 1; justify-content: center; }
 }
 
+
+/* Tombol bahaya (merah) + pilihan di popup "Hapus semua" */
+.btn.danger, .btn.danger:hover { background: var(--red); border-color: var(--red); color: #fff; font-weight: 600; }
+.btn.danger:hover { filter: brightness(0.92); }
+.btn.danger:disabled { opacity: 0.45; cursor: default; pointer-events: none; }
+.hapus-opsi { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.8rem 0.9rem; border: 1px solid var(--border-color); border-radius: 0.6rem; background: var(--surface-2); cursor: pointer; }
+.hapus-opsi:has(input:checked) { border-color: var(--red); background: rgba(239, 68, 68, 0.08); }
+.hapus-opsi input { flex: none; width: 1.05rem; height: 1.05rem; margin-top: 0.2rem; accent-color: var(--red); cursor: pointer; }
+.hapus-opsi b { display: block; font-size: 0.9rem; color: var(--text-main); }
+.hapus-opsi small { display: block; margin-top: 0.15rem; font-size: 0.78rem; line-height: 1.4; color: var(--text-muted); }

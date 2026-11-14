@@ -3,6 +3,7 @@
  * API Jadwal Kuliah (khusus admin). Daftar kuliah dibaca lewat api/jadwal.php?daftar=kuliah.
  *   POST api/kuliah.php {aksi: simpan, id?, elemen_id, hari (1-7), mulai, selesai, matkul, pengajar, kelas, prodi, paksa?}
  *   POST api/kuliah.php {aksi: hapus, id}
+ *   POST api/kuliah.php {aksi: hapus_semua}
  *   POST api/kuliah.php {aksi: impor, uji?, baris: [...]}
  * Jadwal kuliah berlaku setiap minggu pada hari yang sama.
  */
@@ -81,6 +82,10 @@ try {
         case 'hapus':
             $pdo->prepare('DELETE FROM kuliah WHERE id = ?')->execute([(int) ($in['id'] ?? 0)]);
             keluar(['ok' => true]);
+
+        case 'hapus_semua':   // kosongkan seluruh jadwal kuliah
+            $n = $pdo->exec('DELETE FROM kuliah');
+            keluar(['ok' => true, 'terhapus' => (int) $n]);
 
         case 'impor':
             $baris = $in['baris'] ?? null;
