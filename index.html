@@ -3,7 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Masuk ke Kampusly | TSU</title>
+<title>Masuk ke Peminjaman Ruangan | TSU</title>
+<script>
+  // Terapkan tema tersimpan (kunci "theme", sama dengan halaman dalam) sebelum halaman digambar.
+  try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 'dark'; }
+  catch (e) { document.documentElement.dataset.theme = 'dark'; }
+</script>
 <style>
   :root {
     --forest: #2E9E68;
@@ -16,6 +21,34 @@
     --ink-soft: #93A39A;
     --amber: #F2A93B;
     --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --card: #121D17;
+    --field-focus: #1E2E26;
+    --placeholder: #6E7D75;
+    --faint: #4E5C55;
+    --err-fg: #ff9b9b;
+    --ok-fg: #7de0ad;
+    --demo-bg: rgba(255,255,255,.025);
+    --link-hover: #4CC98A;
+    --shadow: 0 24px 60px -28px rgba(0,0,0,.65);
+    color-scheme: dark;
+  }
+  /* Tema terang: nilai-nilai ini memakai ulang nama variabel gelap supaya seluruh halaman ikut berubah. */
+  :root[data-theme="light"] {
+    --dark-bg: #F3F6F4;
+    --dark-surface: #F6F8F7;
+    --dark-line: #D6DDD9;
+    --ink: #1B2A22;
+    --ink-soft: #5F6F66;
+    --card: #FFFFFF;
+    --field-focus: #FFFFFF;
+    --placeholder: #9AA8A0;
+    --faint: #8A978F;
+    --err-fg: #B42318;
+    --ok-fg: #1F7A4D;
+    --demo-bg: #F6F8F7;
+    --link-hover: #1F7A4D;
+    --shadow: 0 24px 60px -30px rgba(20,40,30,.28);
+    color-scheme: light;
   }
 
   * { box-sizing: border-box; }
@@ -70,129 +103,64 @@
     background: var(--dark-bg);
     color: var(--ink);
     overflow-x: hidden;
+    transition: background-color .25s ease, color .25s ease;
   }
 
   .page {
     min-height: 100vh;
     display: flex;
-    align-items: stretch;
+    align-items: center;
+    justify-content: center;
   }
 
-  /* ---------- LEFT: Video Panel ---------- */
-  .story {
-    flex: 1.8;
-    position: relative;
-    overflow: hidden;
-    display: none;
-  }
-
-  @media (min-width: 900px) {
-    .story {
-      display: flex;
-      flex-direction: column;
-      animation: fadeIn 1.1s ease both;
-    }
-  }
-
-  .story-photo {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center center;
-    z-index: 0;
-    will-change: transform;
-  }
-
-  .story-overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg,
-      rgba(15,26,21,0.55) 0%,
-      rgba(15,26,21,0.15) 40%,
-      rgba(15,26,21,0.55) 100%);
-    z-index: 1;
-  }
-
-  /* Transisi ke warna gelap */
-  .story::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    right: -1px;
-    bottom: 0;
-    width: 180px;
-    background: linear-gradient(90deg, transparent, var(--dark-bg));
-    z-index: 4;
-    pointer-events: none;
-  }
-
-  .particles {
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    pointer-events: none;
-    overflow: hidden;
-  }
-  .particles span {
-    position: absolute;
-    bottom: -12%;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.55);
-    filter: blur(0.4px);
-    animation: floatUp linear infinite;
-    will-change: transform, opacity;
-  }
-  .particles span:nth-child(1) { left: 8%;  width: 6px;  height: 6px;  animation-duration: 15s; animation-delay: 0s;    }
-  .particles span:nth-child(2) { left: 24%; width: 10px; height: 10px; background: rgba(242,169,59,.55); animation-duration: 19s; animation-delay: 2.5s; }
-  .particles span:nth-child(3) { left: 41%; width: 5px;  height: 5px;  animation-duration: 13s; animation-delay: 5s;    }
-  .particles span:nth-child(4) { left: 58%; width: 9px;  height: 9px;  background: rgba(160,220,180,.6);  animation-duration: 21s; animation-delay: 1.2s; }
-  .particles span:nth-child(5) { left: 76%; width: 6px;  height: 6px;  animation-duration: 17s; animation-delay: 7s;    }
-  .particles span:nth-child(6) { left: 90%; width: 12px; height: 12px; background: rgba(255,255,255,.35); animation-duration: 23s; animation-delay: 3.6s; }
-
-  .story h1 {
-    position: relative;
-    z-index: 3;
-    font-size: clamp(28px, 3vw, 38px);
-    line-height: 1.25;
-    max-width: 380px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    color: #ffffff;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.35);
-    margin: 56px 0 0 48px;
-    animation: fadeUp .9s var(--ease-out) .35s both;
-  }
-  .story h1::after {
-    content: "";
-    display: block;
-    height: 3px;
-    width: 0;
-    margin-top: 22px;
-    border-radius: 3px;
-    background: linear-gradient(90deg, var(--amber), rgba(242,169,59,0));
-    animation: growLine .9s var(--ease-out) .95s both;
-  }
-
-  /* ---------- RIGHT: Auth Panel (GELAP) ---------- */
+  /* ---------- Kartu login di tengah halaman ---------- */
   .auth {
     flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 40px 24px;
+    padding: 40px 20px;
     position: relative;
     z-index: 5;
-    background: var(--dark-bg);
   }
 
   .auth-card {
     width: 100%;
-    max-width: 360px;
+    max-width: 420px;
+    padding: 34px 32px 28px;
+    background: var(--card);
+    border: 1px solid var(--dark-line);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    transition: background-color .25s ease, border-color .25s ease;
   }
+  @media (max-width: 480px) { .auth-card { padding: 28px 20px 22px; } }
+
+  /* ---------- Tombol tema gelap/terang (pojok kanan atas) ---------- */
+  .theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid var(--dark-line);
+    background: var(--card);
+    color: var(--ink);
+    cursor: pointer;
+    transition: color .2s ease, border-color .2s ease, background-color .25s ease, transform .12s ease;
+  }
+  .theme-toggle:hover { color: var(--forest); border-color: var(--forest); }
+  .theme-toggle:active { transform: scale(.94); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--forest); outline-offset: 2px; }
+  .theme-toggle svg { width: 20px; height: 20px; }
+  /* bulan tampil di tema terang, matahari di tema gelap (sama seperti halaman dalam) */
+  :root:not([data-theme="light"]) .theme-toggle .icon-moon { display: none; }
+  :root[data-theme="light"] .theme-toggle .icon-sun { display: none; }
 
   .brand, h2, .sso-row, .divider, .field,
   .row-between, .btn-primary, .signup, .terms, .copyright {
@@ -212,8 +180,9 @@
   .brand {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
-    margin-bottom: 28px;
+    margin-bottom: 24px;
   }
 
   .brand-mark {
@@ -247,6 +216,7 @@
     font-size: 22px;
     font-weight: 600;
     margin: 0 0 22px 0;
+    text-align: center;
     color: var(--ink);
   }
 
@@ -282,7 +252,7 @@
   }
   .sso-btn:hover {
     border-color: var(--forest);
-    background: #1E2E26;
+    background: var(--field-focus);
     box-shadow: 0 6px 16px -8px rgba(46,158,104,.5);
     transform: translateY(-1px);
   }
@@ -356,13 +326,13 @@
     transition: border-color .2s ease, box-shadow .25s ease, background .2s ease;
   }
 
-  input::placeholder { color: #6E7D75; transition: opacity .2s ease, transform .2s ease; }
+  input::placeholder { color: var(--placeholder); transition: opacity .2s ease, transform .2s ease; }
   input:focus::placeholder { opacity: .55; }
 
   input:focus {
     border-color: var(--forest);
     box-shadow: 0 0 0 3px rgba(46, 158, 104, 0.22);
-    background: #1E2E26;
+    background: var(--field-focus);
   }
 
   .row-between {
@@ -393,7 +363,7 @@
     transform: scaleX(1);
     transform-origin: left center;
   }
-  .link:hover { color: #4CC98A; }
+  .link:hover { color: var(--link-hover); }
 
   .btn-primary {
     position: relative;
@@ -484,7 +454,7 @@
     transform: scaleX(1);
     transform-origin: left center;
   }
-  .signup a:hover { color: #4CC98A; }
+  .signup a:hover { color: var(--link-hover); }
 
   .terms {
     text-align: center;
@@ -498,7 +468,7 @@
   .copyright {
     text-align: center;
     font-size: 11px;
-    color: #4E5C55;
+    color: var(--faint);
     margin-top: 26px;
   }
 
@@ -509,7 +479,7 @@
     border: 1px solid rgba(239, 68, 68, .35);
     border-radius: 8px;
     background: rgba(239, 68, 68, .09);
-    color: #ff9b9b;
+    color: var(--err-fg);
     font-size: 12.5px;
     line-height: 1.45;
   }
@@ -517,14 +487,14 @@
   .login-message.success {
     border-color: rgba(46, 158, 104, .4);
     background: rgba(46, 158, 104, .1);
-    color: #7de0ad;
+    color: var(--ok-fg);
   }
   .demo-account {
     margin-top: 12px;
     padding: 10px 12px;
     border: 1px solid var(--dark-line);
     border-radius: 9px;
-    background: rgba(255,255,255,.025);
+    background: var(--demo-bg);
     font-size: 12px;
   }
   .demo-account strong { color: var(--ink); font-weight: 600; }
@@ -539,26 +509,14 @@
 </style>
 </head>
 <body>
+  <button class="theme-toggle" type="button" id="themeToggle" aria-label="Ganti tema gelap/terang" title="Ganti tema">
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+  </button>
+
   <div class="page">
 
-    <!-- LEFT PANEL -->
-    <div class="story">
-      <video class="story-photo" autoplay loop muted playsinline>
-        <source src="vidssave.com%20MINI%20COMPRO%20TSU%201080P.mp4" type="video/mp4">
-        Browser Anda tidak mendukung tag video.
-      </video>
-      
-      <div class="story-overlay"></div>
-
-      <div class="particles" aria-hidden="true">
-        <span></span><span></span><span></span>
-        <span></span><span></span><span></span>
-      </div>
-
-      <h1>Belajar lebih dekat, kampus dalam genggaman.</h1>
-    </div>
-
-    <!-- RIGHT PANEL -->
+    <!-- KARTU LOGIN (di tengah) -->
     <div class="auth">
       <div class="auth-card">
         <div class="brand">
@@ -568,7 +526,7 @@
               <path d="M6 12v5c3 3 9 3 12 0v-5"/>
             </svg>
           </div>
-          <span class="brand-name">Kampusly</span>
+          <span class="brand-name">Peminjaman Ruangan</span>
         </div>
 
         <h2>Masuk ke akunmu</h2>
@@ -630,6 +588,21 @@
 <script>
   (function () {
     const SESSION_KEY = 'kampuslyCurrentUser';
+
+    // Tema gelap/terang: kunci 'theme' di localStorage sama dengan halaman dalam, jadi pilihan ikut terbawa.
+    const rootEl = document.documentElement, tombolTema = document.getElementById('themeToggle');
+    const syncTema = function () {
+      const gelap = rootEl.dataset.theme !== 'light';
+      tombolTema.setAttribute('aria-pressed', String(gelap));
+      tombolTema.title = gelap ? 'Ganti ke tema terang' : 'Ganti ke tema gelap';
+    };
+    syncTema();
+    tombolTema.addEventListener('click', function () {
+      rootEl.dataset.theme = rootEl.dataset.theme === 'light' ? 'dark' : 'light';
+      try { localStorage.setItem('theme', rootEl.dataset.theme); } catch (e) {}
+      syncTema();
+    });
+
     const form = document.querySelector('form');
     const submitBtn = form.querySelector('.btn-primary');
     const message = document.getElementById('loginMessage');

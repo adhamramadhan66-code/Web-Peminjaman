@@ -361,3 +361,22 @@ html[data-animasi="hemat"], html[data-animasi="hemat"] * , html[data-animasi="he
 }
 html[data-animasi="hemat"]::view-transition-group(*), html[data-animasi="hemat"]::view-transition-old(*), html[data-animasi="hemat"]::view-transition-new(*) { animation: none !important; }
 html[data-animasi="hemat"] .ui-reveal { opacity: 1; transform: none; }
+
+/* ---------- video hero di atas dashboard ---------- */
+/* Penuh sampai tepi atas, memudar transparan ke arah kartu ringkasan (model sama seperti web persuratan baru). */
+.main-content { --hero-h: clamp(340px, 62vh, 640px); }
+.video-sec { position: absolute; top: 0; left: 0; right: 0; height: var(--hero-h); z-index: 0; overflow: hidden; background: transparent; pointer-events: none;
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 38%, rgba(0,0,0,.55) 66%, transparent 97%);
+            mask-image: linear-gradient(to bottom, #000 0%, #000 38%, rgba(0,0,0,.55) 66%, transparent 97%); }
+.video-sec[hidden] { display: none; }
+.video-sec video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.video-sec::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,.55) 0%, rgba(0,0,0,0) 38%); }
+.main-content > .video-sec { animation: none !important; }      /* jangan ikut animasi naik milik elemen lain */
+.main-content > .header { position: relative; z-index: 3; }
+.main-content.ada-video > .filters { position: relative; z-index: 2; margin-top: max(0px, calc(var(--hero-h) - 10.5rem)); }
+.main-content.ada-video > .header h2,
+.main-content.ada-video > .header .user-label { color: #fff; text-shadow: 0 1px 10px rgba(0,0,0,.55); }
+@media (max-width: 700px) {
+    .main-content { --hero-h: clamp(260px, 46vh, 420px); }
+    .main-content.ada-video > .filters { margin-top: max(0px, calc(var(--hero-h) - 8.5rem)); }
+}

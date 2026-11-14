@@ -23,7 +23,7 @@
     <link rel="stylesheet" href="jadwal.css?v=5">
     <link rel="stylesheet" href="pesan.css?v=1">
     <link rel="stylesheet" href="profil.css?v=1">
-    <link rel="stylesheet" href="ui.css?v=3">
+    <link rel="stylesheet" href="ui.css?v=4">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -82,7 +82,7 @@
     </aside>
 
     <!-- MAIN CONTENT -->
-    <main class="main-content">
+    <main class="main-content ada-video">
         <!-- HEADER -->
         <header class="header">
             <h2>Dashboard</h2>
@@ -101,6 +101,13 @@
                 <img src="https://i.pravatar.cc/150?img=32" alt="Profil Admin TSU" class="profile-img">
             </div>
         </header>
+
+        <!-- VIDEO HERO (di atas dashboard). File: "vidssave.com MINI COMPRO TSU 1080P.mp4" di folder ini. -->
+        <section class="video-sec" id="videoSec" aria-label="Video profil TSU">
+            <video id="heroVideo" autoplay loop muted playsinline disablepictureinpicture preload="auto" tabindex="-1">
+                <source src="vidssave.com%20MINI%20COMPRO%20TSU%201080P.mp4" type="video/mp4">
+            </video>
+        </section>
 
         <!-- FILTERS -->
         <div class="filters">
@@ -235,6 +242,23 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
     </button>
 
+    <script>
+        // Video hero: jalan otomatis (tanpa suara) dan berulang. Bila file video tidak ada, hero disembunyikan.
+        (function () {
+            const sec = document.getElementById('videoSec');
+            const main = document.querySelector('main.main-content');
+            const v = document.getElementById('heroVideo');
+            v.muted = true; v.defaultMuted = true; v.setAttribute('muted', '');
+            sec.querySelector('source').addEventListener('error', () => { sec.hidden = true; main.classList.remove('ada-video'); });
+            const mulai = () => { const p = v.play(); if (p && p.catch) p.catch(() => {}); };
+            mulai();
+            v.addEventListener('canplay', mulai);
+            // Bila browser menahan autoplay, mulai pada interaksi pertama (klik/sentuh/gulir/tombol)
+            ['pointerdown', 'touchstart', 'keydown', 'wheel'].forEach(ev =>
+                window.addEventListener(ev, () => { if (v.paused) mulai(); }, { once: true, passive: true, capture: true }));
+            document.addEventListener('visibilitychange', () => { if (!document.hidden && v.paused) mulai(); });
+        })();
+    </script>
     <script src="script.js?v=13"></script>
     <script src="ruang-hari-ini.js?v=6"></script>
     <script src="dashboard-ringkas.js?v=1"></script>
