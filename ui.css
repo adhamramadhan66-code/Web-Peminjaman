@@ -282,6 +282,12 @@ html[data-animasi="hemat"], html[data-animasi="hemat"] * , html[data-animasi="he
 .main-content.ada-video > .kpi-grid { position: relative; z-index: 2; margin-top: max(0px, calc(var(--hero-h) - 6.8rem)); }
 .main-content.ada-video > .header h2,
 .main-content.ada-video > .header .user-label { color: #fff; text-shadow: 0 1px 10px rgba(0,0,0,.55); }
+/* judul di atas video */
+.hero-teks { position: absolute; left: 0; right: 0; top: calc(var(--hero-h) * .30); z-index: 2; text-align: center; padding: 0 20px; pointer-events: none; color: #fff; text-shadow: 0 2px 14px rgba(0,0,0,.6); }
+.main-content:not(.ada-video) > .hero-teks { display: none; }
+.hero-teks .hero-kampus { font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: #E9B949; font-weight: 700; margin: 0 0 8px; }
+.hero-teks .hero-judul { font-size: clamp(24px, 3.6vw, 44px); line-height: 1.15; font-weight: 800; margin: 0 0 8px; }
+.hero-teks .hero-sub { font-size: clamp(13px, 1.3vw, 16px); margin: 0; opacity: .92; }
 @media (max-width: 700px) {
     .main-content { --hero-h: clamp(260px, 46vh, 420px); }
     .main-content.ada-video > .kpi-grid { margin-top: max(0px, calc(var(--hero-h) - 5.5rem)); }
