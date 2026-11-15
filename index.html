@@ -506,6 +506,58 @@
       transition-duration: .001ms !important;
     }
   }
+
+  /* ============================================================
+     LATAR & HIASAN HALAMAN LOGIN (statis, ringan)
+     ============================================================ */
+  :root { --gold: #E9B949; --ov1: rgba(8,22,16,.80); --ov2: rgba(10,40,28,.66); --glass: rgba(14,26,20,.62); --chip: rgba(255,255,255,.08); --chip-line: rgba(255,255,255,.16); }
+  :root[data-theme="light"] { --ov1: rgba(246,251,248,.90); --ov2: rgba(214,238,225,.74); --glass: rgba(255,255,255,.80); --chip: rgba(255,255,255,.72); --chip-line: rgba(31,122,77,.22); }
+  body { background: var(--dark-bg); }
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: 0;
+    background: url("bg-tsu.jpg") center / cover no-repeat;
+  }
+  body::after {
+    content: ""; position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background:
+      radial-gradient(60% 50% at 12% 8%, rgba(46,158,104,.38), transparent 70%),
+      radial-gradient(50% 45% at 92% 92%, rgba(233,185,73,.22), transparent 70%),
+      linear-gradient(160deg, var(--ov1), var(--ov2));
+  }
+  .page { position: relative; z-index: 2; }
+  .auth { flex-direction: column; gap: 18px; }
+  .auth-card {
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    border-color: var(--chip-line);
+    position: relative; overflow: hidden;
+  }
+  .auth-card::before {
+    content: ""; position: absolute; left: 0; right: 0; top: 0; height: 4px;
+    background: linear-gradient(90deg, var(--forest), #4CC98A 55%, var(--gold));
+  }
+  .brand-mark { background: linear-gradient(135deg, #4CC98A, var(--forest-dark)); box-shadow: 0 6px 16px -6px rgba(46,158,104,.7); }
+  h2 { background: linear-gradient(90deg, var(--ink), var(--forest)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .btn-primary { background-image: linear-gradient(135deg, #34AE74, var(--forest-dark)); }
+  .theme-toggle { background: var(--glass); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+
+  .hero-text { text-align: center; max-width: 600px; animation: fadeUp .7s var(--ease-out) both; }
+  .hero-kampus { font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); font-weight: 700; margin: 0 0 6px; }
+  :root[data-theme="light"] .hero-kampus { color: #A87408; }
+  .hero-judul { font-size: 26px; line-height: 1.2; font-weight: 800; margin: 0 0 6px; color: var(--ink); }
+  .hero-sub { font-size: 14px; color: var(--ink-soft); margin: 0; }
+  .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 14px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; font-size: 12px; font-weight: 600;
+    border-radius: 999px; background: var(--chip); border: 1px solid var(--chip-line); color: var(--ink);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  }
+  .chip i { width: 7px; height: 7px; border-radius: 50%; background: var(--forest); display: inline-block; }
+  .chip:nth-child(2) i { background: var(--gold); }
+  .chip:nth-child(3) i { background: #5BB8E8; }
+  .foot-note { font-size: 11px; color: var(--ink-soft); text-align: center; letter-spacing: .04em; }
+  @media (min-width: 481px) and (max-height: 960px) { .auth { padding: 14px 20px; gap: 10px; } .auth-card { padding: 22px 32px 18px; } .brand { margin-bottom: 14px; } h2 { margin-bottom: 14px; } .sso-row { margin-bottom: 14px; } .copyright { margin-top: 12px; } }
+  @media (max-width: 480px) { .hero-judul { font-size: 21px; } .auth { padding-top: 64px; } }
 </style>
 </head>
 <body>
@@ -518,6 +570,12 @@
 
     <!-- KARTU LOGIN (di tengah) -->
     <div class="auth">
+      <div class="hero-text">
+        <p class="hero-kampus">Tiga Serangkai University</p>
+        <h1 class="hero-judul">Pinjam ruang kampus, lebih mudah.</h1>
+        <p class="hero-sub">Cek jadwal, ajukan, dan pantau status peminjaman dalam satu tempat.</p>
+        <div class="chips"><span class="chip"><i></i>Cek ruang kosong</span><span class="chip"><i></i>Ajukan cepat</span><span class="chip"><i></i>Pantau status</span></div>
+      </div>
       <div class="auth-card">
         <div class="brand">
           <div class="brand-mark">
@@ -581,6 +639,7 @@
         <p class="terms demo-account">Akun demo admin: <strong>admin@tsu.ac.id</strong><br>Akun demo pengguna: <strong>mahasiswa@tsu.ac.id</strong><br>Kata sandi keduanya: <strong>tsu12345</strong></p>
 
       </div>
+      <p class="foot-note">© Tiga Serangkai University</p>
     </div>
 
   </div>
