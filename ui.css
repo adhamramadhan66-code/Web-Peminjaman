@@ -437,3 +437,12 @@ tr.baris-setuju > td:first-child { box-shadow: inset 4px 0 0 #10b981; }
 tr.baris-tolak  > td:first-child { box-shadow: inset 4px 0 0 #ef4444; }
 :root[data-theme="light"] tr.baris-setuju > td { background: rgba(16,185,129,.12); }
 :root[data-theme="light"] tr.baris-tolak  > td { background: rgba(239,68,68,.10); }
+
+/* HP (tampilan kartu): warna status di seluruh kartu, bukan per sel */
+@media (max-width: 640px) {
+    table.ui-kartu tr.baris-setuju > td, table.ui-kartu tr.baris-tolak > td { background: none; box-shadow: none; }
+    table.ui-kartu tbody tr.baris-setuju:not(.empty-row):not(.grup-hari):not(.ui-kosong) { background: rgba(16,185,129,.12); border-color: rgba(16,185,129,.55); border-left: 5px solid #10b981; }
+    table.ui-kartu tbody tr.baris-tolak:not(.empty-row):not(.grup-hari):not(.ui-kosong)  { background: rgba(239,68,68,.12);  border-color: rgba(239,68,68,.55);  border-left: 5px solid #ef4444; }
+    table.ui-kartu tr.baris-setuju:not(.empty-row):not(.grup-hari):not(.ui-kosong) td:first-child { background: linear-gradient(90deg, rgba(16,185,129,.18), transparent); }
+    table.ui-kartu tr.baris-tolak:not(.empty-row):not(.grup-hari):not(.ui-kosong) td:first-child  { background: linear-gradient(90deg, rgba(239,68,68,.18), transparent); }
+}
