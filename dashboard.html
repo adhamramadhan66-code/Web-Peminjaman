@@ -18,7 +18,7 @@
         })();
     </script>
     <title>TSU Dashboard | Kampusly</title>
-    <link rel="stylesheet" href="style.css?v=20">
+    <link rel="stylesheet" href="style.css?v=21">
     <link rel="stylesheet" href="jadwal.css?v=5">
     <link rel="stylesheet" href="pesan.css?v=6">
     <link rel="stylesheet" href="profil.css?v=1">
@@ -153,12 +153,13 @@
                         <p class="room-caption" id="roomCaption">Klik ruang untuk melihat siapa yang memakai dan mata kuliahnya</p>
                     </div>
                     <div class="room-nav">
+                        <button type="button" class="btn room-all-btn" id="roomAllBtn"><i data-lucide="layout-grid"></i> Lihat semua</button>
                         <span class="room-floor-label" id="roomFloorLabel"></span>
                         <button type="button" class="room-arrow" id="roomPrev" aria-label="Lantai sebelumnya"><i data-lucide="chevron-left"></i></button>
                         <button type="button" class="room-arrow" id="roomNext" aria-label="Lantai berikutnya"><i data-lucide="chevron-right"></i></button>
                     </div>
                 </div>
-                <div class="room-track" id="roomTrack"></div>
+                <div class="room-track" id="roomTrack" tabindex="0" aria-label="Daftar ruang per lantai, geser atau gunakan tombol panah"></div>
                 <div class="room-dots" id="roomDots"></div>
                 <div class="room-legend">
                     <span><i></i>Tersedia</span><span><i class="dipakai"></i>Sedang dipakai</span><span><i class="dipinjam"></i>Dipinjam / Jadwal kuliah</span><span><i class="sk"></i>Pita biru: kuliah</span><span><i class="sg"></i>Pita ungu: dipinjam pihak lain</span>
@@ -198,6 +199,24 @@
     </main>
 
 
+    <!-- POPUP SEMUA RUANGAN -->
+    <div class="room-modal" id="allModal" role="dialog" aria-modal="true" aria-labelledby="allModalTitle" hidden>
+        <div class="room-modal-box all-box">
+            <div class="room-modal-head">
+                <div>
+                    <h3 id="allModalTitle">Semua Ruangan</h3>
+                    <p id="allModalSub"></p>
+                </div>
+                <button type="button" class="btn-round" id="allModalClose" aria-label="Tutup"><i data-lucide="x"></i></button>
+            </div>
+            <div class="all-tools">
+                <input type="search" id="allSearch" placeholder="Cari ruang atau lantai..." autocomplete="off">
+                <div class="all-filter" id="allFilter"></div>
+            </div>
+            <div class="room-modal-list all-list" id="allList"></div>
+        </div>
+    </div>
+
     <!-- POPUP DETAIL RUANG PER LANTAI -->
     <div class="room-modal" id="roomModal" role="dialog" aria-modal="true" aria-labelledby="roomModalTitle" hidden>
         <div class="room-modal-box">
@@ -235,7 +254,7 @@
         })();
     </script>
     <script src="script.js?v=14"></script>
-    <script src="ruang-hari-ini.js?v=6"></script>
+    <script src="ruang-hari-ini.js?v=7"></script>
     <script src="dashboard-ringkas.js?v=2"></script>
     <script>
         // Tombol tema gelap/terang

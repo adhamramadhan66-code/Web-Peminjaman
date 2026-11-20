@@ -138,6 +138,25 @@
     let st; track.addEventListener('scroll', () => { clearTimeout(st); st = setTimeout(sinkron, 40); }, { passive: true });
     window.addEventListener('resize', () => { track.scrollLeft = idx * track.clientWidth; });
 
+    // Roda mouse: geser kiri/kanan (atau Shift + roda) pindah lantai; roda biasa tetap menggulir halaman.
+    (function roda() {
+        let kunci = 0;
+        track.addEventListener('wheel', (e) => {
+            const datar = Math.abs(e.deltaX) > Math.abs(e.deltaY) || e.shiftKey;
+            if (!datar) return;
+            const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+            if (Math.abs(d) < 4) return;
+            e.preventDefault();
+            if (Date.now() < kunci) return;
+            kunci = Date.now() + 450;
+            pergi(idx + (d > 0 ? 1 : -1));
+        }, { passive: false });
+        track.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') { e.preventDefault(); pergi(idx + 1); }
+            else if (e.key === 'ArrowLeft') { e.preventDefault(); pergi(idx - 1); }
+        });
+    })();
+
     // Geser dengan mouse (sentuhan/trackpad sudah ditangani scroll-snap).
     (function drag() {
         let down = false, sx = 0, sl = 0, moved = false;
@@ -173,7 +192,7 @@
     function tutupModal() {
         if (modal.hidden) return;
         modal.hidden = true; openFloor = openRoom = null;
-        document.body.style.overflow = '';
+        document.body.style.overflow = semua.hidden ? '' : 'hidden';
         if (lastFocus && lastFocus.focus) lastFocus.focus();
     }
     function renderModal() {
@@ -217,8 +236,62 @@
     $('roomModalClose').addEventListener('click', tutupModal);
     modal.addEventListener('click', (e) => { if (e.target === modal) tutupModal(); });
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') tutupModal();
+        if (e.key === 'Escape') { if (!modal.hidden) tutupModal(); else tutupSemua(); }
     });
+
+    // ---- popup semua ruangan ----
+    const semua = $('allModal'), semuaList = $('allList'), cari = $('allSearch'), saring = $('allFilter');
+    let fSemua = 'semua', kunciSemua = false;
+    const FILTER = [['semua', 'Semua'], ['tersedia', 'Tersedia'], ['dipakai', 'Sedang dipakai'], ['dipinjam', 'Dipinjam']];
+    function renderSemua() {
+        if (!data) return;
+        saring.textContent = '';
+        const hitung = { semua: 0, tersedia: 0, dipakai: 0, dipinjam: 0 };
+        const baris = [];
+        data.lantai.forEach((l) => l.ruang.forEach((r) => { const st = status(r); hitung.semua++; hitung[st.kode]++; baris.push({ l, r, st }); }));
+        FILTER.forEach(([k, t]) => {
+            const b = el('button', 'all-chip' + (k === fSemua ? ' active' : ''), t + ' ' + hitung[k]);
+            b.type = 'button';
+            b.addEventListener('click', () => { fSemua = k; renderSemua(); });
+            saring.appendChild(b);
+        });
+        $('allModalSub').textContent = judulTanggal().replace('Ruang \u00b7 ', '') + ' \u00b7 ' + hitung.semua + ' ruang';
+        const q = cari.value.trim().toLowerCase();
+        semuaList.textContent = '';
+        let ada = 0;
+        data.lantai.forEach((l) => {
+            const isi = baris.filter((x) => x.l === l && (fSemua === 'semua' || x.st.kode === fSemua)
+                && (!q || (x.r.nama || '').toLowerCase().includes(q) || l.nama.toLowerCase().includes(q) || (x.r.fasilitas || '').toLowerCase().includes(q)));
+            if (!isi.length) return;
+            ada += isi.length;
+            semuaList.appendChild(el('div', 'all-lantai', l.nama + ' \u00b7 ' + isi.length + ' ruang'));
+            const grid = el('div', 'all-grid');
+            isi.forEach(({ r, st }) => {
+                const t = el('button', 'all-row ' + st.kode);
+                t.type = 'button';
+                t.appendChild(el('b', null, r.nama || 'Ruang tanpa nama'));
+                t.appendChild(el('span', null, st.aktif ? st.aktif.peminjam : st.label));
+                t.addEventListener('click', () => bukaModal(l.id, r.id, t));
+                grid.appendChild(t);
+            });
+            semuaList.appendChild(grid);
+        });
+        if (!ada) semuaList.appendChild(el('div', 'room-note', 'Tidak ada ruang yang cocok.'));
+    }
+    function bukaSemua() {
+        if (!data) return;
+        fSemua = 'semua'; cari.value = ''; lastFocus = $('roomAllBtn');
+        renderSemua(); semua.hidden = false; document.body.style.overflow = 'hidden'; cari.focus();
+    }
+    function tutupSemua() {
+        if (semua.hidden) return;
+        semua.hidden = true; document.body.style.overflow = '';
+        $('roomAllBtn').focus();
+    }
+    $('roomAllBtn').addEventListener('click', bukaSemua);
+    $('allModalClose').addEventListener('click', tutupSemua);
+    semua.addEventListener('click', (e) => { if (e.target === semua) tutupSemua(); });
+    cari.addEventListener('input', renderSemua);
 
     // ---- ambil data ----
     async function muat(silent) {
@@ -231,6 +304,7 @@
             if (!res.ok || !j || !j.lantai) throw new Error((j && j.error) || 'x');
             data = j; render();
             if (!modal.hidden) renderModal();
+            if (!semua.hidden) renderSemua();
         } catch (err) {
             if (my !== reqId || silent) return;
             data = null;
