@@ -67,7 +67,7 @@
             tr.appendChild(td); body.appendChild(tr); return;
         }
         data.forEach((r) => {
-            const tr = el('tr');
+            const tr = el('tr', r.status === 'disetujui' ? 'baris-setuju' : r.status === 'ditolak' ? 'baris-tolak' : '');
             const t1 = el('td'); t1.appendChild(el('strong', null, r.ruang)); t1.appendChild(el('small', null, r.lantai));
             const t2 = el('td', 'num', tanggalPendek(dariIso(r.tanggal)));
             const t3 = el('td', 'num', r.mulai + ' \u2013 ' + r.selesai);

@@ -429,3 +429,11 @@ html[data-animasi="hemat"], html[data-animasi="hemat"] * , html[data-animasi="he
     .panel::before, .chart-card::before, .table-card::before { left: 1rem; right: 1rem; }
     .kpi-grid > .kpi-card::after { width: 4.5rem; height: 4.5rem; right: -1.5rem; top: -1.5rem; }
 }
+
+/* ---------- baris riwayat/daftar peminjaman: hijau jika disetujui, merah jika ditolak ---------- */
+tr.baris-setuju > td { background: rgba(16,185,129,.13); }
+tr.baris-tolak  > td { background: rgba(239,68,68,.13); }
+tr.baris-setuju > td:first-child { box-shadow: inset 4px 0 0 #10b981; }
+tr.baris-tolak  > td:first-child { box-shadow: inset 4px 0 0 #ef4444; }
+:root[data-theme="light"] tr.baris-setuju > td { background: rgba(16,185,129,.12); }
+:root[data-theme="light"] tr.baris-tolak  > td { background: rgba(239,68,68,.10); }
