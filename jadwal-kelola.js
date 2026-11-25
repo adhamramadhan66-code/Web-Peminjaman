@@ -443,15 +443,8 @@
     const BLN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
     const tglPanjang = (s) => { const [y, m, d] = s.split('-').map(Number); const dt = new Date(y, m - 1, d); return HARI_NAMA[dt.getDay() || 7] + ', ' + d + ' ' + BLN[m - 1] + ' ' + y; };
 
-    async function ekspor() {
-        const tab = window.KPJadwal.tab();
-        const btn = $('btnEkspor'); btn.disabled = true;
-        try {
-            await muatExcelJs();
-            const d = await api(tab === 'kegiatan' ? 'api/peminjaman.php?status=disetujui&waktu=semua&semua=1' : 'api/jadwal.php?daftar=kuliah&semua=1');
-            const rows = d.data || [];
-            if (!rows.length) { toast('Belum ada data untuk diekspor.', true); return; }
-            const now = new Date(), nowIso = iso(now), menitNow = now.getHours() * 60 + now.getMinutes();
+    function isiSheet(wb, tab, rows, now) {
+            const nowIso = iso(now), menitNow = now.getHours() * 60 + now.getMinutes();
             const mnt = (t) => { const [h, m] = String(t).split(':').map(Number); return h * 60 + (m || 0); };
 
             let judul, sub, cols, sheetName, fileName, mapRow, hariKe = null;
@@ -468,8 +461,6 @@
             }
             sub = 'Diekspor ' + tglPanjang(nowIso) + ' pukul ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ' · ' + rows.length + ' data';
 
-            const wb = new ExcelJS.Workbook();
-            wb.creator = 'Sistem Peminjaman Ruangan'; wb.created = now;
             const ws = wb.addWorksheet(sheetName, { views: [{ state: 'frozen', ySplit: 4, showGridLines: false }], pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0, paperSize: 9 } });
             const n = cols.length, FONT = 'Calibri';
             const garis = { style: 'thin', color: { argb: 'FFD0D7E2' } };
@@ -519,15 +510,69 @@
             ws.autoFilter = { from: { row: 4, column: 1 }, to: { row: 4, column: n } };
             ws.headerFooter.oddFooter = '&L' + judul + '&RHalaman &P dari &N';
 
+            return fileName;
+    }
+
+    // Kotak pilihan sebelum ekspor
+    function pilihEkspor() {
+        return new Promise((ok) => {
+            const o = el('div', 'sukses-overlay pilih-overlay'); o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', 'Pilih data yang diekspor');
+            const box = el('div', 'sukses-box pilih-box');
+            box.appendChild(el('h3', null, 'Ekspor ke Excel'));
+            box.appendChild(el('p', null, 'Pilih data yang ingin diunduh.'));
+            const tutup = (v) => { o.remove(); ok(v); };
+            [['kegiatan', 'Kegiatan & peminjaman', 'Seluruh kegiatan yang sudah disetujui'], ['kuliah', 'Jadwal kuliah', 'Seluruh jadwal kuliah mingguan'], ['semua', 'Semua data', 'Dua lembar dalam satu berkas Excel']].forEach(([k, j, t]) => {
+                const b = el('button', 'pilih-opsi'); b.type = 'button';
+                b.appendChild(el('strong', null, j)); b.appendChild(el('span', null, t));
+                b.addEventListener('click', () => tutup(k)); box.appendChild(b);
+            });
+            const batal = el('button', 'btn', 'Batal'); batal.type = 'button'; batal.addEventListener('click', () => tutup(null)); box.appendChild(batal);
+            o.addEventListener('click', (e) => { if (e.target === o) tutup(null); });
+            o.appendChild(box); document.body.appendChild(o);
+        });
+    }
+
+    // Animasi centang (sama seperti pengajuan ruang)
+    function animasiSukses(judul, teks) {
+        const o = el('div', 'sukses-overlay'); o.setAttribute('role', 'alertdialog'); o.setAttribute('aria-label', judul);
+        const box = el('div', 'sukses-box');
+        box.innerHTML = '<svg class="sukses-ikon" viewBox="0 0 52 52" aria-hidden="true"><circle class="sukses-putar" cx="26" cy="26" r="24"/><circle class="sukses-lingkar" cx="26" cy="26" r="24"/><path class="sukses-centang" d="M14 27l8 8 16-17"/></svg>';
+        box.appendChild(el('h3', null, judul)); box.appendChild(el('p', null, teks));
+        const t = el('button', 'btn primary', 'Tutup'); t.type = 'button'; box.appendChild(t);
+        o.appendChild(box); document.body.appendChild(o);
+        const selesai = () => { clearTimeout(w); o.remove(); };
+        const w = setTimeout(selesai, 4200);
+        t.addEventListener('click', selesai); o.addEventListener('click', (e) => { if (e.target === o) selesai(); });
+    }
+
+    async function ekspor() {
+        const jenis = await pilihEkspor();
+        if (!jenis) return;
+        const btn = $('btnEkspor'); btn.disabled = true;
+        try {
+            await muatExcelJs();
+            const tabs = jenis === 'semua' ? ['kegiatan', 'kuliah'] : [jenis];
+            const now = new Date(), wb = new ExcelJS.Workbook();
+            wb.creator = 'Sistem Peminjaman Ruangan'; wb.created = now;
+            let fileName = '', jml = 0;
+            for (const tab of tabs) {
+                const d = await api(tab === 'kegiatan' ? 'api/peminjaman.php?status=disetujui&waktu=semua&publik=1&semua=1' : 'api/jadwal.php?daftar=kuliah&semua=1');
+                const rows = d.data || [];
+                if (!rows.length) { if (tabs.length === 1) { toast('Belum ada data untuk diekspor.', true); return; } continue; }
+                fileName = isiSheet(wb, tab, rows, now); jml += rows.length;
+            }
+            if (!jml) { toast('Belum ada data untuk diekspor.', true); return; }
+            if (jenis === 'semua') fileName = 'data-jadwal-lengkap-' + iso(now) + '.xlsx';
             const buf = await wb.xlsx.writeBuffer();
             const a = document.createElement('a');
             a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
             a.download = fileName; document.body.appendChild(a); a.click();
             setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
-            toast('Berhasil mengekspor ' + rows.length + ' data ke Excel.');
+            animasiSukses('Ekspor berhasil', jml + ' data sudah diunduh sebagai ' + fileName + '.');
         } catch (err) { toast(err.message || 'Ekspor gagal.', true); }
         finally { btn.disabled = false; }
     }
+
 
     // =====================================================================
     //  Impor Excel: baca -> pratinjau dari server -> konfirmasi
@@ -594,7 +639,7 @@
             try {
                 const hasil = await api(URL_API[h.tipe], { aksi: 'impor', uji: false, baris: h.baris });
                 tutupModal(imporModal);
-                toast(hasil.tambah + ' data ditambahkan' + (hasil.duplikat || hasil.gagal ? ' (' + (hasil.duplikat + hasil.gagal) + ' dilewati)' : ''));
+                animasiSukses('Impor berhasil', hasil.tambah + ' data ditambahkan' + (hasil.duplikat || hasil.gagal ? ' (' + (hasil.duplikat + hasil.gagal) + ' dilewati)' : '') + '.');
                 if (window.KPJadwal) { window.KPJadwal.tampilkanSemua(); await window.KPJadwal.segarkan(); }
             } catch (err) { toast(err.message, true); ok.disabled = false; batal.disabled = false; ok.textContent = 'Coba lagi'; }
         });

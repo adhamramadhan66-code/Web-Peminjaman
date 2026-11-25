@@ -446,3 +446,12 @@ tr.baris-tolak  > td:first-child { box-shadow: inset 4px 0 0 #ef4444; }
     table.ui-kartu tr.baris-setuju:not(.empty-row):not(.grup-hari):not(.ui-kosong) td:first-child { background: linear-gradient(90deg, rgba(16,185,129,.18), transparent); }
     table.ui-kartu tr.baris-tolak:not(.empty-row):not(.grup-hari):not(.ui-kosong) td:first-child  { background: linear-gradient(90deg, rgba(239,68,68,.18), transparent); }
 }
+
+/* ---------- kotak pilihan ekspor ---------- */
+.pilih-box { text-align: left; animation-name: sukses-pop; }
+.pilih-box h3, .pilih-box p { animation: none; text-align: center; }
+.pilih-opsi { display: flex; flex-direction: column; gap: 0.15rem; width: 100%; text-align: left; padding: 0.75rem 1rem; margin-bottom: 0.6rem; cursor: pointer;
+    background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 12px; font: inherit; transition: border-color 0.15s, background 0.15s, transform 0.15s; }
+.pilih-opsi span { font-size: 0.82rem; color: var(--text-muted); }
+.pilih-opsi:hover, .pilih-opsi:focus-visible { border-color: #10b981; background: rgba(16, 185, 129, 0.08); transform: translateY(-1px); outline: none; }
+.pilih-box > .btn { width: 100%; justify-content: center; }
