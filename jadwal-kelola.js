@@ -578,6 +578,21 @@
         }
     }
 
+    // Brave/Firefox/Safari tidak punya jendela simpan yang bisa ditunggu. Jendela "Simpan sebagai" bawaan browser
+    // membuat halaman kehilangan fokus; selama itu animasi ditahan dan baru jalan setelah fokus kembali.
+    function tungguUnduhan() {
+        return new Promise((selesai) => {
+            const mulai = Date.now(); let terbuka = false;
+            const cek = setInterval(() => {
+                const fokus = document.hasFocus(), lama = Date.now() - mulai;
+                if (!fokus) terbuka = true;
+                if (terbuka && fokus) { clearInterval(cek); setTimeout(selesai, 600); }       // jendela ditutup (Simpan / Batal)
+                else if (!terbuka && lama > 1500) { clearInterval(cek); selesai(); }           // tanpa jendela: langsung terunduh
+                else if (lama > 300000) { clearInterval(cek); selesai(); }
+            }, 200);
+        });
+    }
+
     async function ekspor() {
         const jenis = await pilihEkspor();
         if (!jenis) return;
@@ -604,7 +619,8 @@
                 // Browser tanpa pilihan simpan (Firefox/Safari): unduhan biasa; browser tidak memberi tahu kapan selesai.
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(blob); a.download = fileName; document.body.appendChild(a); a.click();
-                setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+                setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 60000);
+                await tungguUnduhan();
             }
             animasiSukses('Ekspor berhasil', jml + ' data sudah disimpan sebagai ' + fileName + '.');   // tampil setelah berkas benar-benar tersimpan
         } catch (err) { toast(err.message || 'Ekspor gagal.', true); }
