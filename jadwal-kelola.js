@@ -545,6 +545,39 @@
         t.addEventListener('click', selesai); o.addEventListener('click', (e) => { if (e.target === o) selesai(); });
     }
 
+    const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    // Menyimpan lewat jendela "Simpan sebagai" browser dan menunggu sampai berkas benar-benar tertulis.
+    // Hasil: 'ok' (tersimpan), 'batal' (pengguna menutup jendela), 'unduh' (browser tidak mendukung -> unduhan biasa).
+    async function simpanBerkas(blob, nama) {
+        if (!window.showSaveFilePicker) return 'unduh';
+        const tulis = async () => {
+            const h = await window.showSaveFilePicker({ suggestedName: nama, types: [{ description: 'Excel Workbook', accept: { [XLSX_MIME]: ['.xlsx'] } }] });
+            const w = await h.createWritable(); await w.write(blob); await w.close();
+        };
+        try { await tulis(); return 'ok'; }
+        catch (err) {
+            if (err && err.name === 'AbortError') return 'batal';
+            if (err && (err.name === 'SecurityError' || err.name === 'NotAllowedError')) {
+                // Izin klik sudah kedaluwarsa karena data diproses lama: minta satu klik lagi.
+                return new Promise((selesai) => {
+                    const o = el('div', 'sukses-overlay'); o.setAttribute('role', 'alertdialog');
+                    const box = el('div', 'sukses-box');
+                    box.appendChild(el('h3', null, 'Data siap disimpan'));
+                    box.appendChild(el('p', null, nama));
+                    const ok = el('button', 'btn primary', 'Simpan file'); ok.type = 'button';
+                    const bt = el('button', 'btn', 'Batal'); bt.type = 'button';
+                    box.appendChild(ok); box.appendChild(bt); o.appendChild(box); document.body.appendChild(o);
+                    bt.addEventListener('click', () => { o.remove(); selesai('batal'); });
+                    ok.addEventListener('click', async () => {
+                        try { await tulis(); o.remove(); selesai('ok'); }
+                        catch (e2) { o.remove(); selesai(e2 && e2.name === 'AbortError' ? 'batal' : 'unduh'); }
+                    });
+                });
+            }
+            return 'unduh';
+        }
+    }
+
     async function ekspor() {
         const jenis = await pilihEkspor();
         if (!jenis) return;
@@ -564,11 +597,16 @@
             if (!jml) { toast('Belum ada data untuk diekspor.', true); return; }
             if (jenis === 'semua') fileName = 'data-jadwal-lengkap-' + iso(now) + '.xlsx';
             const buf = await wb.xlsx.writeBuffer();
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
-            a.download = fileName; document.body.appendChild(a); a.click();
-            setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
-            animasiSukses('Ekspor berhasil', jml + ' data sudah diunduh sebagai ' + fileName + '.');
+            const blob = new Blob([buf], { type: XLSX_MIME });
+            const hasil = await simpanBerkas(blob, fileName);
+            if (hasil === 'batal') { toast('Ekspor dibatalkan.'); return; }
+            if (hasil === 'unduh') {
+                // Browser tanpa pilihan simpan (Firefox/Safari): unduhan biasa; browser tidak memberi tahu kapan selesai.
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob); a.download = fileName; document.body.appendChild(a); a.click();
+                setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+            }
+            animasiSukses('Ekspor berhasil', jml + ' data sudah disimpan sebagai ' + fileName + '.');   // tampil setelah berkas benar-benar tersimpan
         } catch (err) { toast(err.message || 'Ekspor gagal.', true); }
         finally { btn.disabled = false; }
     }
