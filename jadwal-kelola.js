@@ -469,6 +469,113 @@
         XLSX.writeFile(wb, tab === 'kegiatan' ? 'template-kegiatan-peminjaman.xlsx' : 'template-jadwal-kuliah.xlsx');
     }
 
+
+    // =====================================================================
+    //  Ekspor Excel (berformat: judul, header berwarna, garis, filter)
+    // =====================================================================
+    const URL_EXCELJS = ['vendor/exceljs.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js'];
+    let janjiExcelJs = null;
+    function muatExcelJs() {
+        if (window.ExcelJS) return Promise.resolve();
+        if (!janjiExcelJs) {
+            janjiExcelJs = (async () => {
+                for (const u of URL_EXCELJS) { try { await muatSkrip(u); if (window.ExcelJS) return; } catch (e) { /* sumber berikutnya */ } }
+                janjiExcelJs = null;
+                throw new Error('Pustaka ekspor Excel tidak dapat dimuat. Periksa koneksi internet.');
+            })();
+        }
+        return janjiExcelJs;
+    }
+    const HARI_NAMA = ['', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+    const BLN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    const tglPanjang = (s) => { const [y, m, d] = s.split('-').map(Number); const dt = new Date(y, m - 1, d); return HARI_NAMA[dt.getDay() || 7] + ', ' + d + ' ' + BLN[m - 1] + ' ' + y; };
+
+    async function ekspor() {
+        const tab = window.KPJadwal.tab();
+        const btn = $('btnEkspor'); btn.disabled = true;
+        try {
+            await muatExcelJs();
+            const d = await api(tab === 'kegiatan' ? 'api/peminjaman.php?status=disetujui&waktu=semua&semua=1' : 'api/jadwal.php?daftar=kuliah&semua=1');
+            const rows = d.data || [];
+            if (!rows.length) { toast('Belum ada data untuk diekspor.', true); return; }
+            const now = new Date(), nowIso = iso(now), menitNow = now.getHours() * 60 + now.getMinutes();
+            const mnt = (t) => { const [h, m] = String(t).split(':').map(Number); return h * 60 + (m || 0); };
+
+            let judul, sub, cols, sheetName, fileName, mapRow, hariKe = null;
+            if (tab === 'kegiatan') {
+                judul = 'DAFTAR KEGIATAN & PEMINJAMAN RUANGAN'; sheetName = 'Kegiatan'; fileName = 'kegiatan-peminjaman-' + nowIso + '.xlsx';
+                cols = [['No', 6, 'center'], ['Tanggal', 26, 'left'], ['Jam', 15, 'center'], ['Kegiatan', 38, 'left'], ['Pemohon', 24, 'left'], ['Ruang', 12, 'center'], ['Lantai', 14, 'left'], ['Peserta', 10, 'center'], ['Fasilitas', 28, 'left'], ['Status', 13, 'center']];
+                mapRow = (r, i) => [i + 1, tglPanjang(r.tanggal), r.mulai + ' - ' + r.selesai, r.keperluan || '-', r.peminjam || '-', r.ruang, r.lantai || '-', r.peserta || '-', r.fasilitas || '-',
+                    (r.tanggal < nowIso || (r.tanggal === nowIso && mnt(r.selesai) <= menitNow)) ? 'Selesai' : 'Terjadwal'];
+            } else {
+                judul = 'DAFTAR JADWAL KULIAH'; sheetName = 'Jadwal Kuliah'; fileName = 'jadwal-kuliah-' + nowIso + '.xlsx';
+                cols = [['No', 6, 'center'], ['Hari', 12, 'center'], ['Jam', 15, 'center'], ['Mata Kuliah', 40, 'left'], ['Kelas', 12, 'center'], ['Pengajar', 28, 'left'], ['Program Studi', 26, 'left'], ['Ruang', 12, 'center'], ['Lantai', 14, 'left']];
+                mapRow = (r, i) => [i + 1, HARI_NAMA[r.hari] || '-', r.mulai + ' - ' + r.selesai, r.matkul, r.kelas || '-', r.pengajar || '-', r.prodi || '-', r.ruang, r.lantai || '-'];
+                hariKe = (r) => r.hari;
+            }
+            sub = 'Diekspor ' + tglPanjang(nowIso) + ' pukul ' + String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0') + ' · ' + rows.length + ' data';
+
+            const wb = new ExcelJS.Workbook();
+            wb.creator = 'Sistem Peminjaman Ruangan'; wb.created = now;
+            const ws = wb.addWorksheet(sheetName, { views: [{ state: 'frozen', ySplit: 4, showGridLines: false }], pageSetup: { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0, paperSize: 9 } });
+            const n = cols.length, FONT = 'Calibri';
+            const garis = { style: 'thin', color: { argb: 'FFD0D7E2' } };
+            const kotak = { top: garis, left: garis, bottom: garis, right: garis };
+            cols.forEach((c, i) => { ws.getColumn(i + 1).width = c[1]; });
+
+            ws.mergeCells(1, 1, 1, n);
+            const c1 = ws.getCell(1, 1); c1.value = judul;
+            c1.font = { name: FONT, size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
+            c1.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E3A8A' } };
+            c1.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 }; ws.getRow(1).height = 32;
+            ws.mergeCells(2, 1, 2, n);
+            const c2 = ws.getCell(2, 1); c2.value = sub;
+            c2.font = { name: FONT, size: 10, italic: true, color: { argb: 'FF475569' } };
+            c2.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEFF4FF' } };
+            c2.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 }; ws.getRow(2).height = 20;
+            ws.getRow(3).height = 6;
+
+            const h = ws.getRow(4); h.height = 26;
+            cols.forEach((c, i) => {
+                const cell = h.getCell(i + 1); cell.value = c[0];
+                cell.font = { name: FONT, size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+                cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
+                cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+                cell.border = kotak;
+            });
+
+            const WARNA_HARI = ['', 'FFFFFFFF', 'FFF3F7FF'];
+            let band = 0, hariLalu = null;
+            rows.forEach((r, i) => {
+                if (hariKe) { const hk = hariKe(r); if (hk !== hariLalu) { band++; hariLalu = hk; } }
+                const row = ws.addRow(mapRow(r, i)); row.height = 21;
+                const warna = hariKe ? WARNA_HARI[1 + (band % 2)] : (i % 2 ? 'FFF3F7FF' : 'FFFFFFFF');
+                cols.forEach((c, k) => {
+                    const cell = row.getCell(k + 1);
+                    cell.font = { name: FONT, size: 10.5, color: { argb: 'FF1F2937' } };
+                    cell.alignment = { vertical: 'middle', horizontal: c[2], wrapText: true, indent: c[2] === 'left' ? 1 : 0 };
+                    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: warna } };
+                    cell.border = kotak;
+                });
+                if (tab === 'kegiatan') {
+                    const st = row.getCell(n), selesai = st.value === 'Selesai';
+                    st.font = { name: FONT, size: 10.5, bold: true, color: { argb: selesai ? 'FF475569' : 'FF047857' } };
+                    st.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: selesai ? 'FFE2E8F0' : 'FFD1FAE5' } };
+                }
+            });
+            ws.autoFilter = { from: { row: 4, column: 1 }, to: { row: 4, column: n } };
+            ws.headerFooter.oddFooter = '&L' + judul + '&RHalaman &P dari &N';
+
+            const buf = await wb.xlsx.writeBuffer();
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+            a.download = fileName; document.body.appendChild(a); a.click();
+            setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+            toast('Berhasil mengekspor ' + rows.length + ' data ke Excel.');
+        } catch (err) { toast(err.message || 'Ekspor gagal.', true); }
+        finally { btn.disabled = false; }
+    }
+
     // =====================================================================
     //  Impor Excel: baca -> pratinjau dari server -> konfirmasi
     // =====================================================================
@@ -544,6 +651,7 @@
 
     // ---------- tombol di panel Daftar jadwal ----------
     $('btnTambah').addEventListener('click', () => bukaForm(window.KPJadwal.tab(), null));
+    $('btnEkspor').addEventListener('click', ekspor);
     $('btnTemplate').addEventListener('click', unduhTemplate);
     $('btnImpor').addEventListener('click', () => $('fileExcel').click());
     $('fileExcel').addEventListener('change', (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) mulaiImpor(f); });

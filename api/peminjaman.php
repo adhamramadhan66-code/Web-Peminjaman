@@ -111,6 +111,7 @@ try {
         if (in_array($status, STATUS_PINJAM, true)) { $dasar .= ' AND p.status = ?'; $par[] = $status; }
         $total = $status === 'semua' ? $hitung['semua'] : ($hitung[$status] ?? 0);
 
+        $semua = !empty($_GET['semua']) && $saya['peran'] === 'admin';   // ekspor: tanpa batas halaman
         $halaman = max(1, (int) ($_GET['halaman'] ?? 1));
         $offset = ($halaman - 1) * PER_HALAMAN;
         $arah = $waktu === 'mendatang' ? 'ASC' : 'DESC';
@@ -118,7 +119,7 @@ try {
                                    p.peminjam, p.keperluan, p.peserta, p.fasilitas, p.status, p.catatan, p.pengguna_id
                             $dasar
                             ORDER BY CASE WHEN p.status = 'menunggu' THEN 0 ELSE 1 END, p.tanggal $arah, p.mulai $arah, p.id $arah
-                            LIMIT " . PER_HALAMAN . " OFFSET " . (int) $offset);
+                            " . ($semua ? '' : "LIMIT " . PER_HALAMAN . " OFFSET " . (int) $offset));
         $s->execute($par);
         $data = $s->fetchAll();
         foreach ($data as &$r) {

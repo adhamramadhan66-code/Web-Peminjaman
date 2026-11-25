@@ -44,11 +44,13 @@ try {
         $s = $pdo->prepare('SELECT DISTINCT k.hari ' . $dasar . ' ORDER BY k.hari');
         $s->execute($par);
         $hariAda = array_map('intval', $s->fetchAll(PDO::FETCH_COLUMN));
+        $semua = !empty($_GET['semua']);          // ekspor: seluruh data tanpa halaman (khusus admin)
+        if ($semua) butuh_admin();
         $jumlahHal = max(1, count($hariAda));
         $halaman = min($jumlahHal, max(1, (int) ($_GET['halaman'] ?? 1)));
         $parData = $par;
         $dasarData = $dasar;
-        if ($hariAda) { $dasarData .= ' AND k.hari = ?'; $parData[] = $hariAda[$halaman - 1]; }
+        if ($hariAda && !$semua) { $dasarData .= ' AND k.hari = ?'; $parData[] = $hariAda[$halaman - 1]; }
         $s = $pdo->prepare('SELECT k.id, k.elemen_id AS ruang_id, e.nama AS ruang, l.nama AS lantai, k.hari, k.mulai, k.selesai, k.matkul, k.pengajar, k.kelas, k.prodi '
             . $dasarData . ' ORDER BY k.hari, k.mulai, e.nama, k.id');
         $par = $parData;
