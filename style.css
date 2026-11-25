@@ -435,7 +435,7 @@ body { transition: background-color 0.25s ease, color 0.25s ease; }
 .room-all-btn { padding: 0.35rem 0.7rem; font-size: 0.8125rem; margin-right: 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; }
 .room-all-btn svg { width: 1rem; height: 1rem; }
 #roomModal { z-index: 210; }
-.all-box { max-width: 680px; }
+.all-box { max-width: 900px; }
 .all-tools { padding: 0 1.25rem 0.5rem; display: grid; gap: 0.6rem; }
 .all-tools input { width: 100%; padding: 0.6rem 0.8rem; border-radius: 0.6rem; border: 1px solid var(--border-color); background: var(--surface-2); color: var(--text-main); font: inherit; }
 .all-filter { display: flex; flex-wrap: wrap; gap: 0.4rem; }
@@ -443,6 +443,8 @@ body { transition: background-color 0.25s ease, color 0.25s ease; }
 .all-chip.active { background: #059669; border-color: #059669; color: #fff; }
 .all-list { gap: 0.5rem; }
 .all-lantai { font-weight: 700; font-size: 0.9rem; margin-top: 0.5rem; }
+.all-list { gap: 0.75rem; }
+.all-list .room-tiles { gap: 1rem; }
 .all-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 0.5rem; }
 .all-row { display: flex; flex-direction: column; gap: 0.1rem; text-align: left; padding: 0.55rem 0.7rem; border-radius: 0.6rem; border: 1px solid #047857; background: #059669; color: #fff; cursor: pointer; font: inherit; }
 .all-row b { font-size: 0.85rem; } .all-row span { font-size: 0.7rem; opacity: 0.9; }

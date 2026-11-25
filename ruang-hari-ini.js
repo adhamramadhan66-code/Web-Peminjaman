@@ -265,12 +265,14 @@
             if (!isi.length) return;
             ada += isi.length;
             semuaList.appendChild(el('div', 'all-lantai', l.nama + ' \u00b7 ' + isi.length + ' ruang'));
-            const grid = el('div', 'all-grid');
+            const grid = el('div', 'room-tiles');
             isi.forEach(({ r, st }) => {
-                const t = el('button', 'all-row ' + st.kode);
+                const t = el('button', 'rk' + (st.kode === 'tersedia' ? '' : ' ' + st.kode + ' src-' + st.sumber));
                 t.type = 'button';
-                t.appendChild(el('b', null, r.nama || 'Ruang tanpa nama'));
-                t.appendChild(el('span', null, st.aktif ? st.aktif.peminjam : st.label));
+                t.setAttribute('aria-label', r.nama + ', ' + st.label + (st.aktif ? ', dipakai ' + st.aktif.peminjam : '') + '. Buka detail.');
+                t.appendChild(el('div', 'n', r.nama || 'Ruang tanpa nama'));
+                t.appendChild(el('div', 'f', (st.aktif ? st.aktif.peminjam : r.fasilitas) || '\u00a0'));
+                t.appendChild(el('div', 's', st.label));
                 t.addEventListener('click', () => bukaModal(l.id, r.id, t));
                 grid.appendChild(t);
             });
