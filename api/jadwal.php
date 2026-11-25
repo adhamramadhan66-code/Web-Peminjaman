@@ -39,8 +39,10 @@ try {
         $s = $pdo->prepare('SELECT COUNT(*) ' . $dasar);
         $s->execute($par);
         $total = (int) $s->fetchColumn();
-        $per = 25;
-        $halaman = max(1, (int) ($_GET['halaman'] ?? 1));
+        // Satu hari dipilih: tampilkan seluruh jadwal hari itu sekaligus (tanpa halaman). Semua hari: 25 per halaman.
+        $satuHari = $h >= 1 && $h <= 7;
+        $per = $satuHari ? max(25, $total) : 25;
+        $halaman = $satuHari ? 1 : max(1, (int) ($_GET['halaman'] ?? 1));
         $s = $pdo->prepare('SELECT k.id, k.elemen_id AS ruang_id, e.nama AS ruang, l.nama AS lantai, k.hari, k.mulai, k.selesai, k.matkul, k.pengajar, k.kelas, k.prodi '
             . $dasar . ' ORDER BY k.hari, k.mulai, e.nama, k.id LIMIT ' . $per . ' OFFSET ' . (($halaman - 1) * $per));
         $s->execute($par);
