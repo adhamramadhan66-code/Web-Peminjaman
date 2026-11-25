@@ -262,14 +262,7 @@
             if (!d.data.length) {
                 const tr = el('tr', 'empty-row'), td = el('td', null, 'Tidak ada data yang cocok.'); td.colSpan = jumlahKolom(); tr.appendChild(td); body.appendChild(tr);
             }
-            let hariSebelumnya = 0;
             d.data.forEach((r) => {
-                // Daftar kuliah diurutkan per hari lalu per jam. Saat "Semua hari", beri judul tiap hari supaya
-                // jelas bahwa satu halaman bisa berisi satu hari penuh (mis. 25 baris pertama semuanya Senin).
-                if (dk.tab === 'kuliah' && dk.hari === '0' && r.hari !== hariSebelumnya) {
-                    hariSebelumnya = r.hari;
-                    const gr = el('tr', 'grup-hari'), gd = el('td', null, NAMA_HARI[r.hari]); gd.colSpan = jumlahKolom(); gr.appendChild(gd); body.appendChild(gr);
-                }
                 if (dk.tab === 'kegiatan') {
                     const [lbl, kls] = labelStatus(r), b = el('span', 'badge-st ' + kls, lbl);
                     body.appendChild(baruDaftar([
@@ -284,9 +277,15 @@
                     ].concat(adalahAdmin() ? [{ node: selAksi(r), cls: 'aksi' }] : []), () => lihatDiTimeline(r.ruang_id, tanggalHari(r.hari))));
                 }
             });
-            const dari = dk.total ? (d.halaman - 1) * dk.per + 1 : 0, sampai = Math.min(dk.total, d.halaman * dk.per);
-            $('dInfo').textContent = dari + '\u2013' + sampai + ' dari ' + dk.total + ' data' + (dk.tab === 'kuliah' ? ' \u00b7 urut per hari lalu jam' : '');
-            $('dPrev').disabled = d.halaman <= 1; $('dNext').disabled = sampai >= dk.total;
+            if (dk.tab === 'kuliah') {
+                const hal = d.halaman, jml = d.jumlah_halaman || 1;
+                $('dInfo').textContent = (d.data.length ? NAMA_HARI[d.data[0].hari] + ' \u00b7 ' : '') + d.data.length + ' jadwal \u00b7 halaman ' + hal + ' dari ' + jml + ' (satu halaman = satu hari) \u00b7 total ' + dk.total + ' data';
+                $('dPrev').disabled = hal <= 1; $('dNext').disabled = hal >= jml;
+            } else {
+                const dari = dk.total ? (d.halaman - 1) * dk.per + 1 : 0, sampai = Math.min(dk.total, d.halaman * dk.per);
+                $('dInfo').textContent = dari + '\u2013' + sampai + ' dari ' + dk.total + ' data';
+                $('dPrev').disabled = d.halaman <= 1; $('dNext').disabled = sampai >= dk.total;
+            }
             if (window.lucide) lucide.createIcons();
         } catch (err) {
             body.textContent = '';

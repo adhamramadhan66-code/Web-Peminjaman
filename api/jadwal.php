@@ -39,17 +39,24 @@ try {
         $s = $pdo->prepare('SELECT COUNT(*) ' . $dasar);
         $s->execute($par);
         $total = (int) $s->fetchColumn();
-        // Satu hari dipilih: tampilkan seluruh jadwal hari itu sekaligus (tanpa halaman). Semua hari: 25 per halaman.
-        $satuHari = $h >= 1 && $h <= 7;
-        $per = $satuHari ? max(25, $total) : 25;
-        $halaman = $satuHari ? 1 : max(1, (int) ($_GET['halaman'] ?? 1));
+        // Satu halaman = satu hari penuh. Hari tertentu dipilih: hanya hari itu (1 halaman).
+        // "Semua hari": halaman 1 = seluruh jadwal Senin, halaman 2 = seluruh Selasa, dan seterusnya (hari kosong dilewati).
+        $s = $pdo->prepare('SELECT DISTINCT k.hari ' . $dasar . ' ORDER BY k.hari');
+        $s->execute($par);
+        $hariAda = array_map('intval', $s->fetchAll(PDO::FETCH_COLUMN));
+        $jumlahHal = max(1, count($hariAda));
+        $halaman = min($jumlahHal, max(1, (int) ($_GET['halaman'] ?? 1)));
+        $parData = $par;
+        $dasarData = $dasar;
+        if ($hariAda) { $dasarData .= ' AND k.hari = ?'; $parData[] = $hariAda[$halaman - 1]; }
         $s = $pdo->prepare('SELECT k.id, k.elemen_id AS ruang_id, e.nama AS ruang, l.nama AS lantai, k.hari, k.mulai, k.selesai, k.matkul, k.pengajar, k.kelas, k.prodi '
-            . $dasar . ' ORDER BY k.hari, k.mulai, e.nama, k.id LIMIT ' . $per . ' OFFSET ' . (($halaman - 1) * $per));
+            . $dasarData . ' ORDER BY k.hari, k.mulai, e.nama, k.id');
+        $par = $parData;
         $s->execute($par);
         $data = $s->fetchAll();
         foreach ($data as &$r) { $r['id'] = (int) $r['id']; $r['ruang_id'] = (int) $r['ruang_id']; $r['hari'] = (int) $r['hari']; }
         unset($r);
-        keluar(['total' => $total, 'halaman' => $halaman, 'per' => $per, 'data' => $data]);
+        keluar(['total' => $total, 'halaman' => $halaman, 'jumlah_halaman' => $jumlahHal, 'per' => max(1, count($data)), 'data' => $data]);
     }
 
     $tanggal = $_GET['tanggal'] ?? date('Y-m-d');
