@@ -18,7 +18,7 @@
         })();
     </script>
     <title>TSU Dashboard | Kampusly</title>
-    <link rel="stylesheet" href="style.css?v=22">
+    <link rel="stylesheet" href="style.css?v=23">
     <link rel="stylesheet" href="jadwal.css?v=5">
     <link rel="stylesheet" href="pesan.css?v=6">
     <link rel="stylesheet" href="profil.css?v=1">
@@ -152,10 +152,10 @@
                         <p class="room-caption" id="roomCaption">Klik ruang untuk melihat siapa yang memakai dan mata kuliahnya</p>
                     </div>
                     <div class="room-nav">
-                        <button type="button" class="btn room-all-btn" id="roomAllBtn"><i data-lucide="layout-grid"></i> Lihat semua</button>
                         <span class="room-floor-label" id="roomFloorLabel"></span>
                         <button type="button" class="room-arrow" id="roomPrev" aria-label="Lantai sebelumnya"><i data-lucide="chevron-left"></i></button>
                         <button type="button" class="room-arrow" id="roomNext" aria-label="Lantai berikutnya"><i data-lucide="chevron-right"></i></button>
+                        <button type="button" class="room-arrow room-all-btn" id="roomAllBtn" aria-label="Lihat semua ruangan" title="Lihat semua ruangan"><i data-lucide="maximize"></i></button>
                     </div>
                 </div>
                 <div class="room-track" id="roomTrack" tabindex="0" aria-label="Daftar ruang per lantai, geser atau gunakan tombol panah"></div>
@@ -253,7 +253,7 @@
         })();
     </script>
     <script src="script.js?v=14"></script>
-    <script src="ruang-hari-ini.js?v=8"></script>
+    <script src="ruang-hari-ini.js?v=9"></script>
     <script src="dashboard-ringkas.js?v=2"></script>
     <script>
         // Tombol tema gelap/terang

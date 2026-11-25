@@ -432,8 +432,7 @@ body { transition: background-color 0.25s ease, color 0.25s ease; }
 @media (max-width: 768px) { .room-modal { align-items: flex-end; padding: 0; } .room-modal-box { max-width: none; border-radius: 1rem 1rem 0 0; max-height: 80vh; } }
 
 /* --- popup semua ruangan --- */
-.room-all-btn { padding: 0.35rem 0.7rem; font-size: 0.8125rem; margin-right: 0.5rem; display: inline-flex; align-items: center; gap: 0.35rem; }
-.room-all-btn svg { width: 1rem; height: 1rem; }
+.room-all-btn { margin-left: 0.5rem; }
 #roomModal { z-index: 210; }
 .all-box { max-width: 900px; }
 .all-tools { padding: 0 1.25rem 0.5rem; display: grid; gap: 0.6rem; }
