@@ -184,13 +184,13 @@
 
     // ---------- Daftar jadwal (tabel + pencarian) ----------
     const NAMA_HARI = ['', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
-    const dk = { tab: 'kegiatan', q: '', halaman: 1, waktu: 'mendatang', hari: '0', per: 25, total: 0 };
+    const dk = { tab: 'kegiatan', q: '', halaman: 1, waktu: 'semua', hari: '0', per: 25, total: 0 };
     const KOLOM = {
         kegiatan: ['Tanggal', 'Waktu', 'Kegiatan', 'Pemohon', 'Ruang', 'Peserta', 'Fasilitas', 'Status'],
         kuliah: ['Hari', 'Jam', 'Mata kuliah', 'Kelas', 'Pengajar', 'Program studi', 'Ruang'],
     };
     const FILTER = {
-        kegiatan: [['mendatang', 'Hari ini & mendatang'], ['riwayat', 'Riwayat'], ['semua', 'Semua tanggal']],
+        kegiatan: [['semua', 'Semua (terjadwal & selesai)'], ['mendatang', 'Hari ini & mendatang'], ['riwayat', 'Sudah selesai']],
         kuliah: [['0', 'Semua hari'], ['1', 'Senin'], ['2', 'Selasa'], ['3', 'Rabu'], ['4', 'Kamis'], ['5', 'Jumat'], ['6', 'Sabtu']],
     };
 
@@ -254,7 +254,7 @@
         const body = $('dBody');
         try {
             const url = dk.tab === 'kegiatan'
-                ? 'api/peminjaman.php?' + new URLSearchParams({ status: 'semua', waktu: dk.waktu, q: dk.q, halaman: dk.halaman })
+                ? 'api/peminjaman.php?' + new URLSearchParams({ status: 'disetujui', waktu: dk.waktu, q: dk.q, halaman: dk.halaman })
                 : 'api/jadwal.php?' + new URLSearchParams({ daftar: 'kuliah', hari: dk.hari, q: dk.q, halaman: dk.halaman });
             const d = await api(url);
             dk.total = d.total; dk.per = d.per;
