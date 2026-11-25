@@ -450,12 +450,12 @@
             let judul, sub, cols, sheetName, fileName, mapRow, hariKe = null;
             if (tab === 'kegiatan') {
                 judul = 'DAFTAR KEGIATAN & PEMINJAMAN RUANGAN'; sheetName = 'Kegiatan'; fileName = 'kegiatan-peminjaman-' + nowIso + '.xlsx';
-                cols = [['No', 6, 'center'], ['Tanggal', 26, 'left'], ['Jam', 15, 'center'], ['Kegiatan', 38, 'left'], ['Pemohon', 24, 'left'], ['Ruang', 12, 'center'], ['Lantai', 14, 'left'], ['Peserta', 10, 'center'], ['Fasilitas', 28, 'left'], ['Status', 13, 'center']];
+                cols = [['No', 6, 'center'], ['Tanggal', 26, 'left'], ['Jam', 15, 'center'], ['Kegiatan', 38, 'left'], ['Pemohon', 24, 'left'], ['Ruang', 12, 'center'], ['Lantai', 24, 'left'], ['Peserta', 10, 'center'], ['Fasilitas', 28, 'left'], ['Status', 13, 'center']];
                 mapRow = (r, i) => [i + 1, tglPanjang(r.tanggal), r.mulai + ' - ' + r.selesai, r.keperluan || '-', r.peminjam || '-', r.ruang, r.lantai || '-', r.peserta || '-', r.fasilitas || '-',
                     (r.tanggal < nowIso || (r.tanggal === nowIso && mnt(r.selesai) <= menitNow)) ? 'Selesai' : 'Terjadwal'];
             } else {
                 judul = 'DAFTAR JADWAL KULIAH'; sheetName = 'Jadwal Kuliah'; fileName = 'jadwal-kuliah-' + nowIso + '.xlsx';
-                cols = [['No', 6, 'center'], ['Hari', 12, 'center'], ['Jam', 15, 'center'], ['Mata Kuliah', 40, 'left'], ['Kelas', 12, 'center'], ['Pengajar', 28, 'left'], ['Program Studi', 26, 'left'], ['Ruang', 12, 'center'], ['Lantai', 14, 'left']];
+                cols = [['No', 6, 'center'], ['Hari', 12, 'center'], ['Jam', 15, 'center'], ['Mata Kuliah', 40, 'left'], ['Kelas', 12, 'center'], ['Pengajar', 28, 'left'], ['Program Studi', 26, 'left'], ['Ruang', 12, 'center'], ['Lantai', 24, 'left']];
                 mapRow = (r, i) => [i + 1, HARI_NAMA[r.hari] || '-', r.mulai + ' - ' + r.selesai, r.matkul, r.kelas || '-', r.pengajar || '-', r.prodi || '-', r.ruang, r.lantai || '-'];
                 hariKe = (r) => r.hari;
             }
@@ -492,7 +492,11 @@
             let band = 0, hariLalu = null;
             rows.forEach((r, i) => {
                 if (hariKe) { const hk = hariKe(r); if (hk !== hariLalu) { band++; hariLalu = hk; } }
-                const row = ws.addRow(mapRow(r, i)); row.height = 21;
+                const isi = mapRow(r, i), row = ws.addRow(isi);
+                // Tinggi baris mengikuti isi yang terlipat (wrap) supaya teks tidak menumpuk.
+                let baris = 1;
+                cols.forEach((c, k) => { const lebar = Math.max(4, c[1] - 2 - (c[2] === 'left' ? 1 : 0)); baris = Math.max(baris, Math.ceil(String(isi[k] == null ? '' : isi[k]).length * 1.08 / lebar)); });
+                row.height = Math.max(21, baris * 15 + 6);
                 const warna = hariKe ? WARNA_HARI[1 + (band % 2)] : (i % 2 ? 'FFF3F7FF' : 'FFFFFFFF');
                 cols.forEach((c, k) => {
                     const cell = row.getCell(k + 1);
@@ -540,8 +544,10 @@
         box.appendChild(el('h3', null, judul)); box.appendChild(el('p', null, teks));
         const t = el('button', 'btn primary', 'Tutup'); t.type = 'button'; box.appendChild(t);
         o.appendChild(box); document.body.appendChild(o);
-        const selesai = () => { clearTimeout(w); o.remove(); };
-        const w = setTimeout(selesai, 4200);
+        // Tidak hilang sendiri: tetap tampil sampai ditutup (tombol Tutup, klik di luar kotak, atau Esc).
+        const selesai = () => { document.removeEventListener('keydown', esc); o.remove(); };
+        const esc = (e) => { if (e.key === 'Escape') selesai(); };
+        document.addEventListener('keydown', esc); t.focus();
         t.addEventListener('click', selesai); o.addEventListener('click', (e) => { if (e.target === o) selesai(); });
     }
 

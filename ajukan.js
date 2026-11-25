@@ -160,9 +160,9 @@
             : 'Pengajuanmu sudah terkirim dan menunggu persetujuan admin.' + (d.pesan_terkirim ? ' Admin diberi tahu lewat Pesan.' : '')));
         const lihat = el('a', 'btn primary', 'Lihat riwayat peminjaman'); lihat.href = 'peminjaman.html';
         box.appendChild(lihat);
-        box.appendChild(el('small', null, 'Mengalihkan ke riwayat peminjaman\u2026'));
+        const lagi = el('button', 'btn', 'Ajukan ruang lain'); lagi.type = 'button'; lagi.addEventListener('click', () => location.reload());
+        box.appendChild(lagi);   // animasi tetap tampil sampai pengguna memilih
         o.appendChild(box); document.body.appendChild(o);
-        setTimeout(() => { location.href = 'peminjaman.html'; }, 4200);   // beri waktu animasi putar + centang selesai dan terbaca
     }
 
     muatKetersediaan();
