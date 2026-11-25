@@ -424,53 +424,6 @@
     $('hpOk').addEventListener('click', jalankanHapusSemua);
 
     // =====================================================================
-    //  Template Excel
-    // =====================================================================
-    async function unduhTemplate() {
-        const tab = window.KPJadwal.tab();
-        try { await muatXlsx(); } catch (err) { toast(err.message, true); return; }
-        const ruang = [];
-        window.KPJadwal.lantai().forEach((l) => l.ruang.forEach((r) => ruang.push(r.nama)));
-        const r1 = ruang[0] || 'C1.1', r2 = ruang[1] || r1;
-        const wb = XLSX.utils.book_new();
-        let petunjuk;
-        if (tab === 'kegiatan') {
-            const d = new Date(); d.setDate(d.getDate() + 7);
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
-                ['Tanggal', 'Sampai Tanggal (opsional)', 'Jam Mulai', 'Jam Selesai', 'Kegiatan', 'Pemohon', 'Ruang', 'Peserta', 'Fasilitas', 'Status (opsional)', 'Catatan (opsional)'],
-                [iso(d), '', '08:00', '12:00', 'Contoh: Seminar Nasional', 'Nama pemohon', r1, 50, 'Proyektor, mic', 'disetujui', ''],
-                [iso(d), '', '13:00', '15:00', 'Contoh: Rapat Panitia', 'Nama pemohon', r2, 15, '', '', ''],
-            ]), 'Kegiatan');
-            petunjuk = [
-                'PETUNJUK \u2013 Kegiatan & peminjaman',
-                'Hapus dua baris contoh, lalu isi data Anda mulai dari baris ke-2 pada lembar "Kegiatan".',
-                'Urutan kolom bebas; judul kolom dikenali otomatis. Kolom wajib: Tanggal, Kegiatan, Ruang.',
-                'Tanggal boleh berformat tanggal Excel, 2026-10-24, 24/10/2026, atau "24 Oktober 2026". Rentang ("8-10 Oktober 2025") atau kolom "Sampai Tanggal" dijadikan satu data per hari.',
-                'Jam boleh dua kolom (Jam Mulai, Jam Selesai) atau satu kolom "Waktu" berisi "07:00 - 14:00".',
-                'Jam kosong = 08:00-16:00; hanya jam mulai = selesai 3 jam kemudian (dicatat di kolom catatan).',
-                'Ruang harus sama dengan nama di Editor Ruang. Status: disetujui (bawaan), menunggu, atau ditolak.',
-                'Baris yang sama persis dengan data yang sudah ada otomatis dilewati.',
-            ];
-        } else {
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
-                ['Hari', 'Jam Mulai', 'Jam Selesai', 'Mata Kuliah', 'Pengajar', 'Kelas', 'Program Studi', 'Ruang'],
-                ['Senin', '08:00', '09:40', 'Contoh: Algoritma dan Pemrograman', 'Nama Dosen, M.Kom', 'A1-1S', 'S1 Sistem Informasi', r1],
-                ['Rabu', '10:00', '11:40', 'Contoh: Basis Data', 'Nama Dosen, M.Kom', 'A1-2S', 'S1 Sistem Informasi', r2],
-            ]), 'Jadwal Kuliah');
-            petunjuk = [
-                'PETUNJUK \u2013 Jadwal kuliah',
-                'Hapus dua baris contoh, lalu isi data Anda mulai dari baris ke-2 pada lembar "Jadwal Kuliah".',
-                'Urutan kolom bebas; judul kolom dikenali otomatis. Kolom wajib: Hari, Jam Mulai, Jam Selesai, Mata Kuliah, Ruang.',
-                'Hari: Senin sampai Minggu (atau angka 1-7). Jadwal kuliah berlaku setiap minggu.',
-                'Ruang harus sama dengan nama di Editor Ruang. Baris yang sama persis dengan data yang sudah ada otomatis dilewati.',
-            ];
-        }
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(petunjuk.map((t) => [t])), 'Petunjuk');
-        XLSX.writeFile(wb, tab === 'kegiatan' ? 'template-kegiatan-peminjaman.xlsx' : 'template-jadwal-kuliah.xlsx');
-    }
-
-
-    // =====================================================================
     //  Ekspor Excel (berformat: judul, header berwarna, garis, filter)
     // =====================================================================
     const URL_EXCELJS = ['vendor/exceljs.min.js', 'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js'];
@@ -588,7 +541,7 @@
             h = ambilData(wb, window.KPJadwal.tab());
         } catch (err) { toast(err.message || 'Berkas tidak dapat dibaca.', true); return; }
         if (!h) {
-            toast('Judul kolom tidak dikenali. Unduh "Template" untuk melihat contoh kolom yang dibutuhkan.', true);
+            toast('Judul kolom tidak dikenali. Pastikan baris pertama berisi judul kolom, misalnya hasil Ekspor Excel.', true);
             return;
         }
         if (!h.baris.length) { toast('Tidak ada baris data di bawah judul kolom.', true); return; }
@@ -652,7 +605,6 @@
     // ---------- tombol di panel Daftar jadwal ----------
     $('btnTambah').addEventListener('click', () => bukaForm(window.KPJadwal.tab(), null));
     $('btnEkspor').addEventListener('click', ekspor);
-    $('btnTemplate').addEventListener('click', unduhTemplate);
     $('btnImpor').addEventListener('click', () => $('fileExcel').click());
     $('fileExcel').addEventListener('change', (e) => { const f = e.target.files && e.target.files[0]; e.target.value = ''; if (f) mulaiImpor(f); });
 

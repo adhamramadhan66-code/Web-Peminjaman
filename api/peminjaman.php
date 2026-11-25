@@ -87,7 +87,9 @@ try {
         $par = [];
         // Akun pengguna/mahasiswa hanya boleh melihat pengajuannya sendiri; admin melihat semuanya.
         // (Ringkasan dashboard di atas dan jadwal per tanggal tetap menampilkan seluruh kegiatan.)
-        if ($saya['peran'] !== 'admin') { $where[] = 'p.pengguna_id = ?'; $par[] = (int) $saya['id']; }
+        // Pengecualian: daftar jadwal publik (?publik=1) menampilkan semua kegiatan yang sudah DISETUJUI kepada semua akun.
+        $publik = !empty($_GET['publik']) && ($_GET['status'] ?? '') === 'disetujui';
+        if ($saya['peran'] !== 'admin' && !$publik) { $where[] = 'p.pengguna_id = ?'; $par[] = (int) $saya['id']; }
         $waktu = $_GET['waktu'] ?? 'mendatang';
         if ($waktu === 'mendatang') { $where[] = 'p.tanggal >= ?'; $par[] = $hariIni; }
         elseif ($waktu === 'riwayat') { $where[] = 'p.tanggal < ?'; $par[] = $hariIni; }

@@ -254,7 +254,7 @@
         const body = $('dBody');
         try {
             const url = dk.tab === 'kegiatan'
-                ? 'api/peminjaman.php?' + new URLSearchParams({ status: 'disetujui', waktu: dk.waktu, q: dk.q, halaman: dk.halaman })
+                ? 'api/peminjaman.php?' + new URLSearchParams({ status: 'disetujui', publik: '1', waktu: dk.waktu, q: dk.q, halaman: dk.halaman })
                 : 'api/jadwal.php?' + new URLSearchParams({ daftar: 'kuliah', hari: dk.hari, q: dk.q, halaman: dk.halaman });
             const d = await api(url);
             dk.total = d.total; dk.per = d.per;
