@@ -456,3 +456,6 @@ tr.baris-tolak  > td:first-child { box-shadow: inset 4px 0 0 #ef4444; }
 .pilih-opsi:hover, .pilih-opsi:focus-visible { border-color: #10b981; background: rgba(16, 185, 129, 0.08); transform: translateY(-1px); outline: none; }
 .pilih-box > .btn { width: 100%; justify-content: center; }
 .sukses-box .btn:not(.primary) { width: 100%; justify-content: center; margin-top: 0.5rem; }
+.sukses-box.gagal .sukses-putar { stroke: #ef4444; }
+.sukses-box.gagal .sukses-lingkar { fill: #ef4444; stroke: #ef4444; }
+.sukses-box.gagal .btn.primary { background: linear-gradient(135deg, #ef4444, #dc2626); box-shadow: 0 8px 20px -8px rgba(239, 68, 68, 0.6); }

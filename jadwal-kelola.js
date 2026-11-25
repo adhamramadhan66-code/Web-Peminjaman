@@ -537,10 +537,10 @@
     }
 
     // Animasi centang (sama seperti pengajuan ruang)
-    function animasiSukses(judul, teks) {
+    function animasiSukses(judul, teks, gagal) {
         const o = el('div', 'sukses-overlay'); o.setAttribute('role', 'alertdialog'); o.setAttribute('aria-label', judul);
-        const box = el('div', 'sukses-box');
-        box.innerHTML = '<svg class="sukses-ikon" viewBox="0 0 52 52" aria-hidden="true"><circle class="sukses-putar" cx="26" cy="26" r="24"/><circle class="sukses-lingkar" cx="26" cy="26" r="24"/><path class="sukses-centang" d="M14 27l8 8 16-17"/></svg>';
+        const box = el('div', 'sukses-box' + (gagal ? ' gagal' : ''));
+        box.innerHTML = '<svg class="sukses-ikon" viewBox="0 0 52 52" aria-hidden="true"><circle class="sukses-putar" cx="26" cy="26" r="24"/><circle class="sukses-lingkar" cx="26" cy="26" r="24"/><path class="sukses-centang" d="' + (gagal ? 'M18 18l16 16M34 18L18 34' : 'M14 27l8 8 16-17') + '"/></svg>';
         box.appendChild(el('h3', null, judul)); box.appendChild(el('p', null, teks));
         const t = el('button', 'btn primary', 'Tutup'); t.type = 'button'; box.appendChild(t);
         o.appendChild(box); document.body.appendChild(o);
@@ -592,10 +592,27 @@
             const cek = setInterval(() => {
                 const fokus = document.hasFocus(), lama = Date.now() - mulai;
                 if (!fokus) terbuka = true;
-                if (terbuka && fokus) { clearInterval(cek); setTimeout(selesai, 600); }       // jendela ditutup (Simpan / Batal)
-                else if (!terbuka && lama > 1500) { clearInterval(cek); selesai(); }           // tanpa jendela: langsung terunduh
-                else if (lama > 300000) { clearInterval(cek); selesai(); }
+                if (terbuka && fokus) { clearInterval(cek); setTimeout(() => selesai(true), 600); }       // jendela ditutup (Simpan / Batal)
+                else if (!terbuka && lama > 1500) { clearInterval(cek); selesai(false); }           // tanpa jendela: langsung terunduh
+                else if (lama > 300000) { clearInterval(cek); selesai(true); }
             }, 200);
+        });
+    }
+
+    // Browser tanpa fitur simpan yang bisa ditunggu tidak memberi tahu apakah pengguna menekan Simpan atau Batal, jadi ditanyakan.
+    function konfirmasiSimpan(nama) {
+        return new Promise((hasil) => {
+            const o = el('div', 'sukses-overlay'); o.setAttribute('role', 'alertdialog'); o.setAttribute('aria-label', 'Konfirmasi penyimpanan');
+            const box = el('div', 'sukses-box');
+            box.appendChild(el('h3', null, 'Apakah file sudah tersimpan?'));
+            box.appendChild(el('p', null, nama));
+            const ya = el('button', 'btn primary', 'Ya, sudah tersimpan'); ya.type = 'button';
+            const tidak = el('button', 'btn', 'Tidak, saya batalkan'); tidak.type = 'button';
+            box.appendChild(ya); box.appendChild(tidak); o.appendChild(box); document.body.appendChild(o); ya.focus();
+            const tutup = (v) => { document.removeEventListener('keydown', esc); o.remove(); hasil(v); };
+            const esc = (e) => { if (e.key === 'Escape') tutup(false); };
+            document.addEventListener('keydown', esc);
+            ya.addEventListener('click', () => tutup(true)); tidak.addEventListener('click', () => tutup(false));
         });
     }
 
@@ -620,16 +637,18 @@
             const buf = await wb.xlsx.writeBuffer();
             const blob = new Blob([buf], { type: XLSX_MIME });
             const hasil = await simpanBerkas(blob, fileName);
-            if (hasil === 'batal') { toast('Ekspor dibatalkan.'); return; }
+            const gagal = () => animasiSukses('Ekspor dibatalkan', 'File tidak disimpan. Silakan coba ekspor lagi.', true);
+            if (hasil === 'batal') { gagal(); return; }
             if (hasil === 'unduh') {
-                // Browser tanpa pilihan simpan (Firefox/Safari): unduhan biasa; browser tidak memberi tahu kapan selesai.
+                // Brave/Firefox/Safari: unduhan biasa.
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(blob); a.download = fileName; document.body.appendChild(a); a.click();
                 setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 60000);
-                await tungguUnduhan();
+                const adaJendela = await tungguUnduhan();
+                if (adaJendela && !(await konfirmasiSimpan(fileName))) { gagal(); return; }
             }
-            animasiSukses('Ekspor berhasil', jml + ' data sudah disimpan sebagai ' + fileName + '.');   // tampil setelah berkas benar-benar tersimpan
-        } catch (err) { toast(err.message || 'Ekspor gagal.', true); }
+            animasiSukses('Ekspor berhasil', jml + ' data sudah disimpan sebagai ' + fileName + '.');
+        } catch (err) { animasiSukses('Ekspor gagal', err.message || 'Terjadi kesalahan saat membuat file.', true); }
         finally { btn.disabled = false; }
     }
 
