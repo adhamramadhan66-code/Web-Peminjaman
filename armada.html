@@ -25,6 +25,7 @@
     <link rel="stylesheet" href="pesan.css?v=6">
     <link rel="stylesheet" href="profil.css?v=1">
     <link rel="stylesheet" href="ui.css?v=18">
+    <link rel="stylesheet" href="armada.css?v=1">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -105,6 +106,22 @@
         </header>
 
         <div class="riwayat-wrap">
+            <section class="panel" id="panelPantau">
+                <div class="list-head list-head-flex">
+                    <div>
+                        <h3><span class="dot-hidup" id="pantauDot"></span>Pantau perjalanan</h3>
+                        <p id="pantauInfo">Posisi GPS pemohon yang sedang berangkat, diperbarui otomatis setiap 5 detik.</p>
+                    </div>
+                    <div class="list-actions">
+                        <button type="button" class="btn" id="btnKampus" title="Tandai titik kampus di peta (dipakai untuk memeriksa pemohon sudah tiba)"><i data-lucide="map-pin"></i> Atur titik kampus</button>
+                    </div>
+                </div>
+                <div class="pantau-grid">
+                    <div class="kt-daftar pantau-list" id="pantauList"><p class="arm-kosong">Memuat…</p></div>
+                    <div class="pantau-peta" id="pantauPeta"></div>
+                </div>
+            </section>
+
             <section class="panel">
                 <div class="list-head list-head-flex">
                     <div>
@@ -190,9 +207,11 @@
     </button>
     <div class="toast" id="toast" role="status"></div>
 
-    <script src="app.js?v=4"></script>
+    <script src="app.js?v=5"></script>
     <script src="alasan.js?v=1"></script>
-    <script src="armada.js?v=2"></script>
+    <script src="peta-config.js?v=1"></script>
+    <script src="peta.js?v=1"></script>
+    <script src="armada.js?v=3"></script>
     <script src="pesan-notif.js?v=1"></script>
     <script src="profil.js?v=1"></script>
     <script src="ui.js?v=5"></script>

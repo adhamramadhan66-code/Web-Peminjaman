@@ -160,7 +160,24 @@ function buat_tabel(PDO $pdo): void
         $ins->execute([$a[0], $a[1], $a[2], $i + 1]);
     }
 
-    // Akun login. peran: admin | pengguna. Kata sandi disimpan sebagai hash (password_hash).
+    // Pengaturan sederhana (kunci -> nilai), mis. titik kampus untuk pengecekan "sudah tiba".
+    $pdo->exec("CREATE TABLE IF NOT EXISTS pengaturan (
+        kunci VARCHAR(40) NOT NULL PRIMARY KEY,
+        nilai VARCHAR(255) NOT NULL DEFAULT ''
+    )$eng");
+    // Titik GPS selama perjalanan armada (jejak rute). Satu baris = satu titik yang dikirim HP pemohon.
+    $dbl = $my ? 'DOUBLE' : 'REAL';
+    $pdo->exec("CREATE TABLE IF NOT EXISTS jejak_armada (
+        id $ai,
+        pemakaian_id $int NOT NULL,
+        lat $dbl NOT NULL,
+        lng $dbl NOT NULL,
+        akurasi $int NOT NULL DEFAULT 0,
+        waktu VARCHAR(19) NOT NULL
+        " . ($my ? ', INDEX (pemakaian_id, id)' : '') . "
+    )$eng");
+
+    // Akun login. peran: admin | pengguna | pemohon (pemohon mobil dinas). Kata sandi disimpan sebagai hash (password_hash).
     $pdo->exec("CREATE TABLE IF NOT EXISTS pengguna (
         id $ai,
         nama VARCHAR(80) NOT NULL,
@@ -215,6 +232,25 @@ function buat_tabel(PDO $pdo): void
     ];
     foreach ($baru as $nama => $def) {
         if (!in_array($nama, $k, true)) $pdo->exec("ALTER TABLE peminjaman ADD COLUMN $nama $def");
+    }
+
+    $k = kolom_tabel($pdo, 'pemakaian_armada');
+    $dbl = DB_DRIVER === 'mysql' ? 'DOUBLE' : 'REAL';
+    $baruA = [
+        'pengguna_id'   => "$int NOT NULL DEFAULT 0",          // akun pemohon (0 = dicatat admin / impor)
+        'tujuan_alamat' => "VARCHAR(255) NOT NULL DEFAULT ''",
+        'tujuan_lat'    => "$dbl NOT NULL DEFAULT 0",          // 0 = belum ada titik di peta
+        'tujuan_lng'    => "$dbl NOT NULL DEFAULT 0",
+        'perjalanan'    => "VARCHAR(10) NOT NULL DEFAULT 'belum'",   // belum | jalan | selesai
+        'berangkat'     => "VARCHAR(19) NOT NULL DEFAULT ''",
+        'tiba'          => "VARCHAR(19) NOT NULL DEFAULT ''",
+        'pos_lat'       => "$dbl NOT NULL DEFAULT 0",          // posisi terakhir dari HP pemohon
+        'pos_lng'       => "$dbl NOT NULL DEFAULT 0",
+        'pos_akurasi'   => "$int NOT NULL DEFAULT 0",
+        'pos_waktu'     => "VARCHAR(19) NOT NULL DEFAULT ''",
+    ];
+    foreach ($baruA as $nama => $def) {
+        if (!in_array($nama, $k, true)) $pdo->exec("ALTER TABLE pemakaian_armada ADD COLUMN $nama $def");
     }
 
     $k = kolom_tabel($pdo, 'pesan');
@@ -295,6 +331,7 @@ function seed_akun(PDO $pdo): void
     $sekarang = date('Y-m-d H:i:s');
     $s->execute(['Admin TSU', 'admin@tsu.ac.id', password_hash('tsu12345', PASSWORD_DEFAULT), 'admin', $sekarang]);
     $s->execute(['Mahasiswa Demo', 'mahasiswa@tsu.ac.id', password_hash('tsu12345', PASSWORD_DEFAULT), 'pengguna', $sekarang]);
+    $s->execute(['Pemohon Mobil Dinas', 'pemohon@tsu.ac.id', password_hash('tsu12345', PASSWORD_DEFAULT), 'pemohon', $sekarang]);
 }
 
 function baca_seed(): ?array

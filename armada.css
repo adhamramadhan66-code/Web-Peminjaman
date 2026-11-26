@@ -1,0 +1,36 @@
+/* Kartu perjalanan armada (dipakai portal pemohon dan halaman admin): kiri = identitas kendaraan + tujuan, kanan = rincian. */
+.kt { display: grid; grid-template-columns: minmax(210px, 40%) 1fr; border: 1px solid var(--border-color); border-radius: 1rem; background: var(--surface-2); overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.15s; }
+.kt.klik { cursor: pointer; }
+.kt.klik:hover, .kt.fokus { border-color: #10b981; box-shadow: 0 8px 22px rgba(16, 185, 129, 0.14); transform: translateY(-2px); }
+.kt.jalan { border-color: rgba(59, 130, 246, 0.6); }
+.kt.putus { border-color: var(--red); box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.18); }
+.kt-kiri { padding: 1rem; display: flex; gap: 0.85rem; align-items: flex-start; background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(59, 130, 246, 0.08)); border-right: 1px solid var(--border-color); min-width: 0; }
+.kt-kode { flex: none; width: 3.1rem; height: 3.1rem; border-radius: 0.9rem; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.95rem; color: #fff; background: #10b981; letter-spacing: 0.02em; }
+.kt-kode.WR1 { background: #2563eb; } .kt-kode.WR2 { background: #059669; } .kt-kode.WR3 { background: #d97706; } .kt-kode.APV { background: #db2777; }
+.kt-id { min-width: 0; display: flex; flex-direction: column; gap: 0.15rem; }
+.kt-id small { font-size: 0.74rem; color: var(--text-muted); }
+.kt-id strong { font-size: 0.98rem; line-height: 1.3; }
+.kt-tujuan { margin-top: 0.35rem; display: flex; gap: 0.35rem; align-items: flex-start; font-size: 0.82rem; line-height: 1.4; }
+.kt-tujuan svg { flex: none; width: 15px; height: 15px; margin-top: 2px; color: #dc2626; }
+.kt-tujuan span { color: var(--text-muted); display: block; font-size: 0.74rem; }
+.kt-kanan { padding: 0.9rem 1rem; display: flex; flex-direction: column; gap: 0.45rem; justify-content: center; min-width: 0; }
+.kt-baris { display: flex; justify-content: space-between; gap: 0.8rem; font-size: 0.82rem; }
+.kt-baris span { color: var(--text-muted); }
+.kt-baris b { font-weight: 600; text-align: right; }
+.kt-aksi { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.3rem; }
+.kt-aksi .btn { padding: 0.4rem 0.8rem; font-size: 0.8rem; }
+.kt-daftar { display: flex; flex-direction: column; gap: 0.8rem; }
+.badge-st.putus { background: rgba(239, 68, 68, 0.16); color: #dc2626; }
+.dot-hidup { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981; margin-right: 0.35rem; animation: denyut 1.4s ease-in-out infinite; }
+.dot-hidup.putus { background: #ef4444; animation: none; }
+@keyframes denyut { 0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); } 50% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); } }
+@media (max-width: 640px) { .kt { grid-template-columns: 1fr; } .kt-kiri { border-right: 0; border-bottom: 1px solid var(--border-color); } }
+
+.pantau-grid { display: grid; grid-template-columns: minmax(320px, 1fr) 1.2fr; gap: 1rem; padding: 1rem 1.25rem 1.25rem; align-items: start; }
+.pantau-list { max-height: 460px; overflow: auto; padding-right: 0.2rem; }
+.pantau-list .kt { grid-template-columns: 1fr; }
+.pantau-list .kt-kiri { border-right: 0; border-bottom: 1px solid var(--border-color); }
+.pantau-peta { height: 460px; border-radius: 0.9rem; overflow: hidden; background: var(--surface-3); border: 1px solid var(--border-color); }
+.peta-info { display: flex; align-items: center; justify-content: center; text-align: center; padding: 1.5rem; color: var(--text-muted); font-size: 0.88rem; line-height: 1.6; }
+@media (max-width: 960px) { .pantau-grid { grid-template-columns: 1fr; } }

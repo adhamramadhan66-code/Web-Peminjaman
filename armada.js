@@ -100,6 +100,7 @@
             c(rentang(r), 'num');
             c(waktu(r), 'num');
             const tj = c(el('strong', null, r.tujuan)); if (r.catatan) tj.appendChild(el('small', 'sub', r.catatan));
+            if (r.tujuan_lat) { const a = el('a', 'sub', (r.tujuan_alamat || 'Lihat di Google Maps')); a.href = 'https://www.google.com/maps?q=' + r.tujuan_lat + ',' + r.tujuan_lng; a.target = '_blank'; a.rel = 'noopener'; a.style.display = 'block'; tj.appendChild(a); }
             const pm = c(r.pemohon || '-'); if (r.sopir) pm.appendChild(el('small', 'sub', 'Dengan sopir'));
             c(r.peserta ? String(r.peserta) : '-', 'num');
             const [lbl, kls] = labelStatus(r); c(el('span', 'badge-st ' + kls, lbl));
@@ -374,6 +375,119 @@
         aksiBox.appendChild(batal); aksiBox.appendChild(ok); body.appendChild(aksiBox);
         bukaModal(imporModal, d.tambah ? ok : batal);
     }
+
+    // =====================================================================
+    //  Pantau perjalanan (peta Google Maps + kartu): posisi GPS pemohon secara berkala
+    // =====================================================================
+    const pantau = { peta: null, marker: {}, pin: {}, kampus: null, jalur: null, fokus: 0, modeKampus: false, putus: new Set(), data: [], kampusData: null, siap: false };
+    const umur = (d) => d == null ? 'belum ada' : d < 60 ? d + ' dtk lalu' : Math.floor(d / 60) + ' mnt lalu';
+    function baris(a, b) { const r = el('div', 'kt-baris'); r.appendChild(el('span', null, a)); const v = el('b'); if (b instanceof Node) v.appendChild(b); else v.textContent = b; r.appendChild(v); return r; }
+    function kartuPantau(r) {
+        const kt = el('div', 'kt klik' + (r.perjalanan === 'jalan' ? ' jalan' : '') + (r.gps_putus ? ' putus' : '') + (pantau.fokus === r.id ? ' fokus' : ''));
+        const k = el('div', 'kt-kiri'); k.appendChild(el('div', 'kt-kode ' + r.armada_kode, r.armada_kode));
+        const id = el('div', 'kt-id'); id.appendChild(el('strong', null, r.armada_nama));
+        const t = el('div', 'kt-tujuan'); t.innerHTML = '<i data-lucide="map-pin"></i>'; const x = el('div', null, r.tujuan);
+        if (r.tujuan_alamat) x.appendChild(el('span', null, r.tujuan_alamat)); t.appendChild(x); id.appendChild(t); k.appendChild(id); kt.appendChild(k);
+        const ka = el('div', 'kt-kanan');
+        const st = r.perjalanan === 'jalan' ? (r.gps_putus ? ['GPS terputus', 'putus'] : ['Dalam perjalanan', 'berlangsung']) : r.perjalanan === 'selesai' ? ['Sudah kembali', 'selesai'] : ['Belum berangkat', 'menunggu'];
+        ka.appendChild(baris('Status', el('span', 'badge-st ' + st[1], st[0])));
+        ka.appendChild(baris('Pemohon', r.pemohon || '-'));
+        ka.appendChild(baris('Waktu', rentang(r) + ', ' + waktu(r)));
+        if (r.perjalanan === 'jalan') {
+            const g = el('span'); g.appendChild(el('span', 'dot-hidup' + (r.gps_putus ? ' putus' : ''))); g.appendChild(document.createTextNode(umur(r.detik_lalu)));
+            ka.appendChild(baris('GPS terakhir', g));
+            ka.appendChild(baris('Ke tujuan', window.KPPeta.jarak(r.jarak_tujuan)));
+            ka.appendChild(baris('Ke kampus', window.KPPeta.jarak(r.jarak_kampus)));
+        }
+        if (r.perjalanan === 'selesai' && r.tiba) ka.appendChild(baris('Tiba', r.tiba.slice(11, 16)));
+        if (r.perjalanan === 'jalan') {
+            const ak = el('div', 'kt-aksi'); const b = el('button', 'btn', 'Tandai selesai'); b.type = 'button'; b.title = 'Gunakan bila HP pemohon mati / GPS tidak bisa tiba otomatis';
+            b.addEventListener('click', async (ev) => { ev.stopPropagation(); if (!confirm('Tutup perjalanan ' + r.armada_kode + ' secara manual?\nPemohon dianggap sudah kembali.')) return; try { await api(API, { aksi: 'paksa_selesai', id: r.id, alasan: 'ditutup manual' }); toast('Perjalanan ditutup'); muatPantau(); } catch (e) { toast(e.message, true); } });
+            ak.appendChild(b); ka.appendChild(ak);
+        }
+        kt.appendChild(ka);
+        kt.addEventListener('click', () => { pantau.fokus = pantau.fokus === r.id ? 0 : r.id; renderPantau(); if (pantau.fokus) tampilJejak(r); });
+        return kt;
+    }
+    async function siapkanPetaPantau() {
+        if (pantau.peta || pantau.siap === 'gagal') return;
+        const k = $('pantauPeta');
+        try {
+            pantau.peta = await window.KPPeta.buat(k, { zoom: 13 });
+            pantau.peta.addListener('click', async (e) => {
+                if (!pantau.modeKampus) return;
+                pantau.modeKampus = false; $('btnKampus').classList.remove('primary'); pantau.peta.setOptions({ draggableCursor: null });
+                const lat = e.latLng.lat(), lng = e.latLng.lng();
+                const r = prompt('Radius "sudah tiba" dalam meter (50 - 2000):', String((pantau.kampusData && pantau.kampusData.radius) || 300));
+                if (r === null) return;
+                try { const d = await api(API, { aksi: 'kampus', lat, lng, radius: Number(r) || 300 }); toast('Titik kampus disimpan'); pantau.kampusData = d.kampus; gambarKampus(); muatPantau(); } catch (er) { toast(er.message, true); }
+            });
+            pantau.siap = true;
+        } catch (e) { pantau.siap = 'gagal'; k.className = 'pantau-peta peta-info'; k.textContent = e.message; }
+    }
+    function gambarKampus() {
+        if (!pantau.peta || !pantau.kampusData) return; const p = { lat: pantau.kampusData.lat, lng: pantau.kampusData.lng };
+        if (pantau.kampus) { pantau.kampus.m.setPosition(p); pantau.kampus.c.setCenter(p); pantau.kampus.c.setRadius(pantau.kampusData.radius); return; }
+        pantau.kampus = { m: window.KPPeta.titik(pantau.peta, p, { warna: '#059669', label: 'K', judul: 'Kampus', skala: 12 }), c: new google.maps.Circle({ map: pantau.peta, center: p, radius: pantau.kampusData.radius, strokeColor: '#059669', strokeOpacity: 0.7, strokeWeight: 1.5, fillColor: '#10b981', fillOpacity: 0.12 }) };
+    }
+    async function tampilJejak(r) {
+        if (!pantau.peta) return;
+        try {
+            const d = await api(API + '?jejak=' + r.id); const path = d.titik.map((x) => ({ lat: x.lat, lng: x.lng }));
+            if (pantau.jalur) pantau.jalur.setMap(null);
+            pantau.jalur = new google.maps.Polyline({ map: pantau.peta, path, strokeColor: '#2563eb', strokeWeight: 4, strokeOpacity: 0.75 });
+            const b = new google.maps.LatLngBounds(); path.forEach((p) => b.extend(p)); if (r.tujuan_lat) b.extend({ lat: r.tujuan_lat, lng: r.tujuan_lng });
+            if (!b.isEmpty()) pantau.peta.fitBounds(b, 70);
+        } catch (e) { /* jejak opsional */ }
+    }
+    function renderPantau() {
+        const box = $('pantauList'); box.textContent = '';
+        if (!pantau.data.length) box.appendChild(el('p', 'arm-kosong', 'Belum ada perjalanan hari ini. Pemakaian yang sudah disetujui dan sedang berangkat akan muncul di sini.'));
+        pantau.data.forEach((r) => box.appendChild(kartuPantau(r)));
+        if (window.lucide) lucide.createIcons();
+        const pt = pantau.peta; if (!pt) return;
+        const ada = new Set(pantau.data.map((r) => r.id));
+        Object.keys(pantau.marker).forEach((id) => { if (!ada.has(Number(id))) { pantau.marker[id].setMap(null); delete pantau.marker[id]; } });
+        Object.keys(pantau.pin).forEach((id) => { if (!ada.has(Number(id))) { pantau.pin[id].setMap(null); delete pantau.pin[id]; } });
+        pantau.data.forEach((r) => {
+            if (r.tujuan_lat && !pantau.pin[r.id]) pantau.pin[r.id] = window.KPPeta.pin(pt, { lat: r.tujuan_lat, lng: r.tujuan_lng }, { judul: 'Tujuan ' + r.armada_kode + ': ' + r.tujuan });
+            if (r.perjalanan === 'jalan' && r.pos_lat) {
+                const p = { lat: r.pos_lat, lng: r.pos_lng }, warna = r.gps_putus ? '#dc2626' : '#2563eb';
+                if (!pantau.marker[r.id]) pantau.marker[r.id] = window.KPPeta.titik(pt, p, { warna, label: r.armada_kode.slice(0, 3), judul: r.armada_nama + ' · ' + r.pemohon, skala: 17, z: 5 });
+                else { pantau.marker[r.id].setPosition(p); pantau.marker[r.id].setIcon(Object.assign({}, pantau.marker[r.id].getIcon(), { fillColor: warna })); }
+            } else if (pantau.marker[r.id]) { pantau.marker[r.id].setMap(null); delete pantau.marker[r.id]; }
+        });
+    }
+    let pertamaPantau = true;
+    async function muatPantau() {
+        if (document.visibilityState === 'hidden') return;
+        try {
+            const d = await api(API + '?pantau=1');
+            pantau.data = d.data; pantau.kampusData = d.kampus;
+            const jalan = d.data.filter((r) => r.perjalanan === 'jalan');
+            $('pantauInfo').textContent = jalan.length ? jalan.length + ' perjalanan berlangsung · diperbarui ' + d.sekarang.slice(11, 19) : 'Tidak ada perjalanan berlangsung. Posisi GPS pemohon yang berangkat tampil di sini dan diperbarui tiap 5 detik.';
+            $('pantauDot').classList.toggle('putus', !jalan.length);
+            if (!d.kampus) $('pantauInfo').textContent += ' · Titik kampus belum diatur.';
+            const baruPutus = new Set(jalan.filter((r) => r.gps_putus).map((r) => r.id));
+            baruPutus.forEach((id) => { if (!pantau.putus.has(id)) { const r = jalan.find((x) => x.id === id); toast('GPS ' + r.armada_kode + ' (' + (r.pemohon || '-') + ') terputus!', true); } });
+            pantau.putus = baruPutus;
+            await siapkanPetaPantau();
+            gambarKampus(); renderPantau();
+            if (pertamaPantau && pantau.peta) {
+                pertamaPantau = false; const b = new google.maps.LatLngBounds(); let n = 0;
+                jalan.forEach((r) => { if (r.pos_lat) { b.extend({ lat: r.pos_lat, lng: r.pos_lng }); n++; } });
+                if (d.kampus) { b.extend({ lat: d.kampus.lat, lng: d.kampus.lng }); n++; }
+                if (n) { pantau.peta.fitBounds(b, 70); if (n === 1) pantau.peta.setZoom(15); }
+            }
+        } catch (e) { $('pantauInfo').textContent = e.message; }
+    }
+    $('btnKampus').addEventListener('click', () => {
+        if (!pantau.peta) { toast('Peta belum tampil. Isi API key Google Maps di peta-config.js.', true); return; }
+        pantau.modeKampus = !pantau.modeKampus; $('btnKampus').classList.toggle('primary', pantau.modeKampus);
+        pantau.peta.setOptions({ draggableCursor: pantau.modeKampus ? 'crosshair' : null });
+        if (pantau.modeKampus) toast('Klik titik kampus di peta.');
+    });
+    muatPantau(); setInterval(muatPantau, 5000);
 
     // ---------- tombol ----------
     $('btnTambah').addEventListener('click', () => bukaForm(null));

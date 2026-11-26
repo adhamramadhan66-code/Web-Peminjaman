@@ -634,6 +634,7 @@
 
         <p class="signup"><span id="modeTeks">Belum punya akun?</span> <a href="#" id="modeLink">Daftar</a></p>
         <p class="terms demo-account">Akun demo admin: <strong>admin@tsu.ac.id</strong><br>Akun demo pengguna: <strong>mahasiswa@tsu.ac.id</strong><br>Kata sandi keduanya: <strong>tsu12345</strong></p>
+        <p class="signup"><a href="masuk-armada.html">Pemohon mobil dinas? Masuk di sini</a></p>
 
       </div>
       <p class="foot-note">© Tiga Serangkai University</p>
@@ -674,7 +675,8 @@
     // Jika sesi demo masih aktif, langsung buka dashboard.
     try {
       if (sessionStorage.getItem(SESSION_KEY)) {
-        window.location.replace('dashboard.html');
+        var u0 = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
+        window.location.replace(u0 && u0.peran === 'pemohon' ? 'pemohon.html' : 'dashboard.html');
         return;
       }
     } catch (error) {
@@ -765,7 +767,7 @@
       }
       showMessage((modeDaftar ? 'Akun berhasil dibuat. ' : 'Login berhasil. ') + 'Membuka dashboard...', 'success');
       setTimeout(function () {
-        window.location.replace('dashboard.html');
+        window.location.replace(data.pengguna.peran === 'pemohon' ? 'pemohon.html' : 'dashboard.html');
       }, 500);
     });
 

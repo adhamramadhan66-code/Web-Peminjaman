@@ -42,7 +42,7 @@ function data_pengguna(array $r): array
         'id'    => (int) $r['id'],
         'nama'  => (string) $r['nama'],
         'email' => (string) $r['email'],
-        'peran' => $r['peran'] === 'admin' ? 'admin' : 'pengguna',
+        'peran' => in_array($r['peran'], ['admin', 'pemohon'], true) ? $r['peran'] : 'pengguna',
     ];
 }
 

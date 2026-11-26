@@ -6,6 +6,8 @@
  *   POST api/armada.php {aksi: simpan, id?, armada_id, tanggal, tanggal_akhir?, mulai, selesai?, tujuan, peserta?, sopir?, fasilitas?, pemohon?, status?, tgl_pesan?, paksa?}
  *   POST api/armada.php {aksi: setujui|tolak|hapus, id, alasan?}   (tolak: alasan wajib)
  *   POST api/armada.php {aksi: hapus_semua}
+ *   GET  api/armada.php?pantau=1 | ?jejak=ID     -> perjalanan berjalan (posisi GPS terakhir) / jejak rute
+ *   POST api/armada.php {aksi: kampus, lat, lng, radius?} | {aksi: paksa_selesai, id, alasan?}
  *   POST api/armada.php {aksi: impor, uji?, baris: [...]}
  * Aturan bentrok: satu armada tidak boleh dipakai dua kegiatan yang DISETUJUI pada waktu yang beririsan.
  * Selesai kosong berarti "sampai selesai" (dianggap berakhir 23:59 pada tanggal akhir).
@@ -13,82 +15,18 @@
  */
 require __DIR__ . '/db.php';
 require __DIR__ . '/sesi.php';
-require __DIR__ . '/jadwal_util.php';
+require __DIR__ . '/armada_util.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 
 const PER_HALAMAN_ARMADA = 20;
-const STATUS_ARMADA = ['menunggu', 'disetujui', 'ditolak'];
 
 function keluar($data, int $kode = 200): void
 {
     http_response_code($kode);
     echo json_encode($data, JSON_UNESCAPED_UNICODE);
     exit;
-}
-
-function ujung(array $r): array
-{
-    $akhir = ($r['selesai'] ?? '') !== '' ? $r['selesai'] : '23:59';
-    return [$r['tanggal'] . ' ' . $r['mulai'], ($r['tanggal_akhir'] ?: $r['tanggal']) . ' ' . $akhir];
-}
-
-/** Pesan bentrok bila armada sudah dipakai kegiatan DISETUJUI lain pada waktu yang beririsan; null bila aman. */
-function cek_bentrok(PDO $pdo, int $armada, array $b, int $kecuali = 0): ?string
-{
-    [$s1, $e1] = ujung($b);
-    $s = $pdo->prepare("SELECT * FROM pemakaian_armada WHERE armada_id = ? AND status = 'disetujui' AND id <> ? AND tanggal <= ? AND tanggal_akhir >= ?");
-    $s->execute([$armada, $kecuali, substr($e1, 0, 10), substr($s1, 0, 10)]);
-    foreach ($s->fetchAll() as $r) {
-        [$s2, $e2] = ujung($r);
-        if ($s2 < $e1 && $s1 < $e2) {
-            return 'Armada sudah dipakai untuk "' . $r['tujuan'] . '" (' . $r['tanggal']
-                . ($r['tanggal_akhir'] !== $r['tanggal'] ? ' s.d. ' . $r['tanggal_akhir'] : '') . ', ' . $r['mulai'] . ' - ' . ($r['selesai'] ?: 'selesai') . ').';
-        }
-    }
-    return null;
-}
-
-/** Merapikan dan memeriksa isian satu pemakaian. Mengembalikan [data, pesanError]. */
-function rapikan(array $in): array
-{
-    $tgl = (string) ($in['tanggal'] ?? '');
-    if (!tanggal_valid($tgl)) return [null, 'Isi tanggal pemakaian dengan benar.'];
-    $akhir = (string) ($in['tanggal_akhir'] ?? '');
-    if ($akhir === '') $akhir = $tgl;
-    if (!tanggal_valid($akhir) || $akhir < $tgl) return [null, 'Tanggal akhir tidak boleh sebelum tanggal pemakaian.'];
-    if ((strtotime($akhir) - strtotime($tgl)) / 86400 > 30) return [null, 'Satu pemakaian paling lama 31 hari.'];
-    $mulai = (string) ($in['mulai'] ?? '');
-    if (!jam_valid($mulai)) return [null, 'Isi jam berangkat dengan benar.'];
-    $selesai = (string) ($in['selesai'] ?? '');
-    if ($selesai !== '' && !jam_valid($selesai)) return [null, 'Jam selesai tidak valid (kosongkan bila "sampai selesai").'];
-    if ($selesai !== '' && $akhir === $tgl && $selesai <= $mulai) return [null, 'Jam selesai harus lebih besar dari jam berangkat.'];
-    $tujuan = potong($in['tujuan'] ?? '', 200);
-    if ($tujuan === '') return [null, 'Tujuan / keperluan wajib diisi.'];
-    $status = (string) ($in['status'] ?? 'disetujui');
-    if (!in_array($status, STATUS_ARMADA, true)) $status = 'disetujui';
-    $pesan = (string) ($in['tgl_pesan'] ?? '');
-    return [[
-        'tgl_pesan' => tanggal_valid($pesan) ? $pesan : '', 'tanggal' => $tgl, 'tanggal_akhir' => $akhir, 'mulai' => $mulai, 'selesai' => $selesai,
-        'tujuan' => $tujuan, 'peserta' => max(0, min(99, (int) ($in['peserta'] ?? 0))), 'sopir' => !empty($in['sopir']) ? 1 : 0,
-        'fasilitas' => potong($in['fasilitas'] ?? '', 160), 'pemohon' => potong($in['pemohon'] ?? '', 80), 'status' => $status,
-        'catatan' => potong($in['catatan'] ?? '', 255),
-    ], null];
-}
-
-function baris_armada(PDO $pdo, int $id): ?array
-{
-    $s = $pdo->prepare('SELECT * FROM pemakaian_armada WHERE id = ?');
-    $s->execute([$id]);
-    return $s->fetch() ?: null;
-}
-
-function rapikan_keluar(array $r): array
-{
-    foreach (['id', 'armada_id', 'peserta', 'sopir'] as $k) $r[$k] = (int) $r[$k];
-    $r['sopir'] = $r['sopir'] === 1;
-    return $r;
 }
 
 try {
@@ -120,6 +58,24 @@ try {
             unset($a);
             $menunggu = (int) $pdo->query("SELECT COUNT(*) FROM pemakaian_armada WHERE status = 'menunggu'")->fetchColumn();
             keluar(['armada' => $armada, 'menunggu' => $menunggu]);
+        }
+
+        if (isset($_GET['pantau'])) {
+            // Perjalanan yang sedang berjalan + yang disetujui untuk hari ini tetapi belum berangkat.
+            $kampus = ambil_kampus($pdo);
+            $s = $pdo->prepare("SELECT p.*, a.kode AS armada_kode, a.nama AS armada_nama FROM pemakaian_armada p JOIN armada a ON a.id = p.armada_id
+                WHERE p.status = 'disetujui' AND (p.perjalanan = 'jalan' OR (p.perjalanan = 'belum' AND p.tanggal <= ? AND p.tanggal_akhir >= ?)
+                    OR (p.perjalanan = 'selesai' AND p.tiba >= ?))
+                ORDER BY CASE p.perjalanan WHEN 'jalan' THEN 0 WHEN 'belum' THEN 1 ELSE 2 END, p.tanggal, p.mulai, p.id");
+            $s->execute([$hariIni, $hariIni, $hariIni . ' 00:00:00']);
+            keluar(['kampus' => $kampus, 'sekarang' => $sekarang->format('Y-m-d H:i:s'), 'data' => array_map(fn ($r) => info_perjalanan($r, $kampus), $s->fetchAll())]);
+        }
+        if (isset($_GET['jejak'])) {
+            $s = $pdo->prepare('SELECT lat, lng, waktu FROM jejak_armada WHERE pemakaian_id = ? ORDER BY id DESC LIMIT 300');
+            $s->execute([(int) $_GET['jejak']]);
+            $t = array_reverse($s->fetchAll());
+            foreach ($t as &$x) { $x['lat'] = (float) $x['lat']; $x['lng'] = (float) $x['lng']; }
+            keluar(['titik' => $t]);
         }
 
         // daftar pemakaian
@@ -196,11 +152,28 @@ try {
             $pdo->prepare("UPDATE pemakaian_armada SET status = 'ditolak', catatan = ? WHERE id = ?")->execute([$alasan, $r['id']]);
             keluar(['ok' => true]);
 
+        case 'kampus':      // titik kampus: tujuan akhir "sudah tiba" bagi pemohon
+            if (!koordinat_valid($in['lat'] ?? null, $in['lng'] ?? null)) keluar(['error' => 'Titik kampus tidak valid.'], 422);
+            $radius = max(50, min(2000, (int) ($in['radius'] ?? 300)));
+            $u = $pdo->prepare('DELETE FROM pengaturan WHERE kunci = ?');
+            $i = $pdo->prepare('INSERT INTO pengaturan (kunci, nilai) VALUES (?, ?)');
+            foreach (['kampus_lat' => (float) $in['lat'], 'kampus_lng' => (float) $in['lng'], 'kampus_radius' => $radius] as $k => $v) { $u->execute([$k]); $i->execute([$k, (string) $v]); }
+            keluar(['ok' => true, 'kampus' => ambil_kampus($pdo)]);
+
+        case 'paksa_selesai':   // HP pemohon mati / GPS terputus: admin menutup perjalanan secara manual
+            $r = baris_armada($pdo, (int) ($in['id'] ?? 0));
+            if (!$r) keluar(['error' => 'Data tidak ditemukan.'], 404);
+            $pdo->prepare("UPDATE pemakaian_armada SET perjalanan = 'selesai', tiba = ?, catatan = ? WHERE id = ?")
+                ->execute([$dibuat, 'Ditutup admin ' . $sekarang->format('d/m H:i') . (potong($in['alasan'] ?? '', 120) ? ': ' . potong($in['alasan'], 120) : ''), $r['id']]);
+            keluar(['ok' => true]);
+
         case 'hapus':
+            $pdo->prepare('DELETE FROM jejak_armada WHERE pemakaian_id = ?')->execute([(int) ($in['id'] ?? 0)]);
             $pdo->prepare('DELETE FROM pemakaian_armada WHERE id = ?')->execute([(int) ($in['id'] ?? 0)]);
             keluar(['ok' => true]);
 
         case 'hapus_semua':
+            $pdo->exec('DELETE FROM jejak_armada');
             $n = $pdo->exec('DELETE FROM pemakaian_armada');
             keluar(['ok' => true, 'dihapus' => (int) $n]);
 

@@ -125,3 +125,9 @@ CATATAN KEAMANAN
 - Akun pengguna biasa saat ini masih bisa melihat seluruh daftar pengajuan (sama seperti sebelumnya).
 - Database lama otomatis ditambah tabel "pengguna", tabel "pesan", dan kolom "pengguna_id" pada
   "peminjaman" saat web dibuka pertama kali; data yang sudah ada tidak berubah.
+
+== Mobil dinas (armada) ==
+- Admin: menu "Mobil Dinas" (armada.html). Pemohon: masuk-armada.html -> pemohon.html. Akun demo pemohon: pemohon@tsu.ac.id / tsu12345.
+- Peta memakai Google Maps: isi API key di peta-config.js (Maps JavaScript API + Geocoding API). Tanpa key, halaman tetap jalan tetapi peta belum tampil.
+- Titik kampus diatur admin lewat tombol "Atur titik kampus" di panel Pantau perjalanan; dipakai untuk memeriksa pemohon sudah tiba sebelum perjalanan dapat diselesaikan.
+- Pelacakan berjalan lewat halaman web pemohon: halaman harus tetap terbuka dan GPS menyala. Bila posisi tidak terkirim >60 detik, admin melihat "GPS terputus".

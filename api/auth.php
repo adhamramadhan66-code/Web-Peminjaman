@@ -5,7 +5,7 @@
  *   POST api/auth.php {aksi: masuk,  email, sandi}
  *   POST api/auth.php {aksi: daftar, nama, email, sandi}   -> membuat akun "pengguna" lalu langsung masuk
  *   POST api/auth.php {aksi: keluar}
- * Akun yang mendaftar sendiri selalu berperan "pengguna". Peran "admin" hanya bisa diberikan
+ * Akun yang mendaftar sendiri berperan "pengguna" atau "pemohon" (pemohon mobil dinas, bila {peran: pemohon} dikirim). Peran "admin" hanya bisa diberikan
  * lewat database (kolom peran di tabel pengguna).
  */
 require __DIR__ . '/sesi.php';
@@ -67,15 +67,16 @@ try {
             $s->execute([$email]);
             if ($s->fetchColumn()) kirim_json(['error' => 'Email ini sudah terdaftar. Silakan masuk.'], 409);
 
+            $peranBaru = ($in['peran'] ?? '') === 'pemohon' ? 'pemohon' : 'pengguna';   // "admin" tidak pernah bisa dipilih dari sini
             try {
                 $pdo->prepare('INSERT INTO pengguna (nama, email, sandi, peran, dibuat) VALUES (?, ?, ?, ?, ?)')
-                    ->execute([$nama, $email, password_hash($sandi, PASSWORD_DEFAULT), 'pengguna', date('Y-m-d H:i:s')]);
+                    ->execute([$nama, $email, password_hash($sandi, PASSWORD_DEFAULT), $peranBaru, date('Y-m-d H:i:s')]);
             } catch (PDOException $e) {
                 // dua pendaftaran dengan email sama pada detik yang sama: indeks UNIQUE menolak yang kedua
                 if ((string) $e->getCode() === '23000') kirim_json(['error' => 'Email ini sudah terdaftar. Silakan masuk.'], 409);
                 throw $e;
             }
-            $r = ['id' => (int) $pdo->lastInsertId(), 'nama' => $nama, 'email' => $email, 'peran' => 'pengguna'];
+            $r = ['id' => (int) $pdo->lastInsertId(), 'nama' => $nama, 'email' => $email, 'peran' => $peranBaru];
             mulai_sesi_akun($r);
             kirim_json(['ok' => true, 'pengguna' => data_pengguna($r)]);
 
