@@ -121,6 +121,41 @@ function buat_tabel(PDO $pdo): void
         " . ($my ? ', INDEX (elemen_id), INDEX (hari)' : '') . "
     )$eng");
 
+    // Armada (mobil dinas) dan pemakaiannya. Satu baris pemakaian = satu armada pada satu tanggal atau rentang tanggal.
+    // selesai kosong = "sampai selesai" (dianggap berakhir 23:59). status: menunggu | disetujui | ditolak
+    $pdo->exec("CREATE TABLE IF NOT EXISTS armada (
+        id $ai,
+        kode VARCHAR(10) NOT NULL,
+        nama VARCHAR(60) NOT NULL,
+        keterangan VARCHAR(120) NOT NULL DEFAULT '',
+        urutan $int NOT NULL DEFAULT 0
+    )$eng");
+    $pdo->exec("CREATE TABLE IF NOT EXISTS pemakaian_armada (
+        id $ai,
+        armada_id $int NOT NULL,
+        tgl_pesan VARCHAR(10) NOT NULL DEFAULT '',
+        tanggal VARCHAR(10) NOT NULL,
+        tanggal_akhir VARCHAR(10) NOT NULL,
+        mulai CHAR(5) NOT NULL,
+        selesai CHAR(5) NOT NULL DEFAULT '',
+        tujuan VARCHAR(200) NOT NULL,
+        peserta $int NOT NULL DEFAULT 0,
+        sopir $int NOT NULL DEFAULT 0,
+        fasilitas VARCHAR(160) NOT NULL DEFAULT '',
+        pemohon VARCHAR(80) NOT NULL DEFAULT '',
+        status VARCHAR(12) NOT NULL DEFAULT 'disetujui',
+        catatan VARCHAR(255) NOT NULL DEFAULT '',
+        dibuat VARCHAR(19) NOT NULL DEFAULT ''
+        " . ($my ? ', INDEX (armada_id), INDEX (tanggal), INDEX (status)' : '') . "
+    )$eng");
+    if ((int) $pdo->query('SELECT COUNT(*) FROM armada')->fetchColumn() === 0) {
+        $ins = $pdo->prepare('INSERT INTO armada (kode, nama, keterangan, urutan) VALUES (?, ?, ?, ?)');
+        foreach ([['WR1', 'Mobil Dinas WR1', 'Wakil Rektor 1'], ['WR2', 'Mobil Dinas WR2', 'Wakil Rektor 2'],
+                  ['WR3', 'Mobil Dinas WR3', 'Wakil Rektor 3'], ['APV', 'Mobil APV', 'Mobil operasional bersama']] as $i => $a) {
+            $ins->execute([$a[0], $a[1], $a[2], $i + 1]);
+        }
+    }
+
     // Akun login. peran: admin | pengguna. Kata sandi disimpan sebagai hash (password_hash).
     $pdo->exec("CREATE TABLE IF NOT EXISTS pengguna (
         id $ai,
