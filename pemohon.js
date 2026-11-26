@@ -1,4 +1,4 @@
-/* Portal pemohon mobil dinas: pilih mobil, ajukan dengan tujuan di Google Maps, berangkat dengan GPS aktif,
+/* Portal pemohon mobil dinas: pilih mobil, ajukan dengan tujuan di peta, berangkat dengan GPS aktif,
    dan kirim posisi berkala sampai kembali ke kampus. */
 (function () {
     'use strict';
@@ -25,7 +25,7 @@
         try { res = await fetch(url, payload ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) } : { cache: 'no-store' }); }
         catch (e) { throw new Error('Tidak dapat terhubung ke server.'); }
         let d = null; try { d = await res.json(); } catch (e) { /* abaikan */ }
-        if (res.status === 401) { try { sessionStorage.removeItem(KEY); } catch (e) { /* abaikan */ } location.replace('masuk-armada.html'); throw new Error('Sesi berakhir. Silakan masuk kembali.'); }
+        if (res.status === 401) { try { sessionStorage.removeItem(KEY); } catch (e) { /* abaikan */ } location.replace('index.html#mobil'); throw new Error('Sesi berakhir. Silakan masuk kembali.'); }
         if (!res.ok || !d) { const err = new Error((d && d.error) || 'Server tidak merespons.'); err.data = d; throw err; }
         return d;
     }
@@ -34,7 +34,7 @@
     $('btnKeluar').addEventListener('click', () => {
         if (pelacakan.aktif && !confirm('Perjalanan masih berlangsung. Keluar akan menghentikan pemantauan GPS. Tetap keluar?')) return;
         try { sessionStorage.removeItem(KEY); } catch (e) { /* abaikan */ }
-        const k = () => location.replace('masuk-armada.html');
+        const k = () => location.replace('index.html#mobil');
         fetch('api/auth.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aksi: 'keluar' }), keepalive: true }).then(k, k);
     });
     $('themeToggle').addEventListener('click', () => {
@@ -136,14 +136,14 @@
         }
         const box = $('alamatPilih'); box.textContent = '';
         const b = el('b', null, alamat || 'Titik terpilih'); box.appendChild(b); box.appendChild(document.createTextNode(' (' + lat.toFixed(5) + ', ' + lng.toFixed(5) + ')'));
-        if (!alamat && window.google) KPPeta.alamatDari(lat, lng).then((al) => { if (pilihan && pilihan.lat === lat && al) { pilihan.alamat = al; b.textContent = al; if (!inputs.tujuan.value) inputs.tujuan.value = al.split(',')[0]; } });
+        if (!alamat) KPPeta.alamatDari(lat, lng).then((al) => { if (pilihan && pilihan.lat === lat && al) { pilihan.alamat = al; b.textContent = al; if (!inputs.tujuan.value) inputs.tujuan.value = al.split(',')[0]; } });
     }
     async function siapkanPeta() {
         const k = $('petaPilih'); k.textContent = ''; k.className = 'peta-kotak';
-        if (petaPilih) { if (!pilihan) { markerPilih && markerPilih.setMap(null); markerPilih = null; } return; }
+        if (petaPilih) { if (!pilihan) { markerPilih && markerPilih.remove(); markerPilih = null; } return; }
         try {
             petaPilih = await KPPeta.buat(k, { center: kampus ? { lat: kampus.lat, lng: kampus.lng } : KPPeta.PUSAT, zoom: 14 });
-            petaPilih.addListener('click', (e) => setTujuan(e.latLng.lat(), e.latLng.lng()));
+            petaPilih.onClick((lat, lng) => setTujuan(lat, lng));
             if (kampus) KPPeta.titik(petaPilih, { lat: kampus.lat, lng: kampus.lng }, { warna: '#059669', label: 'K', judul: 'Kampus', skala: 11 });
         } catch (e) { k.className = 'peta-kotak peta-info'; k.textContent = e.message + ' Sementara itu, tempel koordinat tujuan di kolom di bawah peta.'; }
     }
@@ -259,17 +259,17 @@
             pelacakan.peta = await KPPeta.buat($('lacakPeta'), { center: trip.tujuan_lat ? { lat: trip.tujuan_lat, lng: trip.tujuan_lng } : KPPeta.PUSAT, zoom: 13 });
             if (trip.tujuan_lat) KPPeta.pin(pelacakan.peta, { lat: trip.tujuan_lat, lng: trip.tujuan_lng }, { judul: 'Tujuan' });
             if (kampus) KPPeta.titik(pelacakan.peta, { lat: kampus.lat, lng: kampus.lng }, { warna: '#059669', label: 'K', judul: 'Kampus', skala: 11 });
-            pelacakan.jalur = new google.maps.Polyline({ map: pelacakan.peta, path: [], strokeColor: '#2563eb', strokeWeight: 4, strokeOpacity: 0.8 });
+            pelacakan.jalur = KPPeta.garis(pelacakan.peta);
             gambarPosisi(true);
         } catch (e) { const k = $('lacakPeta'); k.className = 'peta-kotak tinggi peta-info'; k.textContent = e.message; }
     }
     function gambarPosisi(fit) {
-        const t = pelacakan.terakhir, pt = pelacakan.peta; if (!t || !pt || !window.google) return;
+        const t = pelacakan.terakhir, pt = pelacakan.peta; if (!t || !pt) return;
         const p = { lat: t.lat, lng: t.lng };
         if (!pelacakan.marker) { pelacakan.marker = KPPeta.titik(pt, p, { warna: '#2563eb', label: pelacakan.aktif.armada_kode.slice(0, 3), judul: 'Posisi Anda', skala: 17, z: 5 }); fit = true; }
         else pelacakan.marker.setPosition(p);
         pelacakan.titikJalur.push(p); if (pelacakan.titikJalur.length > 500) pelacakan.titikJalur.shift(); pelacakan.jalur.setPath(pelacakan.titikJalur);
-        if (fit) { const b = new google.maps.LatLngBounds(); b.extend(p); if (pelacakan.aktif.tujuan_lat) b.extend({ lat: pelacakan.aktif.tujuan_lat, lng: pelacakan.aktif.tujuan_lng }); if (kampus) b.extend({ lat: kampus.lat, lng: kampus.lng }); pt.fitBounds(b, 60); }
+        if (fit) { const b = KPPeta.batas(); b.extend(p); if (pelacakan.aktif.tujuan_lat) b.extend({ lat: pelacakan.aktif.tujuan_lat, lng: pelacakan.aktif.tujuan_lng }); if (kampus) b.extend({ lat: kampus.lat, lng: kampus.lng }); pt.fit(b, 60); }
     }
     async function minta_wake() { try { if (navigator.wakeLock) pelacakan.wake = await navigator.wakeLock.request('screen'); } catch (e) { /* tidak didukung / ditolak */ } }
     document.addEventListener('visibilitychange', () => { if (pelacakan.aktif && document.visibilityState === 'visible') { minta_wake(); kirimPosisi(true); } });

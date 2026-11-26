@@ -7,9 +7,9 @@
         (function () {   // hanya untuk akun pemohon (admin boleh mencoba)
             try {
                 const u = JSON.parse(sessionStorage.getItem('kampuslyCurrentUser') || 'null');
-                if (!u || !u.email) { location.replace('masuk-armada.html'); return; }
+                if (!u || !u.email) { location.replace('index.html#mobil'); return; }
                 if (u.peran !== 'pemohon' && u.peran !== 'admin') { location.replace('dashboard.html'); return; }
-            } catch (e) { location.replace('masuk-armada.html'); }
+            } catch (e) { location.replace('index.html#mobil'); }
             try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 'dark'; } catch (e) { document.documentElement.dataset.theme = 'dark'; }
         })();
     </script>
@@ -101,7 +101,7 @@
                     </div>
                     <div class="peta-kotak" id="petaPilih"></div>
                     <p class="alamat-pilih" id="alamatPilih">Klik peta untuk menandai tujuan.</p>
-                    <input class="in" id="koordTempel" placeholder="Atau tempel koordinat dari Google Maps, mis. -7.5666, 110.8167" style="margin-top:0.5rem" autocomplete="off">
+                    <input class="in" id="koordTempel" placeholder="Atau tempel koordinat dari peta, mis. -7.5666, 110.8167" style="margin-top:0.5rem" autocomplete="off">
                 </div>
                 <div class="kbtns">
                     <button type="button" class="btn" id="kBatal">Batal</button>
@@ -112,8 +112,7 @@
     </div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <script src="peta-config.js?v=1"></script>
-    <script src="peta.js?v=1"></script>
+    <script src="peta.js?v=2"></script>
     <script src="pemohon.js?v=1"></script>
     <script>if (window.lucide) lucide.createIcons();</script>
 </body>

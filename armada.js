@@ -100,7 +100,7 @@
             c(rentang(r), 'num');
             c(waktu(r), 'num');
             const tj = c(el('strong', null, r.tujuan)); if (r.catatan) tj.appendChild(el('small', 'sub', r.catatan));
-            if (r.tujuan_lat) { const a = el('a', 'sub', (r.tujuan_alamat || 'Lihat di Google Maps')); a.href = 'https://www.google.com/maps?q=' + r.tujuan_lat + ',' + r.tujuan_lng; a.target = '_blank'; a.rel = 'noopener'; a.style.display = 'block'; tj.appendChild(a); }
+            if (r.tujuan_lat) { const a = el('a', 'sub', (r.tujuan_alamat || 'Lihat di peta')); a.href = window.KPPeta.tautan(r.tujuan_lat, r.tujuan_lng); a.target = '_blank'; a.rel = 'noopener'; a.style.display = 'block'; tj.appendChild(a); }
             const pm = c(r.pemohon || '-'); if (r.sopir) pm.appendChild(el('small', 'sub', 'Dengan sopir'));
             c(r.peserta ? String(r.peserta) : '-', 'num');
             const [lbl, kls] = labelStatus(r); c(el('span', 'badge-st ' + kls, lbl));
@@ -377,7 +377,7 @@
     }
 
     // =====================================================================
-    //  Pantau perjalanan (peta Google Maps + kartu): posisi GPS pemohon secara berkala
+    //  Pantau perjalanan (peta + kartu): posisi GPS pemohon secara berkala
     // =====================================================================
     const pantau = { peta: null, marker: {}, pin: {}, kampus: null, jalur: null, fokus: 0, modeKampus: false, putus: new Set(), data: [], kampusData: null, siap: false };
     const umur = (d) => d == null ? 'belum ada' : d < 60 ? d + ' dtk lalu' : Math.floor(d / 60) + ' mnt lalu';
@@ -414,10 +414,9 @@
         const k = $('pantauPeta');
         try {
             pantau.peta = await window.KPPeta.buat(k, { zoom: 13 });
-            pantau.peta.addListener('click', async (e) => {
+            pantau.peta.onClick(async (lat, lng) => {
                 if (!pantau.modeKampus) return;
-                pantau.modeKampus = false; $('btnKampus').classList.remove('primary'); pantau.peta.setOptions({ draggableCursor: null });
-                const lat = e.latLng.lat(), lng = e.latLng.lng();
+                pantau.modeKampus = false; $('btnKampus').classList.remove('primary'); pantau.peta.kursor(false);
                 const r = prompt('Radius "sudah tiba" dalam meter (50 - 2000):', String((pantau.kampusData && pantau.kampusData.radius) || 300));
                 if (r === null) return;
                 try { const d = await api(API, { aksi: 'kampus', lat, lng, radius: Number(r) || 300 }); toast('Titik kampus disimpan'); pantau.kampusData = d.kampus; gambarKampus(); muatPantau(); } catch (er) { toast(er.message, true); }
@@ -427,17 +426,17 @@
     }
     function gambarKampus() {
         if (!pantau.peta || !pantau.kampusData) return; const p = { lat: pantau.kampusData.lat, lng: pantau.kampusData.lng };
-        if (pantau.kampus) { pantau.kampus.m.setPosition(p); pantau.kampus.c.setCenter(p); pantau.kampus.c.setRadius(pantau.kampusData.radius); return; }
-        pantau.kampus = { m: window.KPPeta.titik(pantau.peta, p, { warna: '#059669', label: 'K', judul: 'Kampus', skala: 12 }), c: new google.maps.Circle({ map: pantau.peta, center: p, radius: pantau.kampusData.radius, strokeColor: '#059669', strokeOpacity: 0.7, strokeWeight: 1.5, fillColor: '#10b981', fillOpacity: 0.12 }) };
+        if (pantau.kampus) { pantau.kampus.m.setPosition(p); pantau.kampus.c.set(p, pantau.kampusData.radius); return; }
+        pantau.kampus = { m: window.KPPeta.titik(pantau.peta, p, { warna: '#059669', label: 'K', judul: 'Kampus', skala: 12 }), c: window.KPPeta.lingkaran(pantau.peta, p, pantau.kampusData.radius) };
     }
     async function tampilJejak(r) {
         if (!pantau.peta) return;
         try {
             const d = await api(API + '?jejak=' + r.id); const path = d.titik.map((x) => ({ lat: x.lat, lng: x.lng }));
-            if (pantau.jalur) pantau.jalur.setMap(null);
-            pantau.jalur = new google.maps.Polyline({ map: pantau.peta, path, strokeColor: '#2563eb', strokeWeight: 4, strokeOpacity: 0.75 });
-            const b = new google.maps.LatLngBounds(); path.forEach((p) => b.extend(p)); if (r.tujuan_lat) b.extend({ lat: r.tujuan_lat, lng: r.tujuan_lng });
-            if (!b.isEmpty()) pantau.peta.fitBounds(b, 70);
+            if (pantau.jalur) pantau.jalur.remove();
+            pantau.jalur = window.KPPeta.garis(pantau.peta); pantau.jalur.setPath(path);
+            const b = window.KPPeta.batas(); path.forEach((p) => b.extend(p)); if (r.tujuan_lat) b.extend({ lat: r.tujuan_lat, lng: r.tujuan_lng });
+            if (!b.isEmpty()) pantau.peta.fit(b, 70);
         } catch (e) { /* jejak opsional */ }
     }
     function renderPantau() {
@@ -447,15 +446,15 @@
         if (window.lucide) lucide.createIcons();
         const pt = pantau.peta; if (!pt) return;
         const ada = new Set(pantau.data.map((r) => r.id));
-        Object.keys(pantau.marker).forEach((id) => { if (!ada.has(Number(id))) { pantau.marker[id].setMap(null); delete pantau.marker[id]; } });
-        Object.keys(pantau.pin).forEach((id) => { if (!ada.has(Number(id))) { pantau.pin[id].setMap(null); delete pantau.pin[id]; } });
+        Object.keys(pantau.marker).forEach((id) => { if (!ada.has(Number(id))) { pantau.marker[id].remove(); delete pantau.marker[id]; } });
+        Object.keys(pantau.pin).forEach((id) => { if (!ada.has(Number(id))) { pantau.pin[id].remove(); delete pantau.pin[id]; } });
         pantau.data.forEach((r) => {
             if (r.tujuan_lat && !pantau.pin[r.id]) pantau.pin[r.id] = window.KPPeta.pin(pt, { lat: r.tujuan_lat, lng: r.tujuan_lng }, { judul: 'Tujuan ' + r.armada_kode + ': ' + r.tujuan });
             if (r.perjalanan === 'jalan' && r.pos_lat) {
                 const p = { lat: r.pos_lat, lng: r.pos_lng }, warna = r.gps_putus ? '#dc2626' : '#2563eb';
                 if (!pantau.marker[r.id]) pantau.marker[r.id] = window.KPPeta.titik(pt, p, { warna, label: r.armada_kode.slice(0, 3), judul: r.armada_nama + ' · ' + r.pemohon, skala: 17, z: 5 });
-                else { pantau.marker[r.id].setPosition(p); pantau.marker[r.id].setIcon(Object.assign({}, pantau.marker[r.id].getIcon(), { fillColor: warna })); }
-            } else if (pantau.marker[r.id]) { pantau.marker[r.id].setMap(null); delete pantau.marker[r.id]; }
+                else { pantau.marker[r.id].setPosition(p); pantau.marker[r.id].setWarna(warna); }
+            } else if (pantau.marker[r.id]) { pantau.marker[r.id].remove(); delete pantau.marker[r.id]; }
         });
     }
     let pertamaPantau = true;
@@ -474,17 +473,17 @@
             await siapkanPetaPantau();
             gambarKampus(); renderPantau();
             if (pertamaPantau && pantau.peta) {
-                pertamaPantau = false; const b = new google.maps.LatLngBounds(); let n = 0;
+                pertamaPantau = false; const b = window.KPPeta.batas(); let n = 0;
                 jalan.forEach((r) => { if (r.pos_lat) { b.extend({ lat: r.pos_lat, lng: r.pos_lng }); n++; } });
                 if (d.kampus) { b.extend({ lat: d.kampus.lat, lng: d.kampus.lng }); n++; }
-                if (n) { pantau.peta.fitBounds(b, 70); if (n === 1) pantau.peta.setZoom(15); }
+                if (n) { pantau.peta.fit(b, 70); if (n === 1) pantau.peta.setZoom(15); }
             }
         } catch (e) { $('pantauInfo').textContent = e.message; }
     }
     $('btnKampus').addEventListener('click', () => {
-        if (!pantau.peta) { toast('Peta belum tampil. Isi API key Google Maps di peta-config.js.', true); return; }
+        if (!pantau.peta) { toast('Peta belum tampil. Periksa koneksi internet.', true); return; }
         pantau.modeKampus = !pantau.modeKampus; $('btnKampus').classList.toggle('primary', pantau.modeKampus);
-        pantau.peta.setOptions({ draggableCursor: pantau.modeKampus ? 'crosshair' : null });
+        pantau.peta.kursor(pantau.modeKampus);
         if (pantau.modeKampus) toast('Klik titik kampus di peta.');
     });
     muatPantau(); setInterval(muatPantau, 5000);

@@ -34,3 +34,6 @@
 .pantau-peta { height: 460px; border-radius: 0.9rem; overflow: hidden; background: var(--surface-3); border: 1px solid var(--border-color); }
 .peta-info { display: flex; align-items: center; justify-content: center; text-align: center; padding: 1.5rem; color: var(--text-muted); font-size: 0.88rem; line-height: 1.6; }
 @media (max-width: 960px) { .pantau-grid { grid-template-columns: 1fr; } }
+
+.pt-bulat { border-radius: 50%; border: 2.5px solid #fff; color: #fff; font: 700 11px/1 Inter, sans-serif; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35); }
+.leaflet-container { font-family: inherit; background: var(--surface-3); }
