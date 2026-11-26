@@ -148,12 +148,16 @@ function buat_tabel(PDO $pdo): void
         dibuat VARCHAR(19) NOT NULL DEFAULT ''
         " . ($my ? ', INDEX (armada_id), INDEX (tanggal), INDEX (status)' : '') . "
     )$eng");
-    if ((int) $pdo->query('SELECT COUNT(*) FROM armada')->fetchColumn() === 0) {
-        $ins = $pdo->prepare('INSERT INTO armada (kode, nama, keterangan, urutan) VALUES (?, ?, ?, ?)');
-        foreach ([['WR1', 'Mobil Dinas WR1', 'Wakil Rektor 1'], ['WR2', 'Mobil Dinas WR2', 'Wakil Rektor 2'],
-                  ['WR3', 'Mobil Dinas WR3', 'Wakil Rektor 3'], ['APV', 'Mobil APV', 'Mobil operasional bersama']] as $i => $a) {
-            $ins->execute([$a[0], $a[1], $a[2], $i + 1]);
-        }
+    // Rapikan armada ganda (bisa terjadi bila dua permintaan pertama datang bersamaan), lalu kunci kode agar tidak terulang.
+    if ((int) $pdo->query('SELECT COUNT(*) FROM armada')->fetchColumn() !== (int) $pdo->query('SELECT COUNT(DISTINCT kode) FROM armada')->fetchColumn()) {
+        $pdo->exec('UPDATE pemakaian_armada SET armada_id = (SELECT MIN(a2.id) FROM armada a2 WHERE a2.kode = (SELECT a1.kode FROM armada a1 WHERE a1.id = pemakaian_armada.armada_id))');
+        $pdo->exec('DELETE FROM armada WHERE id NOT IN (SELECT m FROM (SELECT MIN(id) AS m FROM armada GROUP BY kode) t)');
+    }
+    try { $pdo->exec('CREATE UNIQUE INDEX armada_kode_unik ON armada (kode)'); } catch (PDOException $e) { /* sudah ada */ }
+    $ins = $pdo->prepare(($my ? 'INSERT IGNORE' : 'INSERT OR IGNORE') . ' INTO armada (kode, nama, keterangan, urutan) VALUES (?, ?, ?, ?)');
+    foreach ([['WR1', 'Mobil Dinas WR1', 'Wakil Rektor 1'], ['WR2', 'Mobil Dinas WR2', 'Wakil Rektor 2'],
+              ['WR3', 'Mobil Dinas WR3', 'Wakil Rektor 3'], ['APV', 'Mobil APV', 'Mobil operasional bersama']] as $i => $a) {
+        $ins->execute([$a[0], $a[1], $a[2], $i + 1]);
     }
 
     // Akun login. peran: admin | pengguna. Kata sandi disimpan sebagai hash (password_hash).
