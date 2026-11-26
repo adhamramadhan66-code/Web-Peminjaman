@@ -14,7 +14,7 @@
     const { jarak } = window.KPPeta;
 
     let user = null; try { user = JSON.parse(sessionStorage.getItem(KEY)); } catch (e) { /* abaikan */ }
-    $('pmNama').textContent = user ? (user.name || user.email) : '';
+    if (user && $('heroSapa')) $('heroSapa').textContent = 'Halo, ' + (user.name || user.email).split(' ')[0] + '! Pinjam mobil dinas, lebih mudah.';
 
     function toast(msg, galat) {
         const t = $('toast'); t.textContent = msg; t.className = 'toast show' + (galat ? ' error' : '');
@@ -30,17 +30,6 @@
         return d;
     }
     const ikon = () => { if (window.lucide) lucide.createIcons(); };
-
-    $('btnKeluar').addEventListener('click', () => {
-        if (pelacakan.aktif && !confirm('Perjalanan masih berlangsung. Keluar akan menghentikan pemantauan GPS. Tetap keluar?')) return;
-        try { sessionStorage.removeItem(KEY); } catch (e) { /* abaikan */ }
-        const k = () => location.replace('index.html#mobil');
-        fetch('api/auth.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aksi: 'keluar' }), keepalive: true }).then(k, k);
-    });
-    $('themeToggle').addEventListener('click', () => {
-        const t = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
-        document.documentElement.dataset.theme = t; try { localStorage.setItem('theme', t); } catch (e) { /* abaikan */ }
-    });
 
     // ---------- kartu ----------
     function kiri(kode, nama, ket, tujuan, alamat) {
@@ -68,7 +57,7 @@
             ka.appendChild(baris('Status', el('span', 'badge-st ' + (a.dipakai ? 'berlangsung' : 'disetujui'), a.dipakai ? 'Sedang dipakai' : 'Tersedia')));
             const t = a.terisi.slice(0, 3);
             ka.appendChild(baris('Sudah terisi', t.length ? t.map((x) => rentang(x) + ' ' + x.mulai).join(' · ') : 'Belum ada jadwal'));
-            const ak = el('div', 'kt-aksi'); ak.appendChild(tombol('Ajukan mobil ini', 'send', 'primary', () => bukaForm(a.id))); ka.appendChild(ak);
+            const ak = el('div', 'kt-aksi'); ak.appendChild(tombol('Ajukan mobil ini', 'send', 'primary', () => { pilihArmada = a.id; pindah('ajukan'); })); ka.appendChild(ak);
             kt.appendChild(ka); box.appendChild(kt);
         });
         ikon();
@@ -98,20 +87,42 @@
         }
         kt.appendChild(ka); return kt;
     }
+    let filterStatus = 'semua', cariQ = '';
+    const kelompok = (r) => r.status === 'menunggu' ? 'menunggu' : r.status === 'ditolak' ? 'ditolak' : r.perjalanan === 'selesai' ? 'selesai' : 'disetujui';
+    const LABEL_TAB = { semua: 'Semua', menunggu: 'Menunggu', disetujui: 'Disetujui', selesai: 'Selesai', ditolak: 'Ditolak' };
     function renderSaya() {
+        // KPI + terbaru (dashboard)
+        const hit = { semua: saya.length, menunggu: 0, disetujui: 0, selesai: 0, ditolak: 0 };
+        saya.forEach((r) => { hit[kelompok(r)]++; });
+        $('kpiTotal').textContent = saya.length; $('kpiTotalSub').textContent = saya.length ? 'sejak pertama mengajukan' : 'belum ada pengajuan';
+        $('kpiMenunggu').textContent = hit.menunggu; $('kpiSetuju').textContent = hit.disetujui; $('kpiSelesai').textContent = hit.selesai;
+        const tb = $('listTerbaru'); tb.textContent = '';
+        if (!saya.length) tb.appendChild(el('p', 'arm-kosong', 'Belum ada pengajuan. Pilih mobil di atas untuk mengajukan.'));
+        saya.slice().sort((x, y) => y.id - x.id).slice(0, 3).forEach((r) => tb.appendChild(kartuTrip(r, true)));
+        // riwayat
+        const tabs = $('statusTabs'); tabs.textContent = '';
+        Object.keys(LABEL_TAB).forEach((k) => {
+            const b = el('button', k === filterStatus ? 'active' : '', LABEL_TAB[k]); b.type = 'button'; b.appendChild(el('small', null, String(hit[k])));
+            b.addEventListener('click', () => { filterStatus = k; renderSaya(); }); tabs.appendChild(b);
+        });
         const box = $('listSaya'); box.textContent = '';
-        if (!saya.length) box.appendChild(el('p', 'pm-sub', 'Belum ada pengajuan. Pilih mobil di atas untuk mengajukan.'));
-        saya.forEach((r) => box.appendChild(kartuTrip(r, true)));
+        const q = cariQ.toLowerCase();
+        const baris = saya.filter((r) => (filterStatus === 'semua' || kelompok(r) === filterStatus) && (!q || (r.tujuan + ' ' + r.armada_kode + ' ' + r.armada_nama + ' ' + (r.tujuan_alamat || '')).toLowerCase().includes(q)));
+        if (!baris.length) box.appendChild(el('p', 'arm-kosong', saya.length ? 'Tidak ada data yang cocok dengan filter.' : 'Belum ada pengajuan.'));
+        baris.forEach((r) => box.appendChild(kartuTrip(r, true)));
+        $('riwayatInfo').textContent = saya.length + ' pengajuan \u00b7 ' + hit.selesai + ' perjalanan selesai';
         ikon();
     }
+    $('fCari').addEventListener('input', (e) => { cariQ = e.target.value.trim(); renderSaya(); });
     async function muat() {
         try {
             const [a, s] = await Promise.all([api(API + '?armada=1'), api(API + '?saya=1')]);
             armada = a.armada; kampus = a.kampus; saya = s.data;
             renderArmada(); renderSaya();
+            if (window.KP) window.KP.status('', 'Data tersinkronisasi');
             const aktif = saya.find((r) => r.perjalanan === 'jalan');
             if (aktif) mulaiPelacakan(aktif); else hentiPelacakan();
-        } catch (e) { toast(e.message, true); }
+        } catch (e) { toast(e.message, true); if (window.KP) window.KP.status('error', 'Gagal tersambung'); }
     }
     async function batalkan(r) {
         if (!confirm('Batalkan pengajuan ke "' + r.tujuan + '"?')) return;
@@ -119,14 +130,7 @@
     }
 
     // ---------- form pengajuan + peta tujuan ----------
-    const modal = $('formModal');
-    let petaPilih = null, markerPilih = null, pilihan = null, inputs = {};
-    const buka = () => { modal.hidden = false; document.body.style.overflow = 'hidden'; };
-    const tutup = () => { modal.hidden = true; document.body.style.overflow = ''; };
-    $('formClose').addEventListener('click', tutup); $('kBatal').addEventListener('click', tutup);
-    modal.addEventListener('mousedown', (e) => { if (e.target === modal) tutup(); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !modal.hidden) tutup(); });
-
+    let petaPilih = null, markerPilih = null, pilihan = null, inputs = {}, pilihArmada = 0;
     function setTujuan(lat, lng, alamat) {
         pilihan = { lat, lng, alamat: alamat || '' };
         const p = { lat, lng };
@@ -139,13 +143,13 @@
         if (!alamat) KPPeta.alamatDari(lat, lng).then((al) => { if (pilihan && pilihan.lat === lat && al) { pilihan.alamat = al; b.textContent = al; if (!inputs.tujuan.value) inputs.tujuan.value = al.split(',')[0]; } });
     }
     async function siapkanPeta() {
-        const k = $('petaPilih'); k.textContent = ''; k.className = 'peta-kotak';
-        if (petaPilih) { if (!pilihan) { markerPilih && markerPilih.remove(); markerPilih = null; } return; }
+        const k = $('petaPilih'); if (!petaPilih) { k.textContent = ''; k.className = 'peta-kotak tinggi'; }
+        if (petaPilih) return;
         try {
             petaPilih = await KPPeta.buat(k, { center: kampus ? { lat: kampus.lat, lng: kampus.lng } : KPPeta.PUSAT, zoom: 14 });
             petaPilih.onClick((lat, lng) => setTujuan(lat, lng));
             if (kampus) KPPeta.titik(petaPilih, { lat: kampus.lat, lng: kampus.lng }, { warna: '#059669', label: 'K', judul: 'Kampus', skala: 11 });
-        } catch (e) { k.className = 'peta-kotak peta-info'; k.textContent = e.message + ' Sementara itu, tempel koordinat tujuan di kolom di bawah peta.'; }
+        } catch (e) { k.className = 'peta-kotak tinggi peta-info'; k.textContent = e.message + ' Sementara itu, tempel koordinat tujuan di kolom di bawah peta.'; }
     }
     $('btnCari').addEventListener('click', async () => {
         const q = $('cariAlamat').value.trim(); if (!q) return;
@@ -165,6 +169,7 @@
     function bukaForm(armadaId) {
         const hariIni = iso(new Date());
         $('kErr').className = 'form-err'; $('kErr').textContent = ''; pilihan = null; $('alamatPilih').textContent = 'Klik peta untuk menandai tujuan.'; $('koordTempel').value = ''; $('cariAlamat').value = '';
+        if (markerPilih) { markerPilih.remove(); markerPilih = null; }
         const F = [
             { k: 'armada_id', t: 'armada', label: 'Mobil', wajib: true, penuh: true },
             { k: 'tanggal', t: 'date', label: 'Tanggal berangkat', wajib: true, v: hariIni },
@@ -180,13 +185,14 @@
         F.forEach((f) => {
             const lb = el('label', f.penuh ? 'penuh' : ''); lb.appendChild(document.createTextNode(f.label)); if (f.wajib) lb.appendChild(el('em', null, ' *'));
             let inp;
-            if (f.t === 'armada') { inp = el('select', 'in'); armada.forEach((x) => inp.appendChild(new Option(x.kode + ' – ' + x.nama, x.id))); inp.value = armadaId; }
+            if (f.t === 'armada') { inp = el('select', 'in'); armada.forEach((x) => inp.appendChild(new Option(x.kode + ' \u2013 ' + x.nama, x.id))); if (armadaId) inp.value = armadaId; }
             else if (f.t === 'select') { inp = el('select', 'in'); f.opsi.forEach(([v, t]) => inp.appendChild(new Option(t, v))); }
             else { inp = el('input', 'in'); inp.type = f.t; if (f.maks) inp.maxLength = f.maks; if (f.t === 'number') { inp.min = '0'; inp.max = '99'; } if (f.t === 'date') inp.min = hariIni; inp.autocomplete = 'off'; if (f.v) inp.value = f.v; }
             inputs[f.k] = inp; lb.appendChild(inp); box.appendChild(lb);
         });
-        buka(); siapkanPeta(); ikon();
+        siapkanPeta(); ikon();
     }
+    $('kReset').addEventListener('click', () => bukaForm(inputs.armada_id ? inputs.armada_id.value : 0));
     $('kForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const v = {}; Object.keys(inputs).forEach((k) => { v[k] = inputs[k].value.trim(); });
@@ -194,10 +200,26 @@
         const btn = $('kSimpan'); btn.disabled = true;
         try {
             await api(API, Object.assign({}, v, { aksi: 'ajukan', armada_id: Number(v.armada_id), sopir: v.sopir === '1', peserta: Number(v.peserta) || 0, tujuan_lat: pilihan.lat, tujuan_lng: pilihan.lng, tujuan_alamat: pilihan.alamat }));
-            tutup(); toast('Pengajuan terkirim. Menunggu persetujuan admin.'); muat();
-        } catch (err) { $('kErr').textContent = err.message; $('kErr').className = 'form-err show'; }
+            toast('Pengajuan terkirim. Menunggu persetujuan admin.'); await muat(); pindah('riwayat');
+        } catch (err) { $('kErr').textContent = err.message; $('kErr').className = 'form-err show'; window.scrollTo({ top: 0, behavior: 'smooth' }); }
         finally { btn.disabled = false; }
     });
+
+    // ---------- tampilan (Dashboard / Ajukan / Riwayat) ----------
+    const JUDUL = { dashboard: 'Dashboard', ajukan: 'Ajukan Mobil', riwayat: 'Riwayat Peminjaman' };
+    function pindah(v) { if (location.hash !== '#' + v) location.hash = v; else tampil(); }
+    function tampil() {
+        let v = (location.hash || '#dashboard').slice(1); if (!JUDUL[v]) v = 'dashboard';
+        document.querySelectorAll('[data-panel]').forEach((d) => { d.hidden = d.getAttribute('data-panel') !== v; });
+        document.querySelectorAll('.nav-item[data-view]').forEach((a) => a.classList.toggle('active', a.getAttribute('data-view') === v));
+        $('judulHalaman').textContent = JUDUL[v]; document.title = JUDUL[v] + ' | Mobil Dinas';
+        if (v === 'ajukan' && armada.length) { bukaForm(pilihArmada); pilihArmada = 0; }
+        if (v === 'ajukan' && petaPilih) setTimeout(() => petaPilih.ukuran(), 50);
+        if (v === 'dashboard' && pelacakan.peta) setTimeout(() => pelacakan.peta.ukuran(), 50);
+        window.scrollTo({ top: 0 });
+    }
+    window.addEventListener('hashchange', tampil);
+    document.querySelectorAll('a[data-view]').forEach((a) => a.addEventListener('click', () => { /* hash berubah sendiri */ }));
 
     // ---------- pelacakan GPS ----------
     const pelacakan = { aktif: null, watch: null, hb: null, terakhir: null, kirimTs: 0, wake: null, peta: null, marker: null, jalur: null, titikJalur: [], kirimLagi: false };
@@ -213,7 +235,7 @@
             toast('Membaca lokasi GPS…');
             const p = await posisiSekarang();
             await api(API, { aksi: 'mulai', id: r.id, lat: p.coords.latitude, lng: p.coords.longitude, akurasi: Math.round(p.coords.accuracy) });
-            toast('Selamat jalan! GPS Anda kini dipantau sampai kembali ke kampus.'); await muat();
+            toast('Selamat jalan! GPS Anda kini dipantau sampai kembali ke kampus.'); await muat(); pindah('dashboard');
             $('panelLacak').scrollIntoView({ behavior: 'smooth' });
         } catch (e) { toast(e.message, true); }
     }
@@ -293,5 +315,6 @@
         finally { btn.disabled = false; }
     });
 
-    muat();
+    muat().then(tampil);
+    tampil();
 })();

@@ -4,116 +4,162 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script>
-        (function () {   // hanya untuk akun pemohon (admin boleh mencoba)
+        // Lindungi halaman: hanya dibuka jika sudah masuk (sesi di server dicek ulang oleh pesan-notif.js).
+        (function () {
             try {
-                const u = JSON.parse(sessionStorage.getItem('kampuslyCurrentUser') || 'null');
-                if (!u || !u.email) { location.replace('index.html#mobil'); return; }
-                if (u.peran !== 'pemohon' && u.peran !== 'admin') { location.replace('dashboard.html'); return; }
-            } catch (e) { location.replace('index.html#mobil'); }
-            try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 'dark'; } catch (e) { document.documentElement.dataset.theme = 'dark'; }
+                const user = JSON.parse(sessionStorage.getItem('kampuslyCurrentUser') || 'null');
+                if (!user || !user.email) { window.location.replace('index.html#mobil'); return; }
+                if (user.peran !== 'pemohon' && user.peran !== 'admin') { window.location.replace('dashboard.html'); return; }
+                document.documentElement.dataset.peran = 'pengguna';
+                try {   // preferensi tampilan dipasang sebelum halaman digambar (lihat ui.css / ui.js)
+                    localStorage.removeItem('ui-animasi');   // sakelar "Animasi" sudah dihapus; pilihan lama (mis. "Hemat") tidak boleh mematikan animasi
+                    if (sessionStorage.getItem('ui-sb')) document.documentElement.setAttribute('data-ui-sb', ''); else sessionStorage.setItem('ui-sb', '1');
+                } catch (e) { /* abaikan */ }
+            } catch (error) { window.location.replace('index.html#mobil'); }
         })();
     </script>
-    <title>Mobil Dinas | Pemohon</title>
+    <title>Peminjaman Mobil Dinas | Kampusly</title>
     <link rel="stylesheet" href="style.css?v=20">
     <link rel="stylesheet" href="denah.css?v=8">
     <link rel="stylesheet" href="jadwal.css?v=5">
+    <link rel="stylesheet" href="pesan.css?v=6">
+    <link rel="stylesheet" href="profil.css?v=1">
     <link rel="stylesheet" href="ui.css?v=18">
-    <link rel="stylesheet" href="armada.css?v=1">
+    <link rel="stylesheet" href="armada.css?v=3">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { display: block; padding: 0; }
-        .pm-top { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 0.9rem; padding: 0.7rem 1.5rem; background: var(--card-bg); border-bottom: 1px solid var(--border-color); backdrop-filter: blur(10px); }
-        .pm-top img { height: 34px; width: auto; }
-        .pm-top h1 { margin: 0; font-size: 1.05rem; flex: 1; }
-        .pm-top h1 small { display: block; font-size: 0.72rem; font-weight: 400; color: var(--text-muted); }
-        .pm-wrap { max-width: 1080px; margin: 0 auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 1.4rem; }
-        .pm-wrap h2 { margin: 0 0 0.9rem; font-size: 1.1rem; }
-        .pm-wrap .panel { padding: 1.2rem; }
-        .pm-sub { margin: -0.5rem 0 1rem; color: var(--text-muted); font-size: 0.85rem; }
-        .peta-kotak { width: 100%; height: 340px; border-radius: 0.9rem; overflow: hidden; background: var(--surface-3); border: 1px solid var(--border-color); }
-        .peta-kotak.tinggi { height: 420px; }
-        .peta-info { display: flex; align-items: center; justify-content: center; text-align: center; padding: 1.5rem; color: var(--text-muted); font-size: 0.88rem; line-height: 1.6; }
-        .lacak { border: 1px solid rgba(59, 130, 246, 0.5); }
-        .lacak-bar { display: flex; flex-wrap: wrap; gap: 0.7rem 1.4rem; align-items: center; margin: 0.8rem 0; font-size: 0.88rem; }
-        .lacak-bar b { font-size: 1.05rem; }
-        .banner-gps { display: none; margin-bottom: 0.8rem; padding: 0.8rem 1rem; border-radius: 0.8rem; background: rgba(239, 68, 68, 0.12); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.4); font-size: 0.88rem; font-weight: 600; }
-        .banner-gps.tampil { display: block; }
-        .cari-baris { display: flex; gap: 0.5rem; margin-bottom: 0.6rem; }
-        .cari-baris .in { flex: 1; }
-        .alamat-pilih { margin: 0.6rem 0 0; font-size: 0.82rem; color: var(--text-muted); min-height: 1.2em; }
-        .alamat-pilih b { color: var(--text-main); }
-        @media (max-width: 640px) { .pm-wrap { padding: 1rem; } .pm-top { padding: 0.6rem 1rem; } }
-    </style>
+    <script>
+        try { document.documentElement.dataset.theme = localStorage.getItem('theme') || 'dark'; }
+        catch (e) { document.documentElement.dataset.theme = 'dark'; }
+    </script>
+    <script>
+        // Pindah halaman lewat menu saat sidebar terbuka: pasang kelas sebelum halaman digambar supaya sidebar langsung tampil terbuka
+        // (tanpa kedip tertutup -> terbuka). Kelas dilepas oleh mobile.js setelah keadaan sebenarnya terpasang.
+        try { if (sessionStorage.getItem('sb-nav') === '1' && window.innerWidth > 768) document.documentElement.classList.add('sb-buka'); } catch (e) { /* abaikan */ }
+    </script>
 </head>
-<body>
-    <header class="pm-top">
-        <img src="logo-tsu.png" alt="TSU">
-        <h1>Peminjaman Mobil Dinas<small id="pmNama"></small></h1>
-        <button class="btn-icon" type="button" id="themeToggle" aria-label="Ganti tema" title="Ganti tema"><i data-lucide="sun-moon"></i></button>
-        <button class="btn" type="button" id="btnKeluar"><i data-lucide="log-out"></i> Keluar</button>
-    </header>
-
-    <div class="pm-wrap">
-        <section class="panel lacak" id="panelLacak" hidden>
-            <h2><span class="dot-hidup" id="lacakDot"></span>Perjalanan sedang berlangsung</h2>
-            <div class="banner-gps" id="bannerGps" role="alert"></div>
-            <div class="kt-daftar" id="lacakKartu"></div>
-            <div class="lacak-bar">
-                <span>Jarak ke tujuan: <b id="lacakTujuan">-</b></span>
-                <span>Jarak ke kampus: <b id="lacakKampus">-</b></span>
-                <span>Terakhir terkirim: <b id="lacakWaktu">-</b></span>
-            </div>
-            <div class="peta-kotak tinggi" id="lacakPeta"></div>
-            <div class="kt-aksi" style="margin-top:0.9rem">
-                <button type="button" class="btn primary" id="btnSelesai"><i data-lucide="flag"></i> Saya sudah kembali ke kampus</button>
-            </div>
-            <p class="pm-sub" style="margin:0.6rem 0 0">Biarkan halaman ini terbuka dan GPS tetap menyala sampai tiba kembali di kampus. Menutup halaman atau mematikan GPS menghentikan pemantauan.</p>
-        </section>
-
-        <section class="panel">
-            <h2>Pilih mobil</h2>
-            <p class="pm-sub">Pilih mobil yang akan dipakai, lalu tentukan tujuan di peta.</p>
-            <div class="kt-daftar" id="listArmada"><p class="pm-sub">Memuat…</p></div>
-        </section>
-
-        <section class="panel">
-            <h2>Pengajuan &amp; perjalanan saya</h2>
-            <div class="kt-daftar" id="listSaya"><p class="pm-sub">Memuat…</p></div>
-        </section>
-    </div>
-
-    <div class="room-modal" id="formModal" role="dialog" aria-modal="true" aria-labelledby="formTitle" hidden>
-        <div class="room-modal-box modal-lebar">
-            <div class="room-modal-head">
-                <div><h3 id="formTitle">Ajukan mobil dinas</h3><p id="formSub">Tentukan waktu dan tujuan perjalanan.</p></div>
-                <button type="button" class="btn-round" id="formClose" aria-label="Tutup"><i data-lucide="x"></i></button>
-            </div>
-            <form class="room-modal-list kform" id="kForm" novalidate>
-                <div class="form-err" id="kErr" role="alert"></div>
-                <div class="kgrid" id="kFields"></div>
-                <div style="margin-top:1rem">
-                    <label style="font-size:0.85rem;font-weight:600">Tujuan di peta <em>*</em></label>
-                    <div class="cari-baris">
-                        <input class="in" id="cariAlamat" type="search" placeholder="Cari alamat / nama tempat, lalu tekan Enter" autocomplete="off">
-                        <button type="button" class="btn" id="btnCari"><i data-lucide="search"></i> Cari</button>
-                        <button type="button" class="btn" id="btnPosisiSaya" title="Pakai lokasi saya saat ini"><i data-lucide="locate-fixed"></i></button>
-                    </div>
-                    <div class="peta-kotak" id="petaPilih"></div>
-                    <p class="alamat-pilih" id="alamatPilih">Klik peta untuk menandai tujuan.</p>
-                    <input class="in" id="koordTempel" placeholder="Atau tempel koordinat dari peta, mis. -7.5666, 110.8167" style="margin-top:0.5rem" autocomplete="off">
-                </div>
-                <div class="kbtns">
-                    <button type="button" class="btn" id="kBatal">Batal</button>
-                    <button type="submit" class="btn primary" id="kSimpan">Kirim pengajuan</button>
-                </div>
-            </form>
+<body class="preload">
+    <aside class="sidebar" id="mainSidebar">
+        <div class="sidebar-top">
+            <div class="logo"><img src="logo-tsu.png" alt="TSU Logo" class="logo-img"></div>
+            <nav class="nav-menu">
+                <a href="#dashboard" class="nav-item active" data-view="dashboard"><i data-lucide="layout-dashboard" class="icon"></i><span>Dashboard</span></a>
+                <a href="#ajukan" class="nav-item" data-view="ajukan"><i data-lucide="car-front" class="icon"></i><span>Ajukan Mobil</span></a>
+                <a href="#riwayat" class="nav-item" data-view="riwayat"><i data-lucide="clipboard-list" class="icon"></i><span>Riwayat Peminjaman</span></a>
+            </nav>
         </div>
-    </div>
+        <div class="sidebar-bottom">
+            <a href="index.html" class="nav-item" id="logoutBtn" title="Keluar dari akun"><i data-lucide="log-out" class="icon"></i><span>Log out</span></a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="header">
+            <h2 id="judulHalaman">Dashboard</h2>
+            <div class="header-right">
+                <span class="sync" id="syncStatus"><i></i><span>Memuat…</span></span>
+                <button class="btn-icon" type="button" id="themeToggle" aria-label="Ganti tema gelap/terang" title="Ganti tema">
+                    <svg class="theme-icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+                    <svg class="theme-icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                </button>
+                <span id="currentUserLabel" class="user-label">Pemohon</span>
+                <img src="foto-kosong.jpg" alt="Foto profil" class="profile-img">
+            </div>
+        </header>
+
+        <!-- ================= DASHBOARD ================= -->
+        <div id="viewDashboard" data-panel="dashboard">
+            <div class="hero-teks hero-pm">
+                <p class="hero-kampus">Tiga Serangkai University</p>
+                <h1 class="hero-judul" id="heroSapa">Pinjam mobil dinas, lebih mudah.</h1>
+                <p class="hero-sub">Pilih mobil, tentukan tujuan di peta, dan berangkat dengan GPS aktif sampai kembali ke kampus.</p>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card dark"><p class="kpi-title">Total Pengajuan</p><h3 class="kpi-value" id="kpiTotal">-</h3><p class="kpi-trend positive"><i data-lucide="clipboard-list"></i> <span id="kpiTotalSub">memuat…</span></p></div>
+                <div class="kpi-card"><p class="kpi-title">Menunggu Persetujuan</p><h3 class="kpi-value" id="kpiMenunggu">-</h3><p class="kpi-trend negative"><i data-lucide="clock"></i> <span>belum diputuskan admin</span></p></div>
+                <div class="kpi-card"><p class="kpi-title">Disetujui</p><h3 class="kpi-value" id="kpiSetuju">-</h3><p class="kpi-trend positive"><i data-lucide="check-circle-2"></i> <span id="kpiSetujuSub">siap berangkat</span></p></div>
+                <div class="kpi-card"><p class="kpi-title">Perjalanan Selesai</p><h3 class="kpi-value" id="kpiSelesai">-</h3><p class="kpi-trend positive"><i data-lucide="flag"></i> <span>sudah kembali ke kampus</span></p></div>
+            </div>
+
+            <section class="panel lacak" id="panelLacak" hidden>
+                <div class="list-head"><h3><span class="dot-hidup" id="lacakDot"></span>Perjalanan sedang berlangsung</h3><p>Biarkan halaman ini terbuka dan GPS tetap menyala sampai tiba kembali di kampus.</p></div>
+                <div class="pm-isi">
+                    <div class="banner-gps" id="bannerGps" role="alert"></div>
+                    <div class="kt-daftar" id="lacakKartu"></div>
+                    <div class="lacak-bar">
+                        <span>Jarak ke tujuan: <b id="lacakTujuan">-</b></span>
+                        <span>Jarak ke kampus: <b id="lacakKampus">-</b></span>
+                        <span>Terakhir terkirim: <b id="lacakWaktu">-</b></span>
+                    </div>
+                    <div class="peta-kotak tinggi" id="lacakPeta"></div>
+                    <div class="kt-aksi" style="margin-top:0.9rem"><button type="button" class="btn primary" id="btnSelesai"><i data-lucide="flag"></i> Saya sudah kembali ke kampus</button></div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="list-head"><h3>Mobil hari ini</h3><p>Status empat mobil dinas TSU. Pilih mobil untuk mengajukan.</p></div>
+                <div class="pm-isi"><div class="arm-grid pm-grid" id="listArmada"><p class="arm-kosong">Memuat…</p></div></div>
+            </section>
+
+            <section class="panel">
+                <div class="list-head list-head-flex">
+                    <div><h3>Pengajuan terbaru</h3><p>Tiga pengajuan terakhir Anda.</p></div>
+                    <div class="list-actions"><a class="btn" href="#riwayat" data-view="riwayat">Lihat semua riwayat</a></div>
+                </div>
+                <div class="pm-isi"><div class="kt-daftar" id="listTerbaru"><p class="arm-kosong">Memuat…</p></div></div>
+            </section>
+        </div>
+
+        <!-- ================= AJUKAN ================= -->
+        <div id="viewAjukan" data-panel="ajukan" hidden>
+            <section class="panel">
+                <div class="list-head"><h3>Ajukan mobil dinas</h3><p>Isi waktu dan tujuan perjalanan. Pengajuan menunggu persetujuan admin.</p></div>
+                <form class="pm-form" id="kForm" novalidate>
+                    <div class="pm-kolom">
+                        <div>
+                            <div class="form-err" id="kErr" role="alert"></div>
+                            <div class="kgrid" id="kFields"></div>
+                        </div>
+                        <div>
+                            <label class="pm-label">Tujuan di peta <em>*</em></label>
+                            <div class="cari-baris">
+                                <input class="in" id="cariAlamat" type="search" placeholder="Cari alamat / nama tempat, lalu Enter" autocomplete="off">
+                                <button type="button" class="btn" id="btnCari"><i data-lucide="search"></i> Cari</button>
+                                <button type="button" class="btn" id="btnPosisiSaya" title="Pakai lokasi saya saat ini"><i data-lucide="locate-fixed"></i></button>
+                            </div>
+                            <div class="peta-kotak tinggi" id="petaPilih"></div>
+                            <p class="alamat-pilih" id="alamatPilih">Klik peta untuk menandai tujuan.</p>
+                            <input class="in" id="koordTempel" placeholder="Atau tempel koordinat, mis. -7.5666, 110.8167" style="margin-top:0.5rem" autocomplete="off">
+                        </div>
+                    </div>
+                    <div class="kbtns"><button type="button" class="btn" id="kReset">Kosongkan</button><button type="submit" class="btn primary" id="kSimpan"><i data-lucide="send"></i> Kirim pengajuan</button></div>
+                </form>
+            </section>
+        </div>
+
+        <!-- ================= RIWAYAT ================= -->
+        <div id="viewRiwayat" data-panel="riwayat" hidden>
+            <section class="panel">
+                <div class="list-head"><h3>Riwayat peminjaman mobil dinas</h3><p id="riwayatInfo">Seluruh pengajuan dan perjalanan Anda.</p></div>
+                <div class="list-tools">
+                    <div class="seg" id="statusTabs" role="tablist" aria-label="Filter status"></div>
+                    <div class="tools-right"><input class="in" type="search" id="fCari" placeholder="Cari tujuan / mobil" aria-label="Cari"></div>
+                </div>
+                <div class="pm-isi"><div class="kt-daftar" id="listSaya"><p class="arm-kosong">Memuat…</p></div></div>
+            </section>
+        </div>
+    </main>
+
+    <button class="sidebar-toggle" id="sidebarToggle" type="button" aria-label="Buka sidebar" aria-expanded="false" aria-controls="mainSidebar" title="Buka/tutup menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
     <script src="peta.js?v=2"></script>
-    <script src="pemohon.js?v=1"></script>
-    <script>if (window.lucide) lucide.createIcons();</script>
+    <script src="app.js?v=5"></script>
+    <script src="pemohon.js?v=3"></script>
+    <script src="ui.js?v=5"></script>
+    <script src="mobile.js?v=4"></script>
 </body>
 </html>
