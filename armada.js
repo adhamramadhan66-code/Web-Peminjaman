@@ -499,7 +499,7 @@
     function tampilTab() {
         let t = (location.hash || '#ringkasan').slice(1); if (!TAB.includes(t)) t = 'ringkasan';
         document.querySelectorAll('[data-tab-panel]').forEach((d) => { d.hidden = d.getAttribute('data-tab-panel') !== t; });
-        document.querySelectorAll('#tabArmada [data-tab]').forEach((a) => a.classList.toggle('aktif', a.getAttribute('data-tab') === t));
+        document.querySelectorAll('.nav-sub[data-tab]').forEach((a) => a.classList.toggle('active', a.getAttribute('data-tab') === t));
         if (t === 'ringkasan' && pantau.peta) setTimeout(() => pantau.peta.ukuran(), 60);
         window.dispatchEvent(new CustomEvent('armada-tab', { detail: t }));
     }

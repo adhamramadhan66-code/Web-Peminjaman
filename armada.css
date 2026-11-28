@@ -67,12 +67,6 @@
 #koordTempel { width: 100%; }
 
 /* ---------- navigasi tab Mobil Dinas ---------- */
-.tab-armada { display: flex; gap: 0.35rem; margin: 0 0 1.1rem; padding: 0.3rem; border: 1px solid var(--border-color); background: var(--surface-1, var(--surface-2)); border-radius: 0.9rem; overflow-x: auto; width: fit-content; max-width: 100%; }
-.tab-armada a { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.55rem 1rem; border-radius: 0.65rem; color: var(--text-muted); font-size: 0.88rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
-.tab-armada a svg, .tab-armada a i { width: 17px; height: 17px; }
-.tab-armada a:hover { color: var(--text-main); background: var(--surface-2); }
-.tab-armada a.aktif { background: var(--green); color: #fff; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3); }
-.tab-armada .nav-badge { position: static; transform: none; margin-left: 0.2rem; box-shadow: none; }
 .tab-isi { display: flex; flex-direction: column; gap: 1.2rem; }
 .tab-isi[hidden] { display: none; }
 
@@ -122,3 +116,10 @@
 @media (max-width: 1000px) { .lok-grid { grid-template-columns: 1fr; } .lok-peta { height: 420px; } .rekap-grid { grid-template-columns: repeat(2, 1fr); } }
 
 .lok-form [hidden], .lok-form[hidden] { display: none !important; }
+
+/* sub-menu Mobil Dinas di sidebar (Ringkasan / Lokasi / Data pemakaian) */
+.nav-induk { margin-bottom: -0.1rem; }
+.nav-sub { padding-top: 0.55rem; padding-bottom: 0.55rem; font-size: 0.88rem; }
+.nav-sub .icon { width: 18px; height: 18px; }
+.sidebar.expanded .nav-sub { padding-left: 1.9rem; }
+@media (max-width: 768px) { .nav-sub { padding-left: 1.9rem; } }

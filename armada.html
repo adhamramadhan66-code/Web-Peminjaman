@@ -25,7 +25,7 @@
     <link rel="stylesheet" href="pesan.css?v=6">
     <link rel="stylesheet" href="profil.css?v=1">
     <link rel="stylesheet" href="ui.css?v=18">
-    <link rel="stylesheet" href="armada.css?v=4">
+    <link rel="stylesheet" href="armada.css?v=5">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -70,9 +70,21 @@
                     <i data-lucide="calendar-days" class="icon"></i>
                     <span>Jadwal Ruang</span>
                 </a>
-                <a href="armada.html" class="nav-item khusus-admin active">
+                <a href="armada.html#ringkasan" class="nav-item khusus-admin nav-induk" title="Mobil Dinas">
                     <i data-lucide="car-front" class="icon"></i>
                     <span>Mobil Dinas</span>
+                </a>
+                <a href="#ringkasan" class="nav-item nav-sub khusus-admin" data-tab="ringkasan" title="Ringkasan">
+                    <i data-lucide="gauge" class="icon"></i>
+                    <span>Ringkasan</span>
+                </a>
+                <a href="#lokasi" class="nav-item nav-sub khusus-admin" data-tab="lokasi" title="Lokasi">
+                    <i data-lucide="map-pin" class="icon"></i>
+                    <span>Lokasi</span>
+                </a>
+                <a href="#data" class="nav-item nav-sub khusus-admin" data-tab="data" title="Data pemakaian">
+                    <i data-lucide="table-2" class="icon"></i>
+                    <span>Data pemakaian</span>
                 </a>
             </nav>
         </div>
@@ -104,13 +116,6 @@
                 <img src="foto-kosong.jpg" alt="Foto profil" class="profile-img">
             </div>
         </header>
-
-        <nav class="tab-armada" id="tabArmada" aria-label="Navigasi mobil dinas">
-            <a href="#ringkasan" data-tab="ringkasan"><i data-lucide="gauge"></i><span>Ringkasan</span></a>
-            <a href="#lokasi" data-tab="lokasi"><i data-lucide="map-pin"></i><span>Lokasi</span></a>
-            <a href="#data" data-tab="data"><i data-lucide="table-2"></i><span>Data pemakaian</span></a>
-            <a href="pesan.html?kontak=mobil" class="tab-pesan" id="tabPesan"><i data-lucide="message-circle"></i><span>Pesan</span><em class="nav-badge" id="tabPesanBadge" hidden>0</em></a>
-        </nav>
 
         <div class="riwayat-wrap">
           <div data-tab-panel="ringkasan" class="tab-isi">
@@ -275,7 +280,7 @@
     <script src="app.js?v=6"></script>
     <script src="alasan.js?v=1"></script>
     <script src="peta.js?v=3"></script>
-    <script src="armada.js?v=4"></script>
+    <script src="armada.js?v=5"></script>
     <script src="lokasi.js?v=1"></script>
     <script src="pesan-notif.js?v=1"></script>
     <script src="profil.js?v=1"></script>
