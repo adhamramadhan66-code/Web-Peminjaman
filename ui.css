@@ -489,3 +489,23 @@ tr.baris-tolak  > td:first-child { box-shadow: inset 4px 0 0 #ef4444; }
 .impor-gagal { margin: 0 0 0.8rem; padding-left: 1.1rem; font-size: 0.8rem; color: var(--red); max-height: 9rem; overflow: auto; }
 @media (max-width: 1100px) { .arm-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px) { .arm-grid { grid-template-columns: 1fr; } }
+
+/* ---------- grup menu sidebar (Peminjaman Ruangan, Mobil Dinas): klik untuk membuka/menutup submenu ---------- */
+.nav-group { display: flex; flex-direction: column; gap: 0.25rem; }
+button.nav-induk { width: 100%; background: none; border: 0; font: inherit; font-weight: 500; font-size: 0.95rem; text-align: left; cursor: pointer; color: var(--text-muted); }
+button.nav-induk .caret { margin-left: auto; width: 0; height: 16px; opacity: 0; overflow: hidden; transition: transform 0.2s ease, opacity 0.2s ease; }
+.sidebar.expanded button.nav-induk .caret { width: 16px; opacity: 1; }
+@media (min-width: 769px) { html.sb-buka .sidebar:not(.expanded) button.nav-induk .caret { width: 16px; opacity: 1; } }
+@media (max-width: 768px) { button.nav-induk .caret { width: 16px; opacity: 1; } }
+.nav-group.terbuka > button.nav-induk .caret { transform: rotate(180deg); }
+.nav-group:has(.nav-sub.active) > button.nav-induk { color: var(--text-main); font-weight: 600; }
+.nav-sub-list { display: none; flex-direction: column; gap: 0.25rem; }
+.nav-group.terbuka > .nav-sub-list { display: flex; }
+.nav-sub { padding-top: 0.55rem; padding-bottom: 0.55rem; font-size: 0.88rem; }
+.nav-sub .icon { width: 18px; height: 18px; }
+.sidebar.expanded .nav-sub { padding-left: 1.9rem; }
+@media (min-width: 769px) { html.sb-buka .sidebar:not(.expanded) .nav-sub { padding-left: 1.9rem; } }
+@media (max-width: 768px) { .nav-sub { padding-left: 1.9rem; } }
+:root[data-theme="light"] .sidebar button.nav-induk { color: rgba(236, 253, 245, 0.80); }
+:root[data-theme="light"] .sidebar button.nav-induk:hover { color: #fff; background-color: rgba(255, 255, 255, 0.12); }
+:root[data-theme="light"] .sidebar .nav-group:has(.nav-sub.active) > button.nav-induk { color: #fff; }

@@ -103,6 +103,19 @@
     }, true);
 
 
+    // ---------- 8. grup menu sidebar: klik untuk membuka/menutup submenu ----------
+    document.querySelectorAll('.nav-group').forEach((g) => {
+        const tombol = g.querySelector('.nav-induk'), kunci = 'nav-grup-' + g.dataset.grup;
+        const punyaAktif = !!g.querySelector('.nav-sub.active');
+        try { const v = sessionStorage.getItem(kunci); if (!punyaAktif && v === '1') g.classList.add('terbuka'); } catch (e) { /* abaikan */ }
+        const sinkron = () => tombol.setAttribute('aria-expanded', g.classList.contains('terbuka') ? 'true' : 'false');
+        sinkron();
+        tombol.addEventListener('click', () => {
+            g.classList.toggle('terbuka'); sinkron();
+            try { sessionStorage.setItem(kunci, g.classList.contains('terbuka') ? '1' : '0'); } catch (e) { /* abaikan */ }
+        });
+    });
+
     // ---------- 9. geser untuk membuka / menutup menu (HP) ----------
     const tombolMenu = document.getElementById('sidebarToggle');
     const bar = document.getElementById('mainSidebar');

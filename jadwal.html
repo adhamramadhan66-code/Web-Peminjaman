@@ -23,7 +23,7 @@
     <link rel="stylesheet" href="jadwal.css?v=8">
     <link rel="stylesheet" href="pesan.css?v=6">
     <link rel="stylesheet" href="profil.css?v=1">
-    <link rel="stylesheet" href="ui.css?v=17">
+    <link rel="stylesheet" href="ui.css?v=20">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -42,36 +42,62 @@
             <div class="logo">
                 <img src="logo-tsu.png" alt="TSU Logo" class="logo-img">
             </div>
-            <nav class="nav-menu">
+                <nav class="nav-menu">
                 <a href="dashboard.html" class="nav-item">
                     <i data-lucide="layout-dashboard" class="icon"></i>
                     <span>Dashboard</span>
-                </a>
-                <a href="ajukan.html" class="nav-item khusus-pengguna">
-                    <i data-lucide="calendar-plus" class="icon"></i>
-                    <span>Ajukan Ruang</span>
-                </a>
-                <a href="peminjaman.html" class="nav-item">
-                    <i data-lucide="clipboard-list" class="icon"></i>
-                    <span class="khusus-pengguna">Riwayat Peminjaman</span><span class="khusus-admin">Daftar Peminjaman</span>
                 </a>
                 <a href="pesan.html" class="nav-item" id="navPesan">
                     <i data-lucide="message-circle" class="icon"></i>
                     <span>Pesan</span>
                     <em class="nav-badge" hidden>0</em>
                 </a>
-                <a href="denah.html" class="nav-item khusus-admin">
-                    <i data-lucide="map" class="icon"></i>
-                    <span>Editor Ruang</span>
-                </a>
-                <a href="jadwal.html" class="nav-item active">
-                    <i data-lucide="calendar-days" class="icon"></i>
-                    <span>Jadwal Ruang</span>
-                </a>
-                <a href="armada.html" class="nav-item khusus-admin">
-                    <i data-lucide="car-front" class="icon"></i>
-                    <span>Mobil Dinas</span>
-                </a>
+                <div class="nav-group terbuka" data-grup="ruang">
+                    <button type="button" class="nav-item nav-induk" aria-expanded="true" title="Peminjaman Ruang">
+                        <i data-lucide="building-2" class="icon"></i>
+                        <span>Peminjaman Ruang</span>
+                        <i data-lucide="chevron-down" class="caret"></i>
+                    </button>
+                    <div class="nav-sub-list">
+                        <a href="ajukan.html" class="nav-item nav-sub khusus-pengguna">
+                            <i data-lucide="calendar-plus" class="icon"></i>
+                            <span>Ajukan Ruang</span>
+                        </a>
+                        <a href="peminjaman.html" class="nav-item nav-sub">
+                            <i data-lucide="clipboard-list" class="icon"></i>
+                            <span class="khusus-pengguna">Riwayat Peminjaman</span><span class="khusus-admin">Daftar Peminjaman</span>
+                        </a>
+                        <a href="denah.html" class="nav-item nav-sub khusus-admin">
+                            <i data-lucide="map" class="icon"></i>
+                            <span>Editor Ruang</span>
+                        </a>
+                        <a href="jadwal.html" class="nav-item nav-sub active">
+                            <i data-lucide="calendar-days" class="icon"></i>
+                            <span>Jadwal Ruang</span>
+                        </a>
+                    </div>
+                </div>
+                <div class="nav-group khusus-admin" data-grup="mobil">
+                    <button type="button" class="nav-item nav-induk" aria-expanded="false" title="Mobil Dinas">
+                        <i data-lucide="car-front" class="icon"></i>
+                        <span>Mobil Dinas</span>
+                        <i data-lucide="chevron-down" class="caret"></i>
+                    </button>
+                    <div class="nav-sub-list">
+                        <a href="armada.html#ringkasan" class="nav-item nav-sub" data-tab="ringkasan">
+                            <i data-lucide="gauge" class="icon"></i>
+                            <span>Ringkasan</span>
+                        </a>
+                        <a href="armada.html#lokasi" class="nav-item nav-sub" data-tab="lokasi">
+                            <i data-lucide="map-pin" class="icon"></i>
+                            <span>Lokasi</span>
+                        </a>
+                        <a href="armada.html#data" class="nav-item nav-sub" data-tab="data">
+                            <i data-lucide="table-2" class="icon"></i>
+                            <span>Data pemakaian</span>
+                        </a>
+                    </div>
+                </div>
             </nav>
         </div>
         <div class="sidebar-bottom">
@@ -240,7 +266,7 @@
     <script src="jadwal-kelola.js?v=10"></script>
     <script src="pesan-notif.js?v=1"></script>
     <script src="profil.js?v=1"></script>
-    <script src="ui.js?v=5"></script>
+    <script src="ui.js?v=6"></script>
     <script src="mobile.js?v=4"></script>
 </body>
 </html>
