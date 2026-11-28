@@ -107,7 +107,12 @@
     document.querySelectorAll('.nav-group').forEach((g) => {
         const tombol = g.querySelector('.nav-induk'), kunci = 'nav-grup-' + g.dataset.grup;
         const punyaAktif = !!g.querySelector('.nav-sub.active');
-        try { const v = sessionStorage.getItem(kunci); if (!punyaAktif && v === '1') g.classList.add('terbuka'); } catch (e) { /* abaikan */ }
+        try {
+            const v = sessionStorage.getItem(kunci);
+            if (!punyaAktif && v === '1') g.classList.add('terbuka');
+            // grup yang terbuka karena halaman aktif ikut diingat, supaya tetap terbuka saat pindah ke grup lain
+            if (g.classList.contains('terbuka')) sessionStorage.setItem(kunci, '1');
+        } catch (e) { /* abaikan */ }
         const sinkron = () => tombol.setAttribute('aria-expanded', g.classList.contains('terbuka') ? 'true' : 'false');
         sinkron();
         tombol.addEventListener('click', () => {
