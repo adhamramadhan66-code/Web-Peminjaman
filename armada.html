@@ -25,7 +25,7 @@
     <link rel="stylesheet" href="pesan.css?v=6">
     <link rel="stylesheet" href="profil.css?v=1">
     <link rel="stylesheet" href="ui.css?v=18">
-    <link rel="stylesheet" href="armada.css?v=3">
+    <link rel="stylesheet" href="armada.css?v=4">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -105,7 +105,15 @@
             </div>
         </header>
 
+        <nav class="tab-armada" id="tabArmada" aria-label="Navigasi mobil dinas">
+            <a href="#ringkasan" data-tab="ringkasan"><i data-lucide="gauge"></i><span>Ringkasan</span></a>
+            <a href="#lokasi" data-tab="lokasi"><i data-lucide="map-pin"></i><span>Lokasi</span></a>
+            <a href="#data" data-tab="data"><i data-lucide="table-2"></i><span>Data pemakaian</span></a>
+            <a href="pesan.html?kontak=mobil" class="tab-pesan" id="tabPesan"><i data-lucide="message-circle"></i><span>Pesan</span><em class="nav-badge" id="tabPesanBadge" hidden>0</em></a>
+        </nav>
+
         <div class="riwayat-wrap">
+          <div data-tab-panel="ringkasan" class="tab-isi">
             <section class="panel" id="panelPantau">
                 <div class="list-head list-head-flex">
                     <div>
@@ -130,6 +138,62 @@
                     </div>
                 </div>
                 <div class="arm-grid" id="armGrid"><p class="arm-kosong">Memuat…</p></div>
+            </section>
+
+          </div>
+
+          <div data-tab-panel="lokasi" class="tab-isi" hidden>
+            <section class="panel">
+                <div class="list-head list-head-flex">
+                    <div>
+                        <h3>Lokasi &amp; titik kampus</h3>
+                        <p>Beri nama titik yang sering dituju (mis. "Kampus TSU"). Pemohon tinggal memilihnya dari daftar, tanpa mencari di peta. Klik peta atau cari alamat untuk menambah lokasi baru.</p>
+                    </div>
+                    <div class="list-actions">
+                        <button type="button" class="btn" id="btnLokSaya" title="Pakai lokasi perangkat ini sebagai titik"><i data-lucide="locate-fixed"></i> Lokasi saya</button>
+                        <button type="button" class="btn primary" id="btnLokBaru"><i data-lucide="plus"></i> Tambah lokasi</button>
+                    </div>
+                </div>
+                <div class="lok-grid">
+                    <div class="lok-kiri">
+                        <form class="lok-form" id="lokForm" hidden novalidate>
+                            <h4 id="lokFormJudul">Lokasi baru</h4>
+                            <div class="form-err" id="lokErr" role="alert"></div>
+                            <label><span>Nama lokasi <em>*</em></span><input class="in" id="lokNama" maxlength="80" autocomplete="off" placeholder="mis. Kampus TSU / Bandara Adi Soemarmo"></label>
+                            <label><span>Alamat (opsional)</span><input class="in" id="lokAlamat" maxlength="255" autocomplete="off"></label>
+                            <label><span>Koordinat</span><input class="in" id="lokKoord" autocomplete="off" placeholder="-7.56660, 110.81670"></label>
+                            <label id="lokRadiusBaris" hidden><span>Radius &ldquo;sudah tiba&rdquo; (meter)</span><input class="in" id="lokRadius" type="number" min="50" max="2000" step="10" value="300"></label>
+                            <p class="lok-petunjuk" id="lokPetunjuk">Klik peta untuk memindahkan titik.</p>
+                            <div class="kbtns">
+                                <button type="button" class="btn danger" id="lokHapus" hidden><i data-lucide="trash-2"></i> Hapus</button>
+                                <span class="kbtns-sp"></span>
+                                <button type="button" class="btn" id="lokBatal">Batal</button>
+                                <button type="submit" class="btn primary" id="lokSimpan">Simpan</button>
+                            </div>
+                        </form>
+                        <div class="lok-daftar" id="lokDaftar"><p class="arm-kosong">Memuat…</p></div>
+                    </div>
+                    <div class="lok-kanan">
+                        <div class="cari-baris">
+                            <input class="in" id="lokCari" type="search" placeholder="Cari alamat / nama tempat, lalu Enter" autocomplete="off">
+                            <button type="button" class="btn" id="lokBtnCari"><i data-lucide="search"></i> Cari</button>
+                        </div>
+                        <div class="peta-kotak lok-peta" id="lokPeta"></div>
+                        <p class="alamat-pilih" id="lokInfo">Klik di peta untuk membuat lokasi baru di titik itu.</p>
+                    </div>
+                </div>
+            </section>
+          </div>
+
+          <div data-tab-panel="data" class="tab-isi" hidden>
+            <section class="panel">
+                <div class="list-head list-head-flex">
+                    <div>
+                        <h3>Rekap per armada</h3>
+                        <p>Jumlah seluruh pemakaian yang pernah tercatat untuk tiap mobil. Klik kartu untuk menyaring daftar di bawah.</p>
+                    </div>
+                </div>
+                <div class="rekap-grid" id="rekapGrid"><p class="arm-kosong">Memuat…</p></div>
             </section>
 
             <section class="panel">
@@ -172,6 +236,7 @@
                     </span>
                 </div>
             </section>
+          </div>
         </div>
     </main>
 
@@ -207,10 +272,11 @@
     </button>
     <div class="toast" id="toast" role="status"></div>
 
-    <script src="app.js?v=5"></script>
+    <script src="app.js?v=6"></script>
     <script src="alasan.js?v=1"></script>
-    <script src="peta.js?v=2"></script>
-    <script src="armada.js?v=3"></script>
+    <script src="peta.js?v=3"></script>
+    <script src="armada.js?v=4"></script>
+    <script src="lokasi.js?v=1"></script>
     <script src="pesan-notif.js?v=1"></script>
     <script src="profil.js?v=1"></script>
     <script src="ui.js?v=5"></script>

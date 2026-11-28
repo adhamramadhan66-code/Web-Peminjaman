@@ -9,6 +9,8 @@
  *   GET  api/armada.php?pantau=1 | ?jejak=ID     -> perjalanan berjalan (posisi GPS terakhir) / jejak rute
  *   POST api/armada.php {aksi: kampus, lat, lng, radius?} | {aksi: paksa_selesai, id, alasan?}
  *   POST api/armada.php {aksi: impor, uji?, baris: [...]}
+ *   GET  api/armada.php?lokasi=1 -> titik kampus + lokasi tujuan tersimpan
+ *   POST api/armada.php {aksi: simpan_lokasi, id?, nama, alamat?, lat, lng} | {aksi: hapus_lokasi, id}   (kampus: {aksi: kampus, nama?, lat, lng, radius?})
  * Aturan bentrok: satu armada tidak boleh dipakai dua kegiatan yang DISETUJUI pada waktu yang beririsan.
  * Selesai kosong berarti "sampai selesai" (dianggap berakhir 23:59 pada tanggal akhir).
  * Pemakaian boleh lebih dari satu hari (tanggal s.d. tanggal_akhir), dipakai terus-menerus.
@@ -31,7 +33,7 @@ function keluar($data, int $kode = 200): void
 
 try {
     $pdo = db();
-    butuh_admin();
+    $admin = butuh_admin();
     $sekarang = new DateTime();
     $hariIni = $sekarang->format('Y-m-d');
 
@@ -54,11 +56,17 @@ try {
                 $s = $pdo->prepare("SELECT COUNT(*) FROM pemakaian_armada WHERE armada_id = ? AND status = 'disetujui' AND tanggal >= ? AND tanggal <= ?");
                 $s->execute([$a['id'], date('Y-m-01'), date('Y-m-t')]);
                 $a['bulan_ini'] = (int) $s->fetchColumn();
+                $a['total'] = ['semua' => 0, 'menunggu' => 0, 'disetujui' => 0, 'ditolak' => 0];
+                $s = $pdo->prepare('SELECT status, COUNT(*) AS n FROM pemakaian_armada WHERE armada_id = ? GROUP BY status');
+                $s->execute([$a['id']]);
+                foreach ($s->fetchAll() as $t) { if (isset($a['total'][$t['status']])) $a['total'][$t['status']] = (int) $t['n']; $a['total']['semua'] += (int) $t['n']; }
             }
             unset($a);
             $menunggu = (int) $pdo->query("SELECT COUNT(*) FROM pemakaian_armada WHERE status = 'menunggu'")->fetchColumn();
             keluar(['armada' => $armada, 'menunggu' => $menunggu]);
         }
+
+        if (isset($_GET['lokasi'])) keluar(['kampus' => ambil_kampus($pdo), 'lokasi' => daftar_lokasi($pdo)]);
 
         if (isset($_GET['pantau'])) {
             // Perjalanan yang sedang berjalan + yang disetujui untuk hari ini tetapi belum berangkat.
@@ -142,6 +150,7 @@ try {
             if (!$r) keluar(['error' => 'Data tidak ditemukan.'], 404);
             if ($bentrok = cek_bentrok($pdo, (int) $r['armada_id'], $r, (int) $r['id'])) keluar(['error' => $bentrok . ' Tolak atau ubah salah satunya dahulu.', 'bentrok' => true], 409);
             $pdo->prepare("UPDATE pemakaian_armada SET status = 'disetujui', catatan = '' WHERE id = ?")->execute([$r['id']]);
+            if ($r['status'] !== 'disetujui') pesan_armada_otomatis($pdo, 'ke_pemohon', $r, 'Pengajuan mobil dinas disetujui', '', (int) $admin['id']);
             keluar(['ok' => true]);
 
         case 'tolak':
@@ -150,15 +159,34 @@ try {
             $alasan = potong($in['alasan'] ?? '', 255);
             if ($alasan === '') keluar(['error' => 'Alasan penolakan wajib diisi.'], 422);
             $pdo->prepare("UPDATE pemakaian_armada SET status = 'ditolak', catatan = ? WHERE id = ?")->execute([$alasan, $r['id']]);
+            pesan_armada_otomatis($pdo, 'ke_pemohon', $r, $r['status'] === 'disetujui' ? 'Pemakaian mobil dinas dibatalkan oleh admin' : 'Pengajuan mobil dinas ditolak', $alasan, (int) $admin['id']);
             keluar(['ok' => true]);
 
         case 'kampus':      // titik kampus: tujuan akhir "sudah tiba" bagi pemohon
-            if (!koordinat_valid($in['lat'] ?? null, $in['lng'] ?? null)) keluar(['error' => 'Titik kampus tidak valid.'], 422);
-            $radius = max(50, min(2000, (int) ($in['radius'] ?? 300)));
-            $u = $pdo->prepare('DELETE FROM pengaturan WHERE kunci = ?');
-            $i = $pdo->prepare('INSERT INTO pengaturan (kunci, nilai) VALUES (?, ?)');
-            foreach (['kampus_lat' => (float) $in['lat'], 'kampus_lng' => (float) $in['lng'], 'kampus_radius' => $radius] as $k => $v) { $u->execute([$k]); $i->execute([$k, (string) $v]); }
+            if ($err = simpan_kampus($pdo, $in)) keluar(['error' => $err], 422);
             keluar(['ok' => true, 'kampus' => ambil_kampus($pdo)]);
+
+        case 'simpan_lokasi':
+            $nama = potong($in['nama'] ?? '', 80);
+            if ($nama === '') keluar(['error' => 'Nama lokasi wajib diisi.'], 422);
+            if (!koordinat_valid($in['lat'] ?? null, $in['lng'] ?? null)) keluar(['error' => 'Tentukan titik lokasi di peta.'], 422);
+            $alamat = potong($in['alamat'] ?? '', 255);
+            $id = (int) ($in['id'] ?? 0);
+            if ($id > 0) {
+                $s = $pdo->prepare('SELECT 1 FROM lokasi_armada WHERE id = ?'); $s->execute([$id]);
+                if (!$s->fetchColumn()) keluar(['error' => 'Lokasi tidak ditemukan (mungkin sudah dihapus).'], 404);
+                $pdo->prepare('UPDATE lokasi_armada SET nama = ?, alamat = ?, lat = ?, lng = ? WHERE id = ?')->execute([$nama, $alamat, (float) $in['lat'], (float) $in['lng'], $id]);
+            } else {
+                $s = $pdo->prepare('SELECT COUNT(*) FROM lokasi_armada WHERE nama = ?'); $s->execute([$nama]);
+                if ((int) $s->fetchColumn() > 0) keluar(['error' => 'Sudah ada lokasi bernama "' . $nama . '". Pakai nama lain atau ubah yang lama.'], 409);
+                $pdo->prepare('INSERT INTO lokasi_armada (nama, alamat, lat, lng, dibuat) VALUES (?,?,?,?,?)')->execute([$nama, $alamat, (float) $in['lat'], (float) $in['lng'], $dibuat]);
+                $id = (int) $pdo->lastInsertId();
+            }
+            keluar(['ok' => true, 'id' => $id, 'lokasi' => daftar_lokasi($pdo)]);
+
+        case 'hapus_lokasi':
+            $pdo->prepare('DELETE FROM lokasi_armada WHERE id = ?')->execute([(int) ($in['id'] ?? 0)]);
+            keluar(['ok' => true, 'lokasi' => daftar_lokasi($pdo)]);
 
         case 'paksa_selesai':   // HP pemohon mati / GPS terputus: admin menutup perjalanan secara manual
             $r = baris_armada($pdo, (int) ($in['id'] ?? 0));

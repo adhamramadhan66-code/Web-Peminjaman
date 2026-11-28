@@ -85,9 +85,51 @@ function jarak_meter(float $lat1, float $lng1, float $lat2, float $lng2): float
 function ambil_kampus(PDO $pdo): ?array
 {
     $h = [];
-    foreach ($pdo->query("SELECT kunci, nilai FROM pengaturan WHERE kunci IN ('kampus_lat', 'kampus_lng', 'kampus_radius')") as $r) $h[$r['kunci']] = $r['nilai'];
+    foreach ($pdo->query("SELECT kunci, nilai FROM pengaturan WHERE kunci IN ('kampus_lat', 'kampus_lng', 'kampus_radius', 'kampus_nama')") as $r) $h[$r['kunci']] = $r['nilai'];
     if (!isset($h['kampus_lat'], $h['kampus_lng']) || (float) $h['kampus_lat'] == 0.0) return null;
-    return ['lat' => (float) $h['kampus_lat'], 'lng' => (float) $h['kampus_lng'], 'radius' => (int) ($h['kampus_radius'] ?? 300) ?: 300];
+    return ['nama' => trim((string) ($h['kampus_nama'] ?? '')) ?: 'Kampus TSU', 'lat' => (float) $h['kampus_lat'], 'lng' => (float) $h['kampus_lng'], 'radius' => (int) ($h['kampus_radius'] ?? 300) ?: 300];
+}
+
+/** Simpan titik kampus (nama, koordinat, radius "sudah tiba"). Mengembalikan pesan galat atau null bila berhasil. */
+function simpan_kampus(PDO $pdo, array $in): ?string
+{
+    if (!koordinat_valid($in['lat'] ?? null, $in['lng'] ?? null)) return 'Titik kampus tidak valid.';
+    $radius = max(50, min(2000, (int) ($in['radius'] ?? 300)));
+    $nama = mb_substr(trim(preg_replace('/\s+/u', ' ', (string) ($in['nama'] ?? ''))), 0, 80) ?: 'Kampus TSU';
+    $u = $pdo->prepare('DELETE FROM pengaturan WHERE kunci = ?');
+    $i = $pdo->prepare('INSERT INTO pengaturan (kunci, nilai) VALUES (?, ?)');
+    foreach (['kampus_lat' => (float) $in['lat'], 'kampus_lng' => (float) $in['lng'], 'kampus_radius' => $radius, 'kampus_nama' => $nama] as $k => $v) { $u->execute([$k]); $i->execute([$k, (string) $v]); }
+    return null;
+}
+
+/** Lokasi tujuan tersimpan, urut nama. */
+function daftar_lokasi(PDO $pdo): array
+{
+    $h = $pdo->query('SELECT id, nama, alamat, lat, lng FROM lokasi_armada ORDER BY nama, id')->fetchAll();
+    foreach ($h as &$r) { $r['id'] = (int) $r['id']; $r['lat'] = (float) $r['lat']; $r['lng'] = (float) $r['lng']; }
+    return $h;
+}
+
+/**
+ * Pesan otomatis (kartu) antara pemohon mobil dinas dan admin lewat fitur Pesan.
+ * $arah = 'ke_admin' (pengajuan baru, ditulis atas nama pemohon) | 'ke_pemohon' (keputusan admin).
+ */
+function pesan_armada_otomatis(PDO $pdo, string $arah, array $r, string $judul, string $alasan = '', int $adminId = 0): void
+{
+    $uid = (int) ($r['pengguna_id'] ?? 0);
+    if ($uid <= 0) return;
+    require_once __DIR__ . '/chat_util.php';
+    $s = $pdo->prepare('SELECT kode, nama FROM armada WHERE id = ?'); $s->execute([(int) $r['armada_id']]);
+    $a = $s->fetch() ?: ['kode' => '?', 'nama' => ''];
+    $tgl = tanggal_indonesia($r['tanggal']);
+    if (!empty($r['tanggal_akhir']) && $r['tanggal_akhir'] !== $r['tanggal']) $tgl .= ' s.d. ' . tanggal_indonesia($r['tanggal_akhir']);
+    $baris = [$judul, 'Mobil: ' . $a['kode'] . ($a['nama'] ? ' (' . $a['nama'] . ')' : ''), 'Tanggal: ' . $tgl,
+        'Jam: ' . $r['mulai'] . '–' . ($r['selesai'] !== '' ? $r['selesai'] : 'selesai'), 'Tujuan: ' . $r['tujuan']];
+    if ($alasan !== '') $baris[] = 'Alasan: ' . $alasan;
+    try {
+        if ($arah === 'ke_admin') pesan_simpan($pdo, $uid, 'pengguna', 0, implode("\n", $baris), 'otomatis', 0);
+        else pesan_simpan($pdo, $uid, 'admin', $adminId, implode("\n", $baris), 'otomatis', 0);
+    } catch (Throwable $e) { /* pesan otomatis bersifat tambahan; jangan menggagalkan keputusan */ }
 }
 
 function koordinat_valid($lat, $lng): bool

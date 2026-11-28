@@ -129,5 +129,8 @@ CATATAN KEAMANAN
 == Mobil dinas (armada) ==
 - Admin: menu "Mobil Dinas" (armada.html). Pemohon: masuk-armada.html -> pemohon.html. Akun demo pemohon: pemohon@tsu.ac.id / tsu12345.
 - Peta memakai OpenStreetMap (Leaflet) + pencarian alamat Nominatim: gratis, tanpa API key, perlu koneksi internet.
-- Titik kampus diatur admin lewat tombol "Atur titik kampus" di panel Pantau perjalanan; dipakai untuk memeriksa pemohon sudah tiba sebelum perjalanan dapat diselesaikan.
+- Halaman Mobil Dinas punya tab: Ringkasan (pantau + 4 armada), Lokasi, Data pemakaian (rekap + daftar + ekspor/impor), dan Pesan.
+- Tab Lokasi: atur titik kampus (nama, titik, radius "sudah tiba") dan lokasi tujuan bernama (mis. "Kampus TSU"). Klik peta / cari alamat / "Lokasi saya", beri nama, simpan. Pemohon memilih lokasi itu lewat tombol cepat dan lencana di peta. Nama di peta memakai nama dari admin, bukan label bawaan OpenStreetMap.
+- Titik kampus dipakai untuk memeriksa pemohon sudah tiba sebelum perjalanan dapat diselesaikan.
+- Pesan: pemohon memakai halaman Pesan yang sama (percakapan dengan admin). Pengajuan baru dan keputusan admin (setujui/tolak) terkirim otomatis sebagai kartu pesan.
 - Pelacakan berjalan lewat halaman web pemohon: halaman harus tetap terbuka dan GPS menyala. Bila posisi tidak terkirim >60 detik, admin melihat "GPS terputus".

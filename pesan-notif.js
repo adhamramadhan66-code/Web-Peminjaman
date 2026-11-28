@@ -17,6 +17,8 @@
         badge.textContent = n > 99 ? '99+' : String(n);
         badge.hidden = !(n > 0);
         nav.title = n > 0 ? 'Pesan (' + n + ' belum dibaca)' : 'Pesan';
+        const b2 = document.getElementById('tabPesanBadge');      // tab Pesan di halaman Mobil Dinas
+        if (b2) { b2.textContent = n > 99 ? '99+' : String(n); b2.hidden = !(n > 0); }
     }
 
     let sedangMemuat = false;

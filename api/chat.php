@@ -69,7 +69,7 @@ try {
         if (!$admin) return ['id' => $saya['id'], 'nama' => $saya['nama'], 'email' => $saya['email']];
         $id = (int) ($sumber['pengguna_id'] ?? 0);
         if ($id <= 0) keluar(['error' => 'Pilih akun yang ingin dikirimi pesan.'], 422);
-        $s = $pdo->prepare("SELECT id, nama, email FROM pengguna WHERE id = ? AND peran = 'pengguna'");
+        $s = $pdo->prepare("SELECT id, nama, email FROM pengguna WHERE id = ? AND peran IN ('pengguna', 'pemohon')");
         $s->execute([$id]);
         $r = $s->fetch();
         if (!$r) keluar(['error' => 'Akun tujuan tidak ditemukan.'], 404);
@@ -101,13 +101,13 @@ try {
                 keluar(['peran' => 'pengguna', 'kontak' => [[
                     'pengguna_id' => $saya['id'],
                     'nama'        => 'Admin',
-                    'email'       => 'Pengelola peminjaman ruang',
+                    'email'       => $saya['peran'] === 'pemohon' ? 'Pengelola mobil dinas' : 'Pengelola peminjaman ruang',
                     'belum'       => (int) $s->fetchColumn(),
                     'terakhir'    => $m ? ['teks' => pratinjau($m), 'dari' => $m['dari'], 'dibuat' => $m['dibuat']] : null,
                 ]]]);
             }
 
-            $where = "u.peran = 'pengguna'";
+            $where = "u.peran IN ('pengguna', 'pemohon')";
             $par = [];
             $q = mb_substr(trim(preg_replace('/\s+/u', ' ', (string) ($_GET['q'] ?? ''))), 0, 60);
             if ($q !== '') {
@@ -115,7 +115,7 @@ try {
                 $where .= ' AND (u.nama LIKE ? OR u.email LIKE ?)';
                 $par = [$like, $like];
             }
-            $s = $pdo->prepare("SELECT u.id, u.nama, u.email,
+            $s = $pdo->prepare("SELECT u.id, u.nama, u.email, u.peran,
                     (SELECT COUNT(*) FROM pesan m WHERE m.pengguna_id = u.id AND m.dari = 'pengguna' AND m.dibaca = 0) AS belum,
                     (SELECT MAX(m.id) FROM pesan m WHERE m.pengguna_id = u.id) AS terakhir_id
                 FROM pengguna u WHERE $where ORDER BY u.nama LIMIT 300");
@@ -139,6 +139,7 @@ try {
                     'pengguna_id' => (int) $a['id'],
                     'nama'        => $a['nama'],
                     'email'       => $a['email'],
+                    'peran'       => $a['peran'],
                     'belum'       => (int) $a['belum'],
                     'terakhir'    => $m ? ['teks' => pratinjau($m), 'dari' => $m['dari'], 'dibuat' => $m['dibuat']] : null,
                     'urut'        => (int) $a['terakhir_id'],
@@ -178,7 +179,7 @@ try {
             $terhapus = array_map(fn ($r) => ['id' => (int) $r['id'], 'dihapus' => (int) $r['dihapus']], $s->fetchAll());
 
             $terakhirId = $pesan ? $pesan[count($pesan) - 1]['id'] : $setelah;
-            keluar(['kontak' => $admin ? $akun : ['id' => $akun['id'], 'nama' => 'Admin', 'email' => 'Pengelola peminjaman ruang'],
+            keluar(['kontak' => $admin ? $akun : ['id' => $akun['id'], 'nama' => 'Admin', 'email' => $saya['peran'] === 'pemohon' ? 'Pengelola mobil dinas' : 'Pengelola peminjaman ruang'],
                     'pesan' => $pesan, 'terhapus' => $terhapus, 'terakhir_id' => $terakhirId]);
         }
 

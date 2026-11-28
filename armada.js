@@ -49,10 +49,27 @@
             box.appendChild(kartu);
         });
     }
+    function renderRekap(list) {
+        const box = $('rekapGrid'); box.textContent = '';
+        list.forEach((a) => {
+            const t = a.total || { semua: 0, menunggu: 0, disetujui: 0, ditolak: 0 };
+            const b = el('button', 'rekap' + (state.armada === String(a.id) ? ' aktif' : '')); b.type = 'button';
+            b.appendChild(el('div', 'rk-kode', a.kode + ' \u00b7 ' + a.nama));
+            b.appendChild(el('div', 'rk-total', String(t.semua)));
+            b.appendChild(el('div', 'rk-sub', t.disetujui + ' disetujui \u00b7 ' + t.menunggu + ' menunggu \u00b7 ' + t.ditolak + ' ditolak'));
+            b.addEventListener('click', () => {
+                state.armada = state.armada === String(a.id) ? '0' : String(a.id); state.halaman = 1;
+                if ($('fArmada')) $('fArmada').value = state.armada;
+                renderRekap(list); muat();
+                const tb = document.querySelector('[data-tab-panel="data"] .tbl-wrap'); if (tb) tb.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+            box.appendChild(b);
+        });
+    }
     async function muatKartu() {
         try {
             const d = await api(API + '?ringkas=1');
-            renderKartu(d.armada);
+            renderKartu(d.armada); renderRekap(d.armada);
             $('armInfo').textContent = 'Status empat mobil dinas TSU saat ini' + (d.menunggu ? ' · ' + d.menunggu + ' pengajuan menunggu persetujuan.' : '.');
             if (window.lucide) lucide.createIcons();
         } catch (err) { /* pesan galat ditampilkan oleh muat() */ }
@@ -414,20 +431,13 @@
         const k = $('pantauPeta');
         try {
             pantau.peta = await window.KPPeta.buat(k, { zoom: 13 });
-            pantau.peta.onClick(async (lat, lng) => {
-                if (!pantau.modeKampus) return;
-                pantau.modeKampus = false; $('btnKampus').classList.remove('primary'); pantau.peta.kursor(false);
-                const r = prompt('Radius "sudah tiba" dalam meter (50 - 2000):', String((pantau.kampusData && pantau.kampusData.radius) || 300));
-                if (r === null) return;
-                try { const d = await api(API, { aksi: 'kampus', lat, lng, radius: Number(r) || 300 }); toast('Titik kampus disimpan'); pantau.kampusData = d.kampus; gambarKampus(); muatPantau(); } catch (er) { toast(er.message, true); }
-            });
             pantau.siap = true;
         } catch (e) { pantau.siap = 'gagal'; k.className = 'pantau-peta peta-info'; k.textContent = e.message; }
     }
     function gambarKampus() {
         if (!pantau.peta || !pantau.kampusData) return; const p = { lat: pantau.kampusData.lat, lng: pantau.kampusData.lng };
-        if (pantau.kampus) { pantau.kampus.m.setPosition(p); pantau.kampus.c.set(p, pantau.kampusData.radius); return; }
-        pantau.kampus = { m: window.KPPeta.titik(pantau.peta, p, { warna: '#059669', label: 'K', judul: 'Kampus', skala: 12 }), c: window.KPPeta.lingkaran(pantau.peta, p, pantau.kampusData.radius) };
+        if (pantau.kampus) { pantau.kampus.m.setPosition(p); pantau.kampus.m.setNama(pantau.kampusData.nama); pantau.kampus.c.set(p, pantau.kampusData.radius); return; }
+        pantau.kampus = { m: window.KPPeta.tanda(pantau.peta, p, { nama: pantau.kampusData.nama || 'Kampus TSU', warna: '#059669', z: 4 }), c: window.KPPeta.lingkaran(pantau.peta, p, pantau.kampusData.radius) };
     }
     async function tampilJejak(r) {
         if (!pantau.peta) return;
@@ -480,12 +490,22 @@
             }
         } catch (e) { $('pantauInfo').textContent = e.message; }
     }
-    $('btnKampus').addEventListener('click', () => {
-        if (!pantau.peta) { toast('Peta belum tampil. Periksa koneksi internet.', true); return; }
-        pantau.modeKampus = !pantau.modeKampus; $('btnKampus').classList.toggle('primary', pantau.modeKampus);
-        pantau.peta.kursor(pantau.modeKampus);
-        if (pantau.modeKampus) toast('Klik titik kampus di peta.');
+    $('btnKampus').addEventListener('click', () => {     // titik kampus diatur di tab Lokasi (nama + titik + radius)
+        location.hash = '#lokasi';
+        window.dispatchEvent(new CustomEvent('lokasi-kampus'));
     });
+    // ---------- tab Ringkasan / Lokasi / Data pemakaian ----------
+    const TAB = ['ringkasan', 'lokasi', 'data'];
+    function tampilTab() {
+        let t = (location.hash || '#ringkasan').slice(1); if (!TAB.includes(t)) t = 'ringkasan';
+        document.querySelectorAll('[data-tab-panel]').forEach((d) => { d.hidden = d.getAttribute('data-tab-panel') !== t; });
+        document.querySelectorAll('#tabArmada [data-tab]').forEach((a) => a.classList.toggle('aktif', a.getAttribute('data-tab') === t));
+        if (t === 'ringkasan' && pantau.peta) setTimeout(() => pantau.peta.ukuran(), 60);
+        window.dispatchEvent(new CustomEvent('armada-tab', { detail: t }));
+    }
+    window.addEventListener('hashchange', tampilTab);
+    tampilTab();
+
     muatPantau(); setInterval(muatPantau, 5000);
 
     // ---------- tombol ----------

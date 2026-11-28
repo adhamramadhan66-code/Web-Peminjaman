@@ -65,3 +65,60 @@
 .hero-teks.hero-pm .hero-sub { color: var(--text-muted); opacity: 1; }
 .kgrid label em { display: inline; font-style: normal; color: var(--red, #ef4444); }
 #koordTempel { width: 100%; }
+
+/* ---------- navigasi tab Mobil Dinas ---------- */
+.tab-armada { display: flex; gap: 0.35rem; margin: 0 0 1.1rem; padding: 0.3rem; border: 1px solid var(--border-color); background: var(--surface-1, var(--surface-2)); border-radius: 0.9rem; overflow-x: auto; width: fit-content; max-width: 100%; }
+.tab-armada a { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.55rem 1rem; border-radius: 0.65rem; color: var(--text-muted); font-size: 0.88rem; font-weight: 600; text-decoration: none; white-space: nowrap; }
+.tab-armada a svg, .tab-armada a i { width: 17px; height: 17px; }
+.tab-armada a:hover { color: var(--text-main); background: var(--surface-2); }
+.tab-armada a.aktif { background: var(--green); color: #fff; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3); }
+.tab-armada .nav-badge { position: static; transform: none; margin-left: 0.2rem; box-shadow: none; }
+.tab-isi { display: flex; flex-direction: column; gap: 1.2rem; }
+.tab-isi[hidden] { display: none; }
+
+/* ---------- penanda bernama di peta ---------- */
+.pt-tanda-wrap { background: none; border: 0; }
+.pt-tanda { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; background: #fff; color: #0f172a; border-radius: 999px; padding: 3px 11px 3px 3px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.32); font: 700 12px/1 Inter, sans-serif; cursor: pointer; }
+.pt-tanda i { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.18); flex: none; }
+
+/* ---------- halaman Lokasi ---------- */
+.lok-grid { display: grid; grid-template-columns: minmax(280px, 380px) 1fr; gap: 1.2rem; padding: 1rem 1.25rem 1.25rem; align-items: start; }
+.lok-kiri { display: flex; flex-direction: column; gap: 0.8rem; min-width: 0; }
+.lok-peta { height: 560px; }
+.lok-daftar { display: flex; flex-direction: column; gap: 0.5rem; max-height: 520px; overflow: auto; padding-right: 2px; }
+.lok-item { display: flex; gap: 0.7rem; align-items: center; text-align: left; width: 100%; padding: 0.65rem 0.8rem; border: 1px solid var(--border-color); border-radius: 0.8rem; background: var(--surface-2); color: var(--text-main); cursor: pointer; font: inherit; }
+.lok-item:hover, .lok-item.aktif { border-color: var(--green); background: var(--green-light); }
+.lok-dot { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #fff; flex: none; }
+.lok-dot svg, .lok-dot i { width: 17px; height: 17px; }
+.lok-teks { min-width: 0; flex: 1; }
+.lok-teks strong { display: block; font-size: 0.9rem; }
+.lok-teks span { display: block; font-size: 0.76rem; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lok-lencana { font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 999px; background: rgba(16, 185, 129, 0.16); color: #059669; flex: none; }
+.lok-form { display: flex; flex-direction: column; gap: 0.6rem; padding: 0.9rem; border: 1px solid var(--green); border-radius: 0.9rem; background: var(--green-light); }
+.lok-form[hidden] { display: none; }
+.lok-form h4 { margin: 0; font-size: 0.95rem; }
+.lok-form label { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.78rem; font-weight: 600; }
+.lok-form label em { font-style: normal; color: var(--red, #ef4444); }
+.lok-form .in { width: 100%; }
+.lok-form .kbtns { display: flex; gap: 0.5rem; margin-top: 0.2rem; }
+.kbtns-sp { flex: 1; }
+.lok-petunjuk { margin: 0; font-size: 0.76rem; color: var(--text-muted); }
+
+/* ---------- pilihan lokasi tersimpan (form pemohon) ---------- */
+.lok-chip-baris { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.6rem; }
+.lok-chip-baris .lbl { width: 100%; font-size: 0.76rem; color: var(--text-muted); font-weight: 600; }
+.lok-chip { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.35rem 0.8rem; border-radius: 999px; border: 1px solid var(--border-color); background: var(--surface-2); color: var(--text-main); font: 600 0.8rem inherit; font-family: inherit; cursor: pointer; }
+.lok-chip svg, .lok-chip i { width: 14px; height: 14px; }
+.lok-chip:hover, .lok-chip.aktif { border-color: var(--green); background: var(--green-light); }
+.lok-chip.kampus { border-color: rgba(16, 185, 129, 0.6); }
+
+/* ---------- rekap per armada ---------- */
+.rekap-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.9rem; padding: 1rem 1.25rem 1.25rem; }
+.rekap { text-align: left; border: 1px solid var(--border-color); background: var(--surface-2); color: var(--text-main); border-radius: 0.9rem; padding: 0.9rem 1rem; cursor: pointer; font: inherit; }
+.rekap:hover, .rekap.aktif { border-color: var(--green); background: var(--green-light); }
+.rekap .rk-kode { font-weight: 700; font-size: 0.95rem; }
+.rekap .rk-total { font-size: 1.7rem; font-weight: 700; line-height: 1.2; margin: 0.2rem 0; }
+.rekap .rk-sub { font-size: 0.76rem; color: var(--text-muted); }
+@media (max-width: 1000px) { .lok-grid { grid-template-columns: 1fr; } .lok-peta { height: 420px; } .rekap-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.lok-form [hidden], .lok-form[hidden] { display: none !important; }

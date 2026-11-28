@@ -50,6 +50,19 @@
         w.setWarna = (c) => { const e = m.getElement(); if (e && e.firstChild) e.firstChild.style.background = c; };
         return w;
     }
+    /** Penanda bernama (lencana berisi nama lokasi), mis. "Kampus TSU". o: {nama, warna, z, klik} */
+    function tanda(peta, pos, o) {
+        o = o || {};
+        const e = document.createElement('div'); e.className = 'pt-tanda';
+        const i = document.createElement('i'); i.style.background = o.warna || '#059669'; e.appendChild(i);
+        const t = document.createElement('span'); t.textContent = o.nama || ''; e.appendChild(t);
+        const ikon = L.divIcon({ className: 'pt-tanda-wrap', html: e, iconSize: null, iconAnchor: [11, 11] });
+        const m = L.marker([pos.lat, pos.lng], { icon: ikon, title: o.nama || '', zIndexOffset: (o.z || 3) * 100 }).addTo(peta._p);
+        if (o.klik) m.on('click', (ev) => { L.DomEvent.stopPropagation(ev); o.klik(); });
+        const w = bungkus(m);
+        w.setNama = (n) => { t.textContent = n; };
+        return w;
+    }
     /** Penanda tujuan berbentuk pin. */
     function pin(peta, pos, o) {
         const warna = (o && o.warna) || '#dc2626';
@@ -63,7 +76,7 @@
     }
     function lingkaran(peta, pos, radius, warna) {
         const c = L.circle([pos.lat, pos.lng], { radius, color: warna || '#059669', weight: 1.5, fillColor: warna || '#10b981', fillOpacity: 0.12 }).addTo(peta._p);
-        return { set(p, r) { c.setLatLng([p.lat, p.lng]); c.setRadius(r); } };
+        return { set(p, r) { c.setLatLng([p.lat, p.lng]); c.setRadius(r); }, remove() { c.remove(); } };
     }
 
     async function nominatim(path) {
@@ -80,5 +93,5 @@
     const tautan = (lat, lng) => 'https://www.openstreetmap.org/?mlat=' + lat + '&mlon=' + lng + '#map=17/' + lat + '/' + lng;
     function jarak(m) { return m == null ? '-' : m < 1000 ? m + ' m' : (m / 1000).toFixed(1).replace('.', ',') + ' km'; }
 
-    window.KPPeta = { muat, buat, batas, titik, pin, garis, lingkaran, cari, alamatDari, tautan, jarak, PUSAT };
+    window.KPPeta = { muat, buat, batas, titik, tanda, pin, garis, lingkaran, cari, alamatDari, tautan, jarak, PUSAT };
 })();

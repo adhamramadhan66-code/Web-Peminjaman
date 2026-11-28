@@ -27,8 +27,9 @@
         try {
             const u = JSON.parse(sessionStorage.getItem(KEY) || 'null');
             if (!u || !u.email) { keLogin(); return null; }
-            if (u.peran === 'pemohon' && !/pemohon\.html$/.test(location.pathname)) { location.replace('pemohon.html'); return null; }   // pemohon mobil dinas hanya memakai portalnya sendiri
+            if (u.peran === 'pemohon' && !/(pemohon|pesan)\.html$/.test(location.pathname)) { location.replace('pemohon.html'); return null; }   // pemohon mobil dinas hanya memakai portalnya sendiri
             root.dataset.peran = u.peran === 'admin' ? 'admin' : 'pengguna';
+            if (u.peran === 'pemohon') root.classList.add('mode-pm');
             return u;
         } catch (e) { keLogin(); return null; }
     };

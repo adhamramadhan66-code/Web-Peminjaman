@@ -48,7 +48,7 @@
     const baris = (a, b) => { const r = el('div', 'kt-baris'); r.appendChild(el('span', null, a)); const v = el('b'); if (b instanceof Node) v.appendChild(b); else v.textContent = b; r.appendChild(v); return r; };
     const tombol = (teks, ic, cls, fn) => { const b = el('button', 'btn ' + (cls || '')); b.type = 'button'; b.innerHTML = '<i data-lucide="' + ic + '"></i> '; b.appendChild(document.createTextNode(teks)); b.addEventListener('click', fn); return b; };
 
-    let armada = [], kampus = null, saya = [];
+    let armada = [], kampus = null, saya = [], lokasi = [];
     function renderArmada() {
         const box = $('listArmada'); box.textContent = '';
         armada.forEach((a) => {
@@ -117,7 +117,7 @@
     async function muat() {
         try {
             const [a, s] = await Promise.all([api(API + '?armada=1'), api(API + '?saya=1')]);
-            armada = a.armada; kampus = a.kampus; saya = s.data;
+            armada = a.armada; kampus = a.kampus; lokasi = a.lokasi || []; saya = s.data;
             renderArmada(); renderSaya();
             if (window.KP) window.KP.status('', 'Data tersinkronisasi');
             const aktif = saya.find((r) => r.perjalanan === 'jalan');
@@ -142,13 +142,37 @@
         const b = el('b', null, alamat || 'Titik terpilih'); box.appendChild(b); box.appendChild(document.createTextNode(' (' + lat.toFixed(5) + ', ' + lng.toFixed(5) + ')'));
         if (!alamat) KPPeta.alamatDari(lat, lng).then((al) => { if (pilihan && pilihan.lat === lat && al) { pilihan.alamat = al; b.textContent = al; if (!inputs.tujuan.value) inputs.tujuan.value = al.split(',')[0]; } });
     }
+    // Lokasi tersimpan (kampus + tujuan yang sudah diberi nama admin): lencana di peta + tombol pilih cepat.
+    let tandaPeta = [];
+    const daftarTitik = () => (kampus ? [{ nama: kampus.nama || 'Kampus TSU', alamat: '', lat: kampus.lat, lng: kampus.lng, kampus: true }] : []).concat(lokasi);
+    function pilihLokasi(l) {
+        setTujuan(l.lat, l.lng, l.alamat || l.nama);
+        if (inputs.tujuan && !inputs.tujuan.value.trim()) inputs.tujuan.value = l.nama;
+        if (petaPilih) petaPilih.setZoom(16);
+        gambarChip();
+    }
+    function gambarTanda() {
+        if (!petaPilih) return;
+        tandaPeta.forEach((t) => t.remove()); tandaPeta = [];
+        daftarTitik().forEach((l) => tandaPeta.push(KPPeta.tanda(petaPilih, { lat: l.lat, lng: l.lng }, { nama: l.nama, warna: l.kampus ? '#059669' : '#2563eb', z: l.kampus ? 4 : 3, klik: () => pilihLokasi(l) })));
+    }
+    function gambarChip() {
+        const box = $('lokChip'), d = daftarTitik(); box.textContent = ''; box.hidden = !d.length; if (!d.length) return;
+        box.appendChild(el('span', 'lbl', 'Pilih cepat tujuan tersimpan:'));
+        d.forEach((l) => {
+            const b = el('button', 'lok-chip' + (l.kampus ? ' kampus' : '') + (pilihan && Math.abs(pilihan.lat - l.lat) < 1e-6 && Math.abs(pilihan.lng - l.lng) < 1e-6 ? ' aktif' : '')); b.type = 'button';
+            b.innerHTML = '<i data-lucide="' + (l.kampus ? 'graduation-cap' : 'map-pin') + '"></i>'; b.appendChild(document.createTextNode(l.nama));
+            b.addEventListener('click', () => pilihLokasi(l)); box.appendChild(b);
+        });
+        ikon();
+    }
     async function siapkanPeta() {
         const k = $('petaPilih'); if (!petaPilih) { k.textContent = ''; k.className = 'peta-kotak tinggi'; }
         if (petaPilih) return;
         try {
             petaPilih = await KPPeta.buat(k, { center: kampus ? { lat: kampus.lat, lng: kampus.lng } : KPPeta.PUSAT, zoom: 14 });
             petaPilih.onClick((lat, lng) => setTujuan(lat, lng));
-            if (kampus) KPPeta.titik(petaPilih, { lat: kampus.lat, lng: kampus.lng }, { warna: '#059669', label: 'K', judul: 'Kampus', skala: 11 });
+            gambarTanda();
         } catch (e) { k.className = 'peta-kotak tinggi peta-info'; k.textContent = e.message + ' Sementara itu, tempel koordinat tujuan di kolom di bawah peta.'; }
     }
     $('btnCari').addEventListener('click', async () => {
@@ -183,14 +207,14 @@
         ];
         const box = $('kFields'); box.textContent = ''; inputs = {};
         F.forEach((f) => {
-            const lb = el('label', f.penuh ? 'penuh' : ''); lb.appendChild(document.createTextNode(f.label)); if (f.wajib) lb.appendChild(el('em', null, ' *'));
+            const lb = el('label', f.penuh ? 'penuh' : ''); const sp = el('span'); sp.appendChild(document.createTextNode(f.label)); if (f.wajib) sp.appendChild(el('em', null, ' *')); lb.appendChild(sp);
             let inp;
             if (f.t === 'armada') { inp = el('select', 'in'); armada.forEach((x) => inp.appendChild(new Option(x.kode + ' \u2013 ' + x.nama, x.id))); if (armadaId) inp.value = armadaId; }
             else if (f.t === 'select') { inp = el('select', 'in'); f.opsi.forEach(([v, t]) => inp.appendChild(new Option(t, v))); }
             else { inp = el('input', 'in'); inp.type = f.t; if (f.maks) inp.maxLength = f.maks; if (f.t === 'number') { inp.min = '0'; inp.max = '99'; } if (f.t === 'date') inp.min = hariIni; inp.autocomplete = 'off'; if (f.v) inp.value = f.v; }
             inputs[f.k] = inp; lb.appendChild(inp); box.appendChild(lb);
         });
-        siapkanPeta(); ikon();
+        gambarChip(); siapkanPeta().then(gambarTanda); ikon();
     }
     $('kReset').addEventListener('click', () => bukaForm(inputs.armada_id ? inputs.armada_id.value : 0));
     $('kForm').addEventListener('submit', async (e) => {
@@ -280,7 +304,7 @@
         try {
             pelacakan.peta = await KPPeta.buat($('lacakPeta'), { center: trip.tujuan_lat ? { lat: trip.tujuan_lat, lng: trip.tujuan_lng } : KPPeta.PUSAT, zoom: 13 });
             if (trip.tujuan_lat) KPPeta.pin(pelacakan.peta, { lat: trip.tujuan_lat, lng: trip.tujuan_lng }, { judul: 'Tujuan' });
-            if (kampus) KPPeta.titik(pelacakan.peta, { lat: kampus.lat, lng: kampus.lng }, { warna: '#059669', label: 'K', judul: 'Kampus', skala: 11 });
+            if (kampus) KPPeta.tanda(pelacakan.peta, { lat: kampus.lat, lng: kampus.lng }, { nama: kampus.nama || 'Kampus TSU', warna: '#059669', z: 4 });
             pelacakan.jalur = KPPeta.garis(pelacakan.peta);
             gambarPosisi(true);
         } catch (e) { const k = $('lacakPeta'); k.className = 'peta-kotak tinggi peta-info'; k.textContent = e.message; }

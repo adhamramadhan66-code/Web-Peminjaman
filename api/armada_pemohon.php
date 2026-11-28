@@ -42,7 +42,7 @@ try {
                 $a['terisi'] = $s->fetchAll(); $a['dipakai'] = false;
                 foreach ($a['terisi'] as $t) { [$s1, $e1] = ujung($t); if ($t['perjalanan'] === 'jalan' || ($s1 <= $nowS && $nowS < $e1)) $a['dipakai'] = true; }
             }
-            keluar(['armada' => $armada, 'kampus' => $kampus]);
+            keluar(['armada' => $armada, 'kampus' => $kampus, 'lokasi' => daftar_lokasi($pdo)]);
         }
         if (isset($_GET['saya'])) {
             $s = $pdo->prepare('SELECT p.*, a.kode AS armada_kode, a.nama AS armada_nama FROM pemakaian_armada p JOIN armada a ON a.id = p.armada_id
@@ -78,7 +78,9 @@ try {
                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
                 ->execute([$aid, $hariIni, $d['tanggal'], $d['tanggal_akhir'], $d['mulai'], $d['selesai'], $d['tujuan'], $d['peserta'], $d['sopir'], $d['fasilitas'], $saya['nama'], 'menunggu', '', $dibuat,
                     $saya['id'], potong($in['tujuan_alamat'] ?? '', 255), (float) $in['tujuan_lat'], (float) $in['tujuan_lng']]);
-            keluar(['ok' => true, 'id' => (int) $pdo->lastInsertId()]);
+            $idBaru = (int) $pdo->lastInsertId();
+            pesan_armada_otomatis($pdo, 'ke_admin', ['pengguna_id' => $saya['id'], 'armada_id' => $aid, 'tanggal' => $d['tanggal'], 'tanggal_akhir' => $d['tanggal_akhir'], 'mulai' => $d['mulai'], 'selesai' => (string) $d['selesai'], 'tujuan' => $d['tujuan']], 'Pengajuan mobil dinas baru');
+            keluar(['ok' => true, 'id' => $idBaru]);
 
         case 'batalkan':
             $r = $milik();

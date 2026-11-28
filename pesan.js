@@ -16,6 +16,7 @@
     const barisPesan = new Map();                // id pesan -> { baris, jam, m } (untuk mengubah jadi "dihapus")
     let tanggalTerakhir = '', pengirimTerakhir = '';
     let cari = '';
+    let jenis = new URLSearchParams(location.search).get('kontak') === 'mobil' ? 'mobil' : 'semua';   // filter daftar (admin): semua | ruang | mobil
     let tokenPesan = 0, sedangPesan = false;
     let tokenKontak = 0, sedangKontak = false, pertamaMuat = true;
     const deepLink = +(new URLSearchParams(location.search).get('u') || 0);
@@ -49,11 +50,13 @@
     function renderKontak() {
         if (!admin) return;
         const box = $('kontakList'); box.textContent = '';
-        if (!kontak.length) {
-            box.appendChild(el('p', 'kontak-kosong', cari ? 'Tidak ada akun yang cocok.' : 'Belum ada akun pengguna yang terdaftar.'));
+        document.querySelectorAll('#kontakFilter button').forEach((b) => b.classList.toggle('aktif', b.dataset.jenis === jenis));
+        const tampilkan = kontak.filter((k) => jenis === 'semua' || (jenis === 'mobil') === (k.peran === 'pemohon'));
+        if (!tampilkan.length) {
+            box.appendChild(el('p', 'kontak-kosong', cari ? 'Tidak ada akun yang cocok.' : jenis === 'mobil' ? 'Belum ada pemohon mobil dinas yang terdaftar.' : 'Belum ada akun pengguna yang terdaftar.'));
             return;
         }
-        kontak.forEach((k) => {
+        tampilkan.forEach((k) => {
             const belum = (k.pengguna_id === aktif && !document.hidden) ? 0 : k.belum;   // yang sedang dibuka dianggap terbaca
             const b = el('button', 'kontak' + (k.pengguna_id === aktif ? ' aktif' : '') + (belum ? ' belum' : ''));
             b.type = 'button';
@@ -61,6 +64,7 @@
             const t = el('div', 'kontak-teks');
             const r1 = el('div', 'kontak-baris');
             r1.appendChild(el('span', 'kontak-nama', k.nama));
+            if (k.peran === 'pemohon') r1.appendChild(el('span', 'tag-mobil', 'Mobil dinas'));
             r1.appendChild(el('span', 'kontak-waktu', k.terakhir ? waktuDaftar(k.terakhir.dibuat) : ''));
             const r2 = el('div', 'kontak-pratinjau');
             r2.appendChild(el('span', 'cuplikan', k.terakhir ? (k.terakhir.dari === 'admin' ? 'Anda: ' : '') + k.terakhir.teks : k.email));
@@ -92,6 +96,7 @@
     }
 
     // ---------- percakapan ----------
+    document.querySelectorAll('#kontakFilter button').forEach((b) => b.addEventListener('click', () => { jenis = b.dataset.jenis; renderKontak(); }));
     function aturTata() { $('msgr').classList.toggle('solo', !admin); }
 
     function buka(k) {
@@ -123,7 +128,9 @@
         box.appendChild(el('strong', null, 'Belum ada pesan'));
         box.appendChild(document.createTextNode(admin
             ? 'Mulai percakapan dengan ' + nama + '. Pengajuan peminjaman dari akun ini juga akan muncul di sini secara otomatis.'
-            : 'Tulis pesan untuk admin. Setiap kali kamu mengirim pengajuan peminjaman, admin juga diberi tahu otomatis lewat sini.'));
+            : saya.peran === 'pemohon'
+                ? 'Tulis pesan untuk admin mobil dinas. Setiap kali kamu mengirim pengajuan mobil, admin juga diberi tahu otomatis lewat sini.'
+                : 'Tulis pesan untuk admin. Setiap kali kamu mengirim pengajuan peminjaman, admin juga diberi tahu otomatis lewat sini.'));
         $('threadBody').appendChild(box);
     }
 
@@ -149,6 +156,10 @@
         const a = negatif
             ? el('a', 'btn' + (admin ? '' : ' primary'), admin ? 'Lihat daftar ditolak' : 'Ajukan ulang')
             : el('a', 'btn' + (admin ? ' primary' : ''), admin ? 'Tinjau pengajuan' : 'Lihat pengajuan');
+        if (!m.peminjaman_id) {     // pesan otomatis mobil dinas (bukan peminjaman ruang)
+            a.href = admin ? 'armada.html#data' : (negatif ? 'pemohon.html#ajukan' : 'pemohon.html#riwayat');
+            a.textContent = admin ? (negatif ? 'Lihat data mobil dinas' : 'Tinjau pengajuan mobil') : (negatif ? 'Ajukan ulang' : 'Lihat riwayat');
+        } else
         a.href = negatif ? (admin ? 'peminjaman.html?status=ditolak' : 'ajukan.html') : 'peminjaman.html' + (admin ? '?status=menunggu' : '');
         aks.appendChild(a); kartu.appendChild(aks);
         return kartu;

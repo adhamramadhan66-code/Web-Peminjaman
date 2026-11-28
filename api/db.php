@@ -177,6 +177,16 @@ function buat_tabel(PDO $pdo): void
         " . ($my ? ', INDEX (pemakaian_id, id)' : '') . "
     )$eng");
 
+    // Lokasi tujuan tersimpan (nama sendiri, mis. "Kampus TSU", "Bandara Adi Soemarmo") agar pemohon tinggal memilih, tanpa mencari di peta.
+    $pdo->exec("CREATE TABLE IF NOT EXISTS lokasi_armada (
+        id $ai,
+        nama VARCHAR(80) NOT NULL,
+        alamat VARCHAR(255) NOT NULL DEFAULT '',
+        lat $dbl NOT NULL,
+        lng $dbl NOT NULL,
+        dibuat VARCHAR(19) NOT NULL DEFAULT ''
+    )$eng");
+
     // Akun login. peran: admin | pengguna | pemohon (pemohon mobil dinas). Kata sandi disimpan sebagai hash (password_hash).
     $pdo->exec("CREATE TABLE IF NOT EXISTS pengguna (
         id $ai,

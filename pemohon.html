@@ -22,10 +22,10 @@
     <link rel="stylesheet" href="style.css?v=20">
     <link rel="stylesheet" href="denah.css?v=8">
     <link rel="stylesheet" href="jadwal.css?v=5">
-    <link rel="stylesheet" href="pesan.css?v=6">
+    <link rel="stylesheet" href="pesan.css?v=7">
     <link rel="stylesheet" href="profil.css?v=1">
     <link rel="stylesheet" href="ui.css?v=18">
-    <link rel="stylesheet" href="armada.css?v=3">
+    <link rel="stylesheet" href="armada.css?v=4">
     <script src="https://unpkg.com/lucide@latest"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -46,6 +46,7 @@
                 <a href="#dashboard" class="nav-item active" data-view="dashboard"><i data-lucide="layout-dashboard" class="icon"></i><span>Dashboard</span></a>
                 <a href="#ajukan" class="nav-item" data-view="ajukan"><i data-lucide="car-front" class="icon"></i><span>Ajukan Mobil</span></a>
                 <a href="#riwayat" class="nav-item" data-view="riwayat"><i data-lucide="clipboard-list" class="icon"></i><span>Riwayat Peminjaman</span></a>
+                <a href="pesan.html" class="nav-item" id="navPesan"><i data-lucide="message-circle" class="icon"></i><span>Pesan</span><em class="nav-badge" hidden>0</em></a>
             </nav>
         </div>
         <div class="sidebar-bottom">
@@ -123,6 +124,7 @@
                         </div>
                         <div>
                             <label class="pm-label">Tujuan di peta <em>*</em></label>
+                            <div class="lok-chip-baris" id="lokChip" hidden></div>
                             <div class="cari-baris">
                                 <input class="in" id="cariAlamat" type="search" placeholder="Cari alamat / nama tempat, lalu Enter" autocomplete="off">
                                 <button type="button" class="btn" id="btnCari"><i data-lucide="search"></i> Cari</button>
@@ -156,9 +158,10 @@
     </button>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-    <script src="peta.js?v=2"></script>
-    <script src="app.js?v=5"></script>
-    <script src="pemohon.js?v=3"></script>
+    <script src="peta.js?v=3"></script>
+    <script src="app.js?v=6"></script>
+    <script src="pesan-notif.js?v=2"></script>
+    <script src="pemohon.js?v=4"></script>
     <script src="ui.js?v=5"></script>
     <script src="mobile.js?v=4"></script>
 </body>
