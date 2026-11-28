@@ -166,7 +166,7 @@
     try { localStorage.setItem('theme', rootEl.dataset.theme); } catch (e) {}
   });
   function tujuan(p) { return p === 'pemohon' ? 'pemohon.html' : 'dashboard.html'; }
-  try { sessionStorage.removeItem('sb-nav'); } catch (e) {}
+  try { sessionStorage.removeItem('sb-nav'); sessionStorage.removeItem('nav-grup-ruang'); sessionStorage.removeItem('nav-grup-mobil'); } catch (e) {}
   if (location.search.indexOf('logout=1') < 0) {
     try { var u0 = JSON.parse(sessionStorage.getItem(KEY) || 'null'); if (u0 && u0.email) { location.replace(tujuan(u0.peran)); return; } } catch (e) {}
   }
